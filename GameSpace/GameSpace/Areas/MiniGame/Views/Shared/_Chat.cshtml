@@ -1,0 +1,37 @@
+﻿<div class="chat-container" id="chatContainer">
+    <!-- Header -->
+    <div class="chat-header" id="chatHeader">
+        <span id="chatTitle">聊天室</span>
+        <span id="userDisplay" style="margin-left:10px; font-weight:normal; font-size:0.85rem;"></span>
+        <div class="chat-controls">
+            <button class="minimize">–</button>
+            <button class="maximize">⬜</button>
+            <button class="close">×</button>
+        </div>
+    </div>
+
+    <!-- Chat window -->
+    <div class="chat-window">
+        <!-- 登入區 -->
+        <div id="loginArea" class="login-area">
+            <h3 class="text-center mb-2">聊天室登入</h3>
+            <input id="userNameInput" placeholder="輸入你的名字" />
+            <button id="loginBtn">登入</button>
+        </div>
+
+        <!-- 聊天區 -->
+        <div id="chatArea" class="chat-area" style="display:none;">
+            <!-- 訊息區 -->
+            <div class="messages" id="messages"></div>
+
+            <!-- 輸入區 -->
+            <form id="chatForm" class="input-form">
+                <input type="text" id="messageInput" placeholder="輸入訊息..." autocomplete="off" />
+                <button type="submit">送出</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 拖拉手把 -->
+    <div class="resize-handle"></div>
+</div>

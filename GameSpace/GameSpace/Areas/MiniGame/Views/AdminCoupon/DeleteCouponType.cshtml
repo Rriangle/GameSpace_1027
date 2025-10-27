@@ -1,0 +1,146 @@
+@model GameSpace.Models.CouponType
+@{
+    ViewData["Title"] = "刪除優惠券類型";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">刪除優惠券類型</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-danger">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-exclamation-triangle"></i> 確認刪除
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle"></i> 警告！
+                        </h4>
+                        <p>您確定要刪除這個優惠券類型嗎？此操作無法復原。</p>
+                        <hr>
+                        <p class="mb-0">刪除後，所有使用此類型的優惠券將受到影響。</p>
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.CouponTypeId)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.CouponTypeId)
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.Name)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.Name)
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.Description)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.Description)
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.DiscountType)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @if (Model.DiscountType == "PERCENT")
+                            {
+                                <span class="badge badge-primary">百分比折扣</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success">固定金額折扣</span>
+                            }
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.DiscountValue)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.DiscountValue)
+                            @if (Model.DiscountType == "PERCENT")
+                            {
+                                <span class="text-muted">%</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">元</span>
+                            }
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.MinSpend)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.MinSpend) 元
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.PointsCost)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.PointsCost) 點
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.ValidFrom)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.ValidFrom)
+                        </dd>
+                        
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.ValidTo)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.ValidTo)
+                        </dd>
+                    </dl>
+
+                    <form asp-action="DeleteCouponType" method="post">
+                        <input type="hidden" asp-for="CouponTypeId" />
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('您確定要刪除這個優惠券類型嗎？此操作無法復原！')">
+                                <i class="fas fa-trash"></i> 確認刪除
+                            </button>
+                            <a asp-action="CouponTypes" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-info-circle"></i> 注意事項
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <h6 class="alert-heading">刪除前請注意：</h6>
+                        <ul class="mb-0">
+                            <li>此操作將永久刪除優惠券類型</li>
+                            <li>所有使用此類型的優惠券將受到影響</li>
+                            <li>建議先檢查是否有會員正在使用此類型</li>
+                            <li>如有疑問，請聯繫系統管理員</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

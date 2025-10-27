@@ -1,0 +1,60 @@
+﻿@using GameSpace.Areas.Forum.Models.Mapping
+@model IEnumerable<MappingRowVm>
+@{
+    ViewData["Title"] = "外部對應清單(Mappings對應表)";
+}
+
+<h2>外部對應清單(Mappings對應表)</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <select name="gameId" class="form-select" asp-items="ViewBag.Games">
+            <option value="" selected="@(ViewBag.GameId == null ? "selected" : null)">全部遊戲</option>
+        </select>
+    </div>
+    <div class="col-auto">
+
+        <select name="sourceId" class="form-select" asp-items="ViewBag.Sources">
+            <option value="" selected="@(ViewBag.SourceId == null ? "selected" : null)">全部來源</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <input class="form-control" type="text" name="q" value="@ViewBag.Q" placeholder="External Key 查詢" />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary">查詢</button>
+        <a asp-action="Create" class="btn btn-success">新增</a>
+    </div>
+    <div class="d-flex gap-2 mb-3">
+        <a asp-area="Forum" asp-controller="Imports" asp-action="Defs"
+           class="btn btn-outline-secondary">匯入定義（Metrics/Mapping）</a>
+        <a asp-area="Forum" asp-controller="Imports" asp-action="Daily"
+           class="btn btn-outline-secondary">匯入每日數據（JSON）</a>
+    </div>
+</form>
+
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr>
+           @*  <th>ID</th> *@
+            <th>遊戲</th>
+            <th>來源</th>
+            <th>External Key</th>
+            <th>建立時間</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var x in Model)
+        {
+            <tr>
+                @* <td>@x.Id</td> *@
+                <td>@x.GameName </td>
+                <td>@x.SourceName </td>
+                <td>@x.ExternalKey</td>
+                <td>@(x.CreatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                <td><a asp-action="Edit" asp-route-id="@x.Id" class="btn btn-sm btn-warning">編輯</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

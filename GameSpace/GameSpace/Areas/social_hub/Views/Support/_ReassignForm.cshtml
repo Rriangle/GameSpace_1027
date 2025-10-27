@@ -1,0 +1,298 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.ReassignTicketVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@removeTagHelper Microsoft.AspNetCore.Mvc.TagHelpers.OptionTagHelper, Microsoft.AspNetCore.Mvc.TagHelpers
+@using System.Linq
+
+@{
+    // 從 ViewBag 取得不可指派名單（若有）；避免 null 造成例外
+    var disabledTargets = (ViewBag.DisabledTargets as IEnumerable<int>) ?? Enumerable.Empty<int>();
+    var disabledSet = new HashSet<int>(disabledTargets);
+
+    // 目前登入管理員（由 Controller 放在 ViewBag）
+    var myId = (int?)ViewBag.MeManagerId;
+}
+
+<style>
+    /* ===== 轉單 Modal 样式（與 Close 一致） ===== */
+    .reassign-form .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem 1rem;
+        margin-bottom: 1rem;
+    }
+
+    @@media (max-width:576px) {
+        .reassign-form .meta-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .reassign-form .meta-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: .5rem;
+        padding: .5rem .75rem;
+    }
+
+    .reassign-form .meta-label {
+        font-size: .8rem;
+        color: #6c757d;
+        margin-bottom: .15rem;
+    }
+
+    .reassign-form .meta-value {
+        font-weight: 600;
+    }
+
+    .reassign-form .divider {
+        margin: .75rem 0 1rem;
+        border-top: 1px dashed #e5e7eb;
+    }
+
+    .reassign-form .hint {
+        font-size: .85rem;
+        color: #6c757d;
+    }
+
+    .reassign-form .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .5rem;
+    }
+
+    .reassign-form .warn {
+        display: none;
+    }
+
+        .reassign-form .warn.show {
+            display: block;
+        }
+</style>
+
+<form id="reassignForm" class="reassign-form" method="post"
+      asp-area="social_hub" asp-controller="Support" asp-action="ReassignConfirm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.TicketId" />
+    <input type="hidden" name="returnUrl" value="@(ViewBag.ReturnUrl ?? string.Empty)" />
+    <input type="hidden" name="modal" value="true" />
+
+    <h5 class="mb-2">指派他人 / 轉單</h5>
+
+    <!-- 基本資訊卡 -->
+    <div class="meta-grid">
+        <div class="meta-card">
+            <div class="meta-label">工單 ID</div>
+            <div class="meta-value">#@Model.TicketId</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">使用者 ID</div>
+            <div class="meta-value">@Model.UserId</div>
+        </div>
+
+        <div class="meta-card" style="grid-column:1 / -1;">
+            <div class="meta-label">主旨</div>
+            <div class="meta-value text-truncate">@Model.Subject</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">目前指派</div>
+            <div class="meta-value">
+                @if (Model.CurrentAssignedManagerId.HasValue)
+                {
+                    <span class="badge bg-light text-dark border">@Model.CurrentAssignedManagerId</span>
+                }
+                else
+                {
+                    <span class="text-muted">未指派</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 警示訊息（由前端檢查時控制顯示） -->
+    <div id="reassign-warning" class="alert alert-warning py-2 mb-2 warn" role="alert" aria-live="polite">
+        <span id="reassign-warning-text"></span>
+    </div>
+
+    <!-- 指派對象（搜尋 + 清單） -->
+    <div class="mb-2">
+        <label for="reassign-select" class="form-label mb-1">指派給（ManagerId）</label>
+
+        <div class="input-group input-group-sm mb-2">
+            <span class="input-group-text" id="filter-label">搜尋</span>
+            <input id="reassign-filter" type="text" class="form-control" inputmode="numeric" aria-labelledby="filter-label"
+                   placeholder="輸入 ManagerId 即時篩選" autocomplete="off">
+        </div>
+
+        <select id="reassign-select" class="form-select" name="toManagerId" required size="6" aria-describedby="reassign-help">
+            @foreach (var mid in (Model.CandidateManagerIds ?? Enumerable.Empty<int>()))
+            {
+                var isSelected = Model.CurrentAssignedManagerId.HasValue && mid == Model.CurrentAssignedManagerId.Value;
+                var isSelf = myId.HasValue && mid == myId.Value;
+
+                // 只有「目前就是我」才禁自指；工單在別人手上時，允許選擇自己（表示接手）
+                var forbidSelfNow = (Model.CurrentAssignedManagerId == myId) && isSelf;
+
+                var isDisabled = disabledSet.Contains(mid) || forbidSelfNow;
+
+                var badge =
+                isSelf
+                ? (isDisabled ? "（自己，不可指派）" : "（自己）")
+                : (isDisabled ? "（不可指派）" : "");
+
+                <option value="@mid" @(isSelected ? "selected" : "") @(isDisabled ? "disabled" : "")>@mid @badge</option>
+            }
+        </select>
+        <div id="reassign-help" class="hint mt-1">
+            僅列出具客服權限的管理員；被標記為「不可指派」者無法選擇。
+        </div>
+    </div>
+
+    <!-- 備註 -->
+    <div class="mb-3">
+        <label for="reassign-note" class="form-label mb-1">備註</label>
+        <textarea id="reassign-note" class="form-control" name="note" rows="3" maxlength="255"
+                  placeholder="可留空，最多 255 字"></textarea>
+        <div class="d-flex justify-content-between mt-1">
+            <span class="hint">此備註會記錄在指派歷史中。</span>
+            <span class="hint"><span id="reassign-note-count">0</span>/255</span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="button" class="btn btn-outline-secondary" id="btn-cancel">取消</button>
+        <button id="reassign-submit" type="submit" class="btn btn-primary">確認轉單</button>
+    </div>
+</form>
+
+<script>
+    // ===== 備註字數統計 =====
+    (function(){
+      const note=document.getElementById('reassign-note'), cnt=document.getElementById('reassign-note-count');
+      if(!note||!cnt) return;
+      const upd=()=>{ cnt.textContent=(note.value||'').length; };
+      note.addEventListener('input',upd); upd();
+    })();
+
+    // ===== 快篩 + 前端防呆（禁自己、禁 disabled、禁同人） =====
+    (function(){
+      const box=document.getElementById('reassign-filter');
+      const sel=document.getElementById('reassign-select');
+      const warn=document.getElementById('reassign-warning');
+      const wt=document.getElementById('reassign-warning-text');
+      const submit=document.getElementById('reassign-submit');
+      if(!box||!sel) return;
+
+      // 把初始 option 記下來（包含 text/disabled/selected），以便動態重建
+      const all=Array.from(sel.options).map(o=>({value:o.value,text:o.text,selected:o.selected,disabled:o.disabled}));
+      // 允許指派的 id 集合（非 disabled）
+      const validSet=new Set(all.filter(o=>!o.disabled).map(o=>o.value));
+
+      const currentId='@(Model.CurrentAssignedManagerId?.ToString() ?? "")';
+      const myId='@(myId?.ToString() ?? "")';
+      // 只有「目前就是我」才禁自指
+      const forbidSelfNow = !!(currentId && myId && currentId === myId);
+
+      function showWarn(msg){ wt.textContent=msg; warn.classList.add('show'); submit?.setAttribute('disabled',''); }
+      function hideWarn(){ warn.classList.remove('show'); submit?.removeAttribute('disabled'); }
+
+      function check(){
+        const opt=sel.selectedOptions&&sel.selectedOptions[0];
+        if(!opt){ hideWarn(); return; }
+
+        if(forbidSelfNow && myId && opt.value===myId){
+          showWarn('目前已由你負責，無需再指派給自己。'); return;
+        }
+        if(opt.disabled){
+          showWarn('此對象不可指派。'); return;
+        }
+        if(currentId && opt.value===currentId){
+          showWarn('選擇的對象與目前指派相同。'); return;
+        }
+        hideWarn();
+      }
+
+      function apply(){
+        const q=(box.value||'').trim();
+        const digits=/^\d+$/.test(q);
+
+        // 重建 option（保留當前選擇；若輸入完整 id 且在 validSet 當中，自動選中）
+        sel.innerHTML='';
+        const items = q ? all.filter(o=>o.value.includes(q) || o.text.includes(q)) : all;
+
+        // 依數字排序（避免重建後順序亂掉）
+        items.sort((a,b)=>(+a.value)-(+b.value));
+
+        for(const it of items){
+          const op=document.createElement('option');
+          op.value=it.value; op.textContent=it.text;
+          if(it.disabled) op.disabled=true;
+
+          // 初始選中（目前指派）優先保留
+          if(it.value===currentId || it.selected) op.selected=true;
+          sel.appendChild(op);
+        }
+
+        if(q && digits && !validSet.has(q)){
+          showWarn('輸入的 ID 不在可指派名單（未具客服權限或不存在）。');
+        }else{
+          // 若輸入正好是可指派 id，直接選上它
+          if(validSet.has(q)){
+            const op=[...sel.options].find(o=>o.value===q);
+            if(op) op.selected=true;
+          }
+          check();
+        }
+      }
+
+      let t=null;
+      box.addEventListener('input',()=>{ if(t) clearTimeout(t); t=setTimeout(apply,120); });
+      box.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); apply(); } });
+      sel.addEventListener('change', check);
+
+      apply();
+    })();
+
+    // ===== 取消：通知父頁關閉 Modal =====
+    document.getElementById('btn-cancel')?.addEventListener('click', ()=> {
+      parent?.postMessage({ type:'modal:cancel' }, '*');
+    });
+
+    // ===== Ajax 送出（含 Anti-Forgery Header） =====
+    (function(){
+      const f=document.getElementById('reassignForm'), btn=document.getElementById('reassign-submit');
+      if(!f||!btn) return;
+
+      f.addEventListener('submit',async e=>{
+        e.preventDefault();
+
+        // 基本前端檢查（避免惡意改 DOM）
+        const sel = document.getElementById('reassign-select');
+        const opt = sel?.selectedOptions && sel.selectedOptions[0];
+        if(!opt){ alert('請選擇指派對象'); return; }
+        if(opt.disabled){ alert('此對象不可指派'); return; }
+
+        const token=f.querySelector('input[name="__RequestVerificationToken"]')?.value||'';
+        btn.disabled=true; btn.classList.add('disabled');
+        try{
+          const r=await fetch(f.action,{
+            method:'POST',
+            body:new FormData(f),
+            credentials:'same-origin',
+            headers:{'X-Requested-With':'XMLHttpRequest','RequestVerificationToken':token}
+          });
+          if(!r.ok){
+            const txt=await r.text();
+            alert(txt||'指派失敗'); btn.disabled=false; btn.classList.remove('disabled'); return;
+          }
+          // 通知父頁關閉並刷新
+          parent?.postMessage({ type:'modal:done' }, '*');
+        }catch{
+          alert('連線失敗'); btn.disabled=false; btn.classList.remove('disabled');
+        }
+      });
+    })();
+</script>

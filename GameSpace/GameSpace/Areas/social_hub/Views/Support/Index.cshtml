@@ -1,0 +1,386 @@
+﻿@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Xsrf
+
+@{
+    var tokens = Xsrf.GetAndStoreTokens(Context);
+
+    ViewData["Title"] = "客服工作台";
+    var meId = ViewBag.MeManagerId as int?;
+    bool canDispatch =
+        (ViewBag.CanAssignToOthers as bool?) ??
+        (ViewBag.CanDispatch as bool?) ??
+        false;
+}
+<meta name="request-verification-token" content="@tokens.RequestToken" />
+
+@section Styles {
+    <style>
+        /* ===== Host 用 Flex，內容不出內部直向滾動，高度交由 JS 量測後設定 ===== */
+        .ticket-host {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+            .ticket-host .table-zone {
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow: hidden; /* 僅保留橫向由 .table-responsive 處理 */
+            }
+
+            .ticket-host .table-responsive {
+                height: 100%;
+                overflow-y: hidden;
+            }
+            /* 壓縮列高（更扁一點） */
+            .ticket-host table.table > :not(caption) > * > * {
+                padding: .35rem .5rem;
+            }
+
+            /* 分頁貼底靠右 */
+            .ticket-host .pagination-wrap {
+                margin-top: auto;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding-right: .25rem;
+            }
+
+            .ticket-host .pagination {
+                margin-bottom: 0;
+            }
+
+        /* ===== 頁首：標題 + 搜尋同列、縮高 ===== */
+        .page-head {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-bottom: .5rem;
+            flex-wrap: wrap;
+        }
+
+            .page-head h4 {
+                margin: 0;
+            }
+
+            .page-head .searchbar {
+                margin-left: auto;
+                max-width: 420px;
+            }
+    </style>
+}
+
+<div class="page-head">
+    <h4>@ViewData["Title"]</h4>
+    <div class="input-group input-group-sm searchbar">
+        <span class="input-group-text">搜尋</span>
+        <input id="q" name="q" type="text" class="form-control" placeholder="可輸入工單ID、會員ID或主旨關鍵字">
+        <button id="btnSearch" class="btn btn-outline-secondary">查詢</button>
+    </div>
+</div>
+
+<ul class="nav nav-tabs" id="support-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-assigned" data-bs-toggle="tab" data-bs-target="#pane-assigned" type="button" role="tab" aria-controls="pane-assigned" aria-selected="true">
+            指派給我 <span class="badge bg-light text-dark ms-1" id="count-assigned">—</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-unassigned" data-bs-toggle="tab" data-bs-target="#pane-unassigned" type="button" role="tab" aria-controls="pane-unassigned" aria-selected="false">
+            未指派 <span class="badge bg-light text-dark ms-1" id="count-unassigned">—</span>
+        </button>
+    </li>
+    @if (canDispatch)
+    {
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-inprogress" data-bs-toggle="tab" data-bs-target="#pane-inprogress" type="button" role="tab" aria-controls="pane-inprogress" aria-selected="false">
+                未完成 <span class="badge bg-light text-dark ms-1" id="count-inprogress">—</span>
+            </button>
+        </li>
+    }
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-closed" data-bs-toggle="tab" data-bs-target="#pane-closed" type="button" role="tab" aria-controls="pane-closed" aria-selected="false">
+            已結單 <span class="badge bg-light text-dark ms-1" id="count-closed">—</span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom p-3" id="support-tabsContent">
+    <div class="tab-pane fade show active" id="pane-assigned" role="tabpanel" aria-labelledby="tab-assigned">
+        <div id="host-assigned" class="ticket-host">載入中…</div>
+    </div>
+    <div class="tab-pane fade" id="pane-unassigned" role="tabpanel" aria-labelledby="tab-unassigned">
+        <div id="host-unassigned" class="ticket-host">載入中…</div>
+    </div>
+    @if (canDispatch)
+    {
+        <div class="tab-pane fade" id="pane-inprogress" role="tabpanel" aria-labelledby="tab-inprogress">
+            <div id="host-inprogress" class="ticket-host">載入中…</div>
+        </div>
+    }
+    <div class="tab-pane fade" id="pane-closed" role="tabpanel" aria-labelledby="tab-closed">
+        <div id="host-closed" class="ticket-host">載入中…</div>
+    </div>
+</div>
+
+@* ===== 詳細資料 Modal（仍使用 iframe 載頁面） ===== *@
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">詳細資料</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="detailFrame" class="w-100" style="height:70vh;border:0;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ===== 轉單 Modal（以 Partial 動態載入，不用 iframe） ===== *@
+<div class="modal fade" id="reassignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">指派他人 / 轉單</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reassignPanel">載入中…</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const qBox = document.getElementById('q');
+        const btnSearch = document.getElementById('btnSearch');
+
+        function qs() {
+          const q = (qBox.value || '').trim();
+          return q ? ('&q=' + encodeURIComponent(q)) : '';
+        }
+
+        async function loadCounts() {
+          const r = await fetch('@Url.Action("GetCounts")');
+          if (!r.ok) return;
+          const x = await r.json();
+          document.getElementById('count-assigned').innerText   = x.assigned   ?? '0';
+          document.getElementById('count-unassigned').innerText = x.unassigned ?? '0';
+          const ip = document.getElementById('count-inprogress'); if (ip) ip.innerText = x.inprogress ?? '0';
+          document.getElementById('count-closed').innerText     = x.closed     ?? '0';
+        }
+
+        // ===== 量測 host 內的 table 實際列高，固定顯示 TARGET_ROWS 列 =====
+        const TARGET_ROWS = 10;
+        const SAFETY_PX   = 10;
+
+        function fixHostHeight(host){
+          const table = host.querySelector('table');
+          const pager = host.querySelector('.pagination-wrap');
+          if(!table || !pager){ return; }
+
+          const thead = table.tHead?.rows?.[0];
+          const headerH = thead ? thead.getBoundingClientRect().height : 40;
+
+          let rowH = 44;
+          const tb = table.tBodies && table.tBodies[0];
+          if (tb && tb.rows.length) {
+            let total = 0, n = Math.min(3, tb.rows.length);
+            for (let i = 0; i < n; i++) total += tb.rows[i].getBoundingClientRect().height;
+            rowH = Math.max(36, total / n);
+          }
+
+          const pagerH = pager.getBoundingClientRect().height || 40;
+          const target = Math.ceil(headerH + rowH * TARGET_ROWS + pagerH + SAFETY_PX);
+          host.style.height = target + 'px';
+        }
+
+        function recalcAllHosts(){
+          document.querySelectorAll('.ticket-host').forEach(fixHostHeight);
+        }
+
+        // ===== AJAX 渲染 partial
+        async function render(hostId, url) {
+          const host = document.getElementById(hostId);
+          host.innerHTML = '載入中…';
+          const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+          host.innerHTML = await r.text();
+          fixHostHeight(host);
+        }
+
+        const renderAssigned   = (p)=> render('host-assigned',   '@Url.Action("ListAssigned")?page='   + (p||1) + qs());
+        const renderUnassigned = (p)=> render('host-unassigned', '@Url.Action("ListUnassigned")?page=' + (p||1) + qs());
+        const renderInProgress = (p)=> render('host-inprogress', '@Url.Action("ListInProgress")?page=' + (p||1) + qs());
+        const renderClosed     = (p)=> render('host-closed',     '@Url.Action("ListClosed")?page='     + (p||1) + qs());
+
+        // 攔截 partial 內的分頁連結
+        function wirePaging(hostId, renderFn) {
+          const host = document.getElementById(hostId);
+          if (!host) return;
+          host.addEventListener('click', (e) => {
+            const a = e.target.closest('a.page-link');
+            if (!a) return;
+            e.preventDefault();
+            try {
+              const u = new URL(a.getAttribute('href') || a.href, location.origin);
+              const p = parseInt(u.searchParams.get('page') || '1', 10);
+              renderFn(p);
+              loadCounts();
+            } catch {
+              renderFn(1);
+            }
+          });
+        }
+
+        // ===== 防偽 Token for AJAX（指派給我用） =====
+        function getRvt() {
+          const m = document.querySelector('meta[name="request-verification-token"]');
+          return m ? m.content : '';
+        }
+
+        // ===== 指派給我（事件委派） =====
+        document.getElementById('support-tabsContent').addEventListener('click', async (e) => {
+          const btnAssignMe = e.target.closest('.btn-assign-me');
+          if (btnAssignMe) {
+            e.preventDefault();
+            if (btnAssignMe.classList.contains('disabled') || btnAssignMe.hasAttribute('disabled')) return;
+
+            const id = btnAssignMe.getAttribute('data-id');
+            if (!id) return;
+
+            try {
+              const r = await fetch('@Url.Action("AssignToMe")', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'RequestVerificationToken': getRvt()
+                },
+                body: new URLSearchParams({ id })
+              });
+
+              if (r.ok) {
+                const activeId = document.querySelector('#support-tabs button.nav-link.active')?.id;
+                if (activeId === 'tab-unassigned')      renderUnassigned(1);
+                else if (activeId === 'tab-inprogress') renderInProgress(1);
+                else if (activeId === 'tab-closed')     renderClosed(1);
+                else                                    renderAssigned(1);
+                loadCounts();
+              } else {
+                const msg = await r.text();
+                alert(msg || '指派失敗');
+              }
+            } catch (ex) {
+              console.error(ex);
+              alert('網路錯誤，請稍後再試');
+            }
+          }
+
+          // 詳細資料 modal
+          const aDetail = e.target.closest('a.btn-detail');
+          if (aDetail) {
+            const url = aDetail.getAttribute('data-detail-url');
+            if (url) {
+              e.preventDefault();
+              const f = document.getElementById('detailFrame');
+              if (f) f.src = url;
+              const modalEl = document.getElementById('detailModal');
+              if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            }
+          }
+        });
+
+        // ===== 轉單：載入部分檢視進 Modal（不用 iframe） =====
+        const reassignModalEl = document.getElementById('reassignModal');
+        const reassignPanel   = document.getElementById('reassignPanel');
+
+        document.getElementById('support-tabsContent').addEventListener('click', async (e) => {
+          const aReassign = e.target.closest('a.btn-reassign');
+          if (!aReassign) return;
+
+          const url = aReassign.getAttribute('data-reassign-url') || aReassign.getAttribute('href');
+          if (!url || aReassign.classList.contains('disabled')) return;
+
+          e.preventDefault();
+          reassignPanel.innerHTML = '載入中…';
+
+          const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'modal=1', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          reassignPanel.innerHTML = await r.text();
+
+          bootstrap.Modal.getOrCreateInstance(reassignModalEl).show();
+        });
+
+        // 轉單表單 AJAX 提交
+        reassignModalEl.addEventListener('submit', async (e) => {
+          const form = e.target.closest('form#reassignForm');
+          if (!form) return;
+
+          e.preventDefault();
+
+          try {
+            const r = await fetch(form.action, {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }, // Anti-forgery 已在表單內
+              body: new FormData(form)
+            });
+
+            if (r.ok) {
+              bootstrap.Modal.getOrCreateInstance(reassignModalEl).hide();
+
+              const activeId = document.querySelector('#support-tabs button.nav-link.active')?.id;
+              if (activeId === 'tab-unassigned')      renderUnassigned(1);
+              else if (activeId === 'tab-inprogress') renderInProgress(1);
+              else if (activeId === 'tab-closed')     renderClosed(1);
+              else                                    renderAssigned(1);
+              loadCounts();
+            } else {
+              const msg = await r.text();
+              alert(msg || '轉單失敗');
+            }
+          } catch (ex) {
+            console.error(ex);
+            alert('網路錯誤，請稍後再試');
+          }
+        });
+
+        // 搜尋按 Enter
+        qBox.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ btnSearch.click(); } });
+
+        // 搜尋按鈕
+        btnSearch.addEventListener('click', () => {
+          const activeId = document.querySelector('#support-tabs button.nav-link.active')?.id;
+          if (activeId === 'tab-unassigned') renderUnassigned(1);
+          else if (activeId === 'tab-inprogress') renderInProgress(1);
+          else if (activeId === 'tab-closed') renderClosed(1);
+          else renderAssigned(1);
+          loadCounts();
+        });
+
+        // Tab 切換
+        document.getElementById('tab-assigned').addEventListener('shown.bs.tab', () => { renderAssigned(1); loadCounts(); });
+        document.getElementById('tab-unassigned').addEventListener('shown.bs.tab', () => { renderUnassigned(1); loadCounts(); });
+        const tabIp = document.getElementById('tab-inprogress');
+        if (tabIp) tabIp.addEventListener('shown.bs.tab', () => { renderInProgress(1); loadCounts(); });
+        document.getElementById('tab-closed').addEventListener('shown.bs.tab', () => { renderClosed(1); loadCounts(); });
+
+        // 初次載入
+        document.addEventListener('DOMContentLoaded', () => {
+          renderAssigned(1);
+          loadCounts();
+
+          // 綁分頁攔截
+          wirePaging('host-assigned',   renderAssigned);
+          wirePaging('host-unassigned', renderUnassigned);
+          wirePaging('host-inprogress', renderInProgress);
+          wirePaging('host-closed',     renderClosed);
+
+          // 視窗尺寸變更時重算高度（字體縮放等）
+          new ResizeObserver(recalcAllHosts).observe(document.body);
+        });
+    </script>
+}

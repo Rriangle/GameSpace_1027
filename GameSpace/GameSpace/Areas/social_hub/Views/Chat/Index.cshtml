@@ -1,0 +1,171 @@
+﻿@using GameSpace.Areas.social_hub.Models.ViewModels
+@model GameSpace.Areas.social_hub.Models.ViewModels.ChatHomeVM
+@{
+    ViewData["Title"] = "聊天中心";
+}
+@section Styles {
+    <link href="~/lib/social_hub/css/chat-1to1.css" rel="stylesheet" />
+    <style>
+        /* 左側「聯絡人」卡片：固定高度 + 內層滾動 */
+        .contact-pane {
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .contact-pane .pane-header {
+            flex: 0 0 auto;
+            border-bottom: 1px solid #e9ecef;
+            padding: .5rem .75rem;
+        }
+        .contact-pane .pane-body {
+            flex: 1 1 auto;
+            overflow: auto; /* 只讓內層列表滾動 */
+        }
+        #contactList .btn {
+            border-radius: 0;
+            padding: .5rem .75rem;
+        }
+
+        /* 右側列表外觀一致 */
+        .card-like {
+            background: #fff;
+            border-radius: .25rem;
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+        }
+
+        /* 手機略降高度，避免太擠 */
+        @@media (max-width: 576px) {
+            .contact-pane { height: 60vh; }
+        }
+    </style>
+}
+
+<div class="container my-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="mb-0">聊天中心</h3>
+        <div class="small text-muted">總未讀：<span id="unreadTotal">0</span></div>
+    </div>
+
+    <div class="row g-3">
+        <!-- 左側：聯絡人（固定高度、內層滾動） -->
+        <div class="col-12 col-md-3">
+            <div class="contact-pane card-like">
+                <div class="pane-header d-flex justify-content-between align-items-center">
+                    <strong>聯絡人</strong>
+                </div>
+                <div class="pane-body">
+                    <ul id="contactList" class="list-unstyled mb-0">
+                        <li class="px-2 py-2 text-muted">載入中…</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：最近對話 -->
+        <div class="col-12 col-md-9">
+            <div class="card-like">
+                <div class="p-2 border-bottom"><strong>最近對話</strong></div>
+                <ul class="list-group list-group-flush">
+                    @if (Model?.Conversations?.Any() == true)
+                    {
+                        foreach (var c in Model.Conversations)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a class="text-decoration-none" asp-action="With" asp-route-otherId="@c.OtherId">
+                                    與 @c.OtherId 的對話
+                                    @if (!string.IsNullOrWhiteSpace(c.LastPreview))
+                                    {
+                                        <small class="text-muted ms-2">@c.LastPreview</small>
+                                    }
+                                </a>
+                                <span class="badge bg-danger @(c.UnreadCount > 0 ? "" : "d-none")"
+                                      data-unread-conv="@c.ConversationId">@c.UnreadCount</span>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-muted">尚無對話紀錄</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          const $ = s => document.querySelector(s);
+          const contactList = $("#contactList");
+          const unreadTotal = $("#unreadTotal");
+
+          async function ensureSignalR(){
+            if (window.signalR) return true;
+            const cdns = [
+              "https://cdn.jsdelivr.net/npm/%40microsoft/signalr%408.0.5/dist/browser/signalr.min.js",
+              "https://unpkg.com/%40microsoft/signalr%408.0.5/dist/browser/signalr.min.js"
+            ];
+            for (const src of cdns){
+              try{
+                await new Promise((res,rej)=>{
+                  const s=document.createElement("script");
+                  s.src=src; s.defer=true; s.onload=res; s.onerror=rej;
+                  document.head.appendChild(s);
+                });
+                if (window.signalR) return true;
+              }catch{}
+            }
+            return false;
+          }
+
+          async function loadContacts(){
+            try{
+              const r = await fetch("/social_hub/Chat/Contacts");
+              const arr = await r.json();
+              contactList.innerHTML = "";
+              if (!Array.isArray(arr) || arr.length===0){
+                contactList.innerHTML = `<li class="px-2 py-2 text-muted">沒有好友</li>`; return;
+              }
+              for (const c of arr){
+                const label = c.nick ? `[${c.nick}] ${c.name}` : (c.name ?? `User ${c.id}`);
+                const li = document.createElement("li");
+                li.innerHTML = `
+                  <a class="btn w-100 text-start d-flex justify-content-between align-items-center"
+                     href="/social_hub/Chat/With?otherId=${c.id}">
+                    <span>${label}</span>
+                    ${c.unread > 0 ? `<span class="badge bg-danger">${c.unread}</span>` : ""}
+                  </a>`;
+                contactList.appendChild(li);
+              }
+            }catch{
+              contactList.innerHTML = `<li class="px-2 py-2 text-danger">載入失敗</li>`;
+            }
+          }
+
+          async function refreshUnread(){
+            try{
+              const r = await fetch("/social_hub/Chat/UnreadSummary");
+              if(!r.ok) return;
+              const data = await r.json();
+              unreadTotal.textContent = data.total ?? 0;
+            }catch{}
+          }
+
+          loadContacts();
+          refreshUnread();
+
+          (async () => {
+            const ok = await ensureSignalR();
+            if (!ok) return;
+            const conn = new signalR.HubConnectionBuilder()
+              .withUrl("/social_hub/chatHub").withAutomaticReconnect().build();
+            conn.on("UnreadUpdate", data => {
+              if (data && typeof data.total === "number")
+                unreadTotal.textContent = String(data.total);
+            });
+            try{ await conn.start(); }catch{}
+          })();
+        })();
+    </script>
+}

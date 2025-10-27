@@ -1,0 +1,28 @@
+﻿<!-- 數據表格組件 -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">@ViewBag.TableTitle</h6>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="refreshData">
+                <i class="fas fa-sync-alt"></i> 重新整理
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success" id="exportData">
+                <i class="fas fa-download"></i> 匯出
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="@ViewBag.TableId" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        @Html.Raw(ViewBag.TableHeaders)
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 數據將通過 AJAX 載入 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

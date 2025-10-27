@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "小遊戲管理系統 - 登入";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0 text-center">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form action="/Login" method="post" class="mt-3">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label for="ManagerAccount" class="form-label">管理者帳號</label>
+                            <input name="ManagerAccount" id="ManagerAccount" class="form-control" autocomplete="username" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ManagerPassword" class="form-label">密碼</label>
+                            <input name="ManagerPassword" id="ManagerPassword" type="password" class="form-control" autocomplete="current-password" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">登入</button>
+                            <button type="button" id="fillDemoBtn" class="btn btn-outline-secondary">
+                                最高管理者資料填入
+                            </button>
+                            <button type="button" id="secondRole" class="btn btn-outline-secondary">
+                                使用者與論壇管理者資料填入
+                            </button>
+                            <button type="button" id="shoppingRole" class="btn btn-outline-secondary">
+                                商城與購物管理者資料填入
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        //最高管理者資料填入
+        (function () {
+            const btn = document.getElementById('fillDemoBtn');
+            btn?.addEventListener('click', function () {
+                const acc = document.getElementById('ManagerAccount');
+                const pwd = document.getElementById('ManagerPassword');
+                if (acc) acc.value = 'zhang_zhiming_01';
+                if (pwd) pwd.value = 'AdminPass001@@';
+                acc?.focus();
+            });
+
+            // 使用者與論壇管理者資料填入
+            const secondRoleBtn = document.getElementById('secondRole');
+            secondRoleBtn?.addEventListener('click', function () {
+                const acc = document.getElementById('ManagerAccount');
+                const pwd = document.getElementById('ManagerPassword');
+                if (acc) acc.value = 'li_xiaohua_02';
+                if (pwd) pwd.value = 'SecurePass002#';
+                acc?.focus();
+            });
+            
+            // 商城與購物管理者資料填入
+            const shoppingRoleBtn = document.getElementById('shoppingRole');
+            shoppingRoleBtn?.addEventListener('click', function () {
+                const acc = document.getElementById('ManagerAccount');
+                const pwd = document.getElementById('ManagerPassword');
+                if (acc) acc.value = 'wang_meiling_03';
+                if (pwd) pwd.value = 'StrongPwd003!'; 
+                acc?.focus();
+            });
+        })();
+    </script>
+} 

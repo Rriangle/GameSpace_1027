@@ -1,0 +1,49 @@
+﻿@using GameSpace.Areas.OnlineStore.ViewModels
+@using GameSpace.Areas.OnlineStore.ViewModels.Common
+@model IEnumerable<GameSpace.Areas.OnlineStore.ViewModels.RankingRowVM>
+@{
+    var paging = (PagingVM)ViewBag.Paging;
+}
+@if (!(Model?.Any() ?? false))
+{
+    <div class="text-muted">無資料</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Period</th>
+                    <th>Date</th>
+                    <th>ProductId</th>
+                    <th>Metric</th>
+                    <th>Pos</th>
+                    <th>Value</th>
+                    <th>Amount</th>
+                    <th>Volume</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model)
+                {
+                    <tr>
+                        <td>@x.RankingId</td>
+                        <td>@x.PeriodType</td>
+                        <td>@x.RankingDate.ToString("yyyy/MM/dd")</td>
+                        <td>@x.ProductId</td>
+                        <td>@x.RankingMetric</td>
+                        <td>@x.RankingPosition</td>
+                        <td>@x.MetricValueNum</td>
+                        <td>@x.TradingAmount</td>
+                        <td>@x.TradingVolume</td>
+                        <td class="text-truncate" style="max-width:320px">@x.MetricNote</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="text-end text-muted small">共 @paging.Total 筆，頁 @paging.Page</div>
+}

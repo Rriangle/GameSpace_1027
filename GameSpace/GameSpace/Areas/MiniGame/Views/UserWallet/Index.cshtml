@@ -1,0 +1,302 @@
+﻿@{
+    ViewData["Title"] = "我的錢包";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-wallet mr-2 text-primary"></i>我的錢包
+        </h1>
+        <div class="d-flex">
+            <span class="badge badge-success mr-2 shadow-sm">
+                <i class="fas fa-circle text-success"></i> 正常
+            </span>
+            <button class="btn btn-outline-primary btn-sm" onclick="refreshWallet()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+
+    <!-- 錢包統計卡片 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2 hover-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">點數餘額</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="pointsBalance">載入中...</div>
+                            <div class="text-xs text-muted">較昨日 <span class="text-success">+50</span></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2 hover-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">優惠券</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="couponsCount">載入中...</div>
+                            <div class="text-xs text-muted">可使用 <span class="text-success">3張</span></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ticket-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2 hover-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">電子券</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="eVouchersCount">載入中...</div>
+                            <div class="text-xs text-muted">總價值 <span class="text-info">NT$ 300</span></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gift fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2 hover-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">本月獲得</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="monthlyEarned">載入中...</div>
+                            <div class="text-xs text-muted">較上月 <span class="text-warning">+15.2%</span></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 錢包內容 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <ul class="nav nav-tabs card-header-tabs" id="walletTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="points-tab" data-toggle="tab" href="#points" role="tab">
+                                <i class="fas fa-coins"></i> 點數記錄
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="coupons-tab" data-toggle="tab" href="#coupons" role="tab">
+                                <i class="fas fa-ticket-alt"></i> 我的優惠券
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="evouchers-tab" data-toggle="tab" href="#evouchers" role="tab">
+                                <i class="fas fa-gift"></i> 我的電子券
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="walletTabsContent">
+                        <!-- 點數記錄 -->
+                        <div class="tab-pane fade show active" id="points" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="pointsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>時間</th>
+                                            <th>類型</th>
+                                            <th>金額</th>
+                                            <th>餘額</th>
+                                            <th>備註</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>2024-01-15 14:30</td>
+                                            <td><span class="badge badge-success">簽到獎勵</span></td>
+                                            <td class="text-success font-weight-bold">+10</td>
+                                            <td>1,500</td>
+                                            <td>每日簽到</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-01-15 13:45</td>
+                                            <td><span class="badge badge-info">遊戲獎勵</span></td>
+                                            <td class="text-success font-weight-bold">+50</td>
+                                            <td>1,490</td>
+                                            <td>小遊戲高分</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-01-15 12:20</td>
+                                            <td><span class="badge badge-warning">任務完成</span></td>
+                                            <td class="text-success font-weight-bold">+100</td>
+                                            <td>1,440</td>
+                                            <td>完成每日任務</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2024-01-15 10:15</td>
+                                            <td><span class="badge badge-primary">購買道具</span></td>
+                                            <td class="text-danger font-weight-bold">-200</td>
+                                            <td>1,340</td>
+                                            <td>購買寵物食物</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 優惠券 -->
+                        <div class="tab-pane fade" id="coupons" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-success">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-ticket-alt fa-3x text-success mb-3"></i>
+                                            <h5 class="card-title">滿額折扣券</h5>
+                                            <p class="card-text">滿 NT$ 500 享 9 折優惠</p>
+                                            <span class="badge badge-success">可使用</span>
+                                            <p class="text-muted small mt-2">到期日: 2024-02-15</p>
+                                            <button class="btn btn-success btn-sm">使用</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-ticket-alt fa-3x text-info mb-3"></i>
+                                            <h5 class="card-title">免運券</h5>
+                                            <p class="card-text">免運費優惠</p>
+                                            <span class="badge badge-info">可使用</span>
+                                            <p class="text-muted small mt-2">到期日: 2024-02-20</p>
+                                            <button class="btn btn-info btn-sm">使用</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-ticket-alt fa-3x text-warning mb-3"></i>
+                                            <h5 class="card-title">新用戶優惠券</h5>
+                                            <p class="card-text">首次購買享 8 折優惠</p>
+                                            <span class="badge badge-warning">可使用</span>
+                                            <p class="text-muted small mt-2">到期日: 2024-03-01</p>
+                                            <button class="btn btn-warning btn-sm">使用</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 電子券 -->
+                        <div class="tab-pane fade" id="evouchers" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-gift fa-3x text-primary mb-3"></i>
+                                            <h5 class="card-title">現金券</h5>
+                                            <p class="card-text">NT$ 100</p>
+                                            <span class="badge badge-primary">未使用</span>
+                                            <p class="text-muted small mt-2">到期日: 2024-03-15</p>
+                                            <button class="btn btn-primary btn-sm">查看</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-success">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-gift fa-3x text-success mb-3"></i>
+                                            <h5 class="card-title">商品券</h5>
+                                            <p class="card-text">NT$ 200</p>
+                                            <span class="badge badge-success">未使用</span>
+                                            <p class="text-muted small mt-2">到期日: 2024-04-01</p>
+                                            <button class="btn btn-success btn-sm">查看</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-gift fa-3x text-info mb-3"></i>
+                                            <h5 class="card-title">點數券</h5>
+                                            <p class="card-text">500 點數</p>
+                                            <span class="badge badge-info">未使用</span>
+                                            <p class="text-muted small mt-2">到期日: 2024-05-01</p>
+                                            <button class="btn btn-info btn-sm">查看</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    $(document).ready(function() {
+        // 模擬載入數據
+        setTimeout(function() {
+            $("#pointsBalance").text("1,500");
+            $("#couponsCount").text("5");
+            $("#eVouchersCount").text("3");
+            $("#monthlyEarned").text("800");
+        }, 1000);
+        
+        // 初始化 DataTable
+        $("#pointsTable").DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+            },
+            "pageLength": 10,
+            "order": [[0, "desc"]],
+            "columnDefs": [
+                { "orderable": false, "targets": 4 }
+            ]
+        });
+        
+        // 添加載入動畫
+        $(".card").each(function(index) {
+            $(this).css("animation-delay", (index * 0.1) + "s");
+            $(this).addClass("fade-in");
+        });
+    });
+    
+    function refreshWallet() {
+        // 顯示載入動畫
+        $("#loadingSpinner").addClass("show");
+        
+        // 模擬刷新數據
+        setTimeout(function() {
+            $("#loadingSpinner").removeClass("show");
+            // 重新載入錢包數據
+            loadWalletData();
+            console.log("錢包數據已刷新");
+        }, 1000);
+    }
+</script>
+
+
+
+

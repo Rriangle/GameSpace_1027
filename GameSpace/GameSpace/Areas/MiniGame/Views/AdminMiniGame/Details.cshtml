@@ -1,0 +1,258 @@
+@model GameSpace.Models.MiniGame
+
+@{
+    ViewData["Title"] = "遊戲記錄詳情";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-gamepad me-2"></i>遊戲記錄詳情
+                    </h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("ViewGameRecords", "AdminMiniGame")" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>返回列表
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>基本資訊</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th width="30%">遊戲ID</th>
+                                    <td>@Model.PlayId</td>
+                                </tr>
+                                <tr>
+                                    <th>用戶ID</th>
+                                    <td>@Model.UserId</td>
+                                </tr>
+                                <tr>
+                                    <th>用戶名稱</th>
+                                    <td>@(Model.User?.UserName ?? "未知")</td>
+                                </tr>
+                                <tr>
+                                    <th>寵物ID</th>
+                                    <td>@Model.PetId</td>
+                                </tr>
+                                <tr>
+                                    <th>關卡</th>
+                                    <td>@Model.Level</td>
+                                </tr>
+                                <tr>
+                                    <th>怪物數量</th>
+                                    <td>@Model.MonsterCount</td>
+                                </tr>
+                                <tr>
+                                    <th>速度倍率</th>
+                                    <td>@Model.SpeedMultiplier</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>遊戲結果</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th width="30%">遊戲結果</th>
+                                    <td>
+                                        @switch (Model.Result)
+                                        {
+                                            case "Win":
+                                            case "勝利":
+                                                <span class="badge badge-success">勝利</span>
+                                                break;
+                                            case "Lose":
+                                            case "失敗":
+                                                <span class="badge badge-danger">失敗</span>
+                                                break;
+                                            case "Abort":
+                                            case "中止":
+                                                <span class="badge badge-warning">中止</span>
+                                                break;
+                                            default:
+                                                <span class="badge badge-secondary">@Model.Result</span>
+                                                break;
+                                        }
+                                        @if (Model.Aborted)
+                                        {
+                                            <span class="badge badge-dark ms-1">已中止</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>獲得經驗值</th>
+                                    <td>
+                                        @if (Model.ExpGained > 0)
+                                        {
+                                            <span class="font-weight-bold text-success">+@Model.ExpGained</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="font-weight-bold text-secondary">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>獲得點數</th>
+                                    <td>
+                                        @if (Model.PointsGained > 0)
+                                        {
+                                            <span class="font-weight-bold text-success">+@Model.PointsGained</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="font-weight-bold text-secondary">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>優惠券獲得</th>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.CouponGained) && Model.CouponGained != "0")
+                                        {
+                                            <span class="font-weight-bold text-info">+@Model.CouponGained</span>
+                                            @if (Model.CouponGainedTime != default(DateTime))
+                                            {
+                                                <small class="text-muted d-block">獲得時間: @Model.CouponGainedTime.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="font-weight-bold text-secondary">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h5>時間資訊</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th width="20%">開始時間</th>
+                                    <td>@Model.StartTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                </tr>
+                                <tr>
+                                    <th>結束時間</th>
+                                    <td>
+                                        @if (Model.EndTime.HasValue)
+                                        {
+                                            @Model.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                                            <small class="text-muted d-block">
+                                                遊戲時長: @((Model.EndTime.Value - Model.StartTime).TotalMinutes.ToString("F1")) 分鐘
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">未完成</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    @if (Model.ExpGainedTime != default(DateTime) || Model.PointsGainedTime != default(DateTime))
+                    {
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h5>獎勵時間</h5>
+                                <table class="table table-bordered">
+                                    @if (Model.ExpGainedTime != default(DateTime))
+                                    {
+                                        <tr>
+                                            <th width="20%">經驗值獲得時間</th>
+                                            <td>@Model.ExpGainedTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        </tr>
+                                    }
+                                    @if (Model.PointsGainedTime != default(DateTime))
+                                    {
+                                        <tr>
+                                            <th>點數獲得時間</th>
+                                            <td>@Model.PointsGainedTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h5>寵物狀態變化</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th width="20%">飢餓變化</th>
+                                    <td>
+                                        @if (Model.HungerDelta != 0)
+                                        {
+                                            <span class="@(Model.HungerDelta > 0 ? "text-success" : "text-danger")">
+                                                @(Model.HungerDelta > 0 ? "+" : "")@Model.HungerDelta
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>心情變化</th>
+                                    <td>
+                                        @if (Model.MoodDelta != 0)
+                                        {
+                                            <span class="@(Model.MoodDelta > 0 ? "text-success" : "text-danger")">
+                                                @(Model.MoodDelta > 0 ? "+" : "")@Model.MoodDelta
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>體力變化</th>
+                                    <td>
+                                        @if (Model.StaminaDelta != 0)
+                                        {
+                                            <span class="@(Model.StaminaDelta > 0 ? "text-success" : "text-danger")">
+                                                @(Model.StaminaDelta > 0 ? "+" : "")@Model.StaminaDelta
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>清潔變化</th>
+                                    <td>
+                                        @if (Model.CleanlinessDelta != 0)
+                                        {
+                                            <span class="@(Model.CleanlinessDelta > 0 ? "text-success" : "text-danger")">
+                                                @(Model.CleanlinessDelta > 0 ? "+" : "")@Model.CleanlinessDelta
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

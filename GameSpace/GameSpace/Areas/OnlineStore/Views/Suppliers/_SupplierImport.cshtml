@@ -1,0 +1,15 @@
+﻿<div data-panel-title="匯入供應商（CSV）">
+    <form method="post" class="js-ajax" enctype="multipart/form-data"
+          action="@Url.Action("ImportCsv","Suppliers", new { area="OnlineStore" })">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label class="form-label">選擇 CSV 檔案</label>
+            <input type="file" name="file" class="form-control" accept=".csv,text/csv" />
+            <div class="form-text">欄位：<code>SupplierName</code></div>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">關閉</button>
+            <button type="submit" class="btn btn-primary">開始匯入</button>
+        </div>
+    </form>
+</div>

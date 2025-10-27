@@ -1,0 +1,115 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.CsAgentEditVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "客服資料";
+    // 這兩個旗標由 Controller 決定（例如：只能看自己的時候就全唯讀）
+    bool isReadOnly = Model?.IsReadOnly ?? true;
+    bool allowToggle = Model?.AllowToggleActive ?? false;            // 是否允許改啟用
+    bool allowEditMax = Model?.AllowEditMaxConcurrent ?? false;      // 是否允許改同時上限
+}
+
+<div class="mutes-header">
+    <h2 class="mutes-title">
+        <span>@ViewData["Title"]</span>
+        @if (isReadOnly)
+        {
+            <span class="badge rounded-pill badge-readonly" title="此頁面為唯讀模式">唯讀</span>
+        }
+        else
+        {
+            <span class="badge rounded-pill badge-manage" title="可以修改欄位">可編輯</span>
+        }
+    </h2>
+    <div class="mutes-subtle">
+        <i class="far fa-id-badge me-1"></i>
+        管理員：@Model?.ManagerName（ID: @Model?.ManagerId）
+    </div>
+</div>
+
+<partial name="~/Areas/social_hub/Views/Mutes/_Toast.cshtml" />
+
+<div class="mutes-card">
+    <div class="card-body">
+        <form asp-area="social_hub"
+              asp-controller="CsPermissions"
+              asp-action="EditAgent"
+              method="post"
+              class="js-prevent-double-submit">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="AgentId" />
+            <input type="hidden" asp-for="ManagerId" />
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label">管理員名稱</label>
+                    <input class="form-control" value="@Model?.ManagerName" readonly />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label">管理員 ID</label>
+                    <input class="form-control" value="@Model?.ManagerId" readonly />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="form-check form-switch mt-4">
+                        <input asp-for="IsActive"
+                               class="form-check-input"
+                               disabled="@(isReadOnly || !allowToggle)" />
+                        <label asp-for="IsActive" class="form-check-label">啟用</label>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label asp-for="MaxConcurrent" class="form-label">同時處理上限</label>
+                    <input asp-for="MaxConcurrent"
+                           class="form-control"
+                           type="number" min="1" max="50"
+                           disabled="@(isReadOnly || !allowEditMax)" />
+                    <div class="form-text">建議 1–50；預設 5。</div>
+                </div>
+
+                @* 顯示（唯讀）時間資訊（如你 VM 有帶） *@
+                @if (Model?.CreatedAt != null || Model?.UpdatedAt != null)
+                {
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">建立時間</label>
+                                <input class="form-control"
+                                       value="@(Model?.CreatedAt?.ToString("yyyy/MM/dd HH:mm") ?? "-")" readonly />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">最後更新</label>
+                                <input class="form-control"
+                                       value="@(Model?.UpdatedAt?.ToString("yyyy/MM/dd HH:mm") ?? "-")" readonly />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <a class="btn btn-secondary"
+                   asp-area="social_hub" asp-controller="CsPermissions" asp-action="Index">
+                    <i class="fas fa-arrow-left me-1"></i>返回
+                </a>
+
+                @if (!isReadOnly && (allowToggle || allowEditMax))
+                {
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>儲存
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/lib/social_hub/css/mutes.css" rel="stylesheet" asp-append-version="true" />
+}
+@section Scripts {
+    <script src="~/lib/social_hub/js/mutes.js" asp-append-version="true"></script>
+}

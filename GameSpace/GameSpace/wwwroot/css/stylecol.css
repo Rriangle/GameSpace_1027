@@ -1,0 +1,41 @@
+﻿
+/* 深灰背景 */
+.custom-bg-dark {
+    background-color: #2c2c2c !important;
+}
+
+/* Sidebar 基本樣式 */
+#sidebar {
+    width: 250px;
+    transition: width 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+    #sidebar.collapsed {
+        width: 0; /* 收縮 */
+    }
+
+    #sidebar .flex-grow-1 {
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+/* Content Wrapper 自動填滿 */
+#content-wrapper {
+    flex-grow: 1;
+    transition: margin-left 0.3s ease;
+}
+
+#sidebar.collapsed ~ #content-wrapper {
+    margin-left: 0;
+}
+
+/* Toggle Button 左下固定 */
+#sidebarToggle {
+    position: fixed; /* 固定位置 */
+    bottom: 1rem; /* 與底部間距 */
+    left: 1rem; /* 與左側間距 */
+    z-index: 1050;
+}

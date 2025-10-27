@@ -1,0 +1,55 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.CodePrefixVM
+@{
+    var isEdit = Model.Id > 0;
+}
+<div class="modal fade" id="modalHost" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">
+                    <i class="bi bi-braces-asterisk me-2"></i>@(isEdit ? "編輯前綴規則" : "新增前綴規則")
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="prefixForm" method="post" action="@Url.Action(isEdit? "PrefixEdit":"PrefixCreate","CodeCenter",new{area="OnlineStore"})">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">前綴代碼（1–10）</label>
+                        <input class="form-control" name="Prefix" value="@Model.Prefix" maxlength="10" required />
+                        <div class="form-text">建議 2 碼，例：GM、OT。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">商品類型</label>
+                        <input class="form-control" name="ProductType" value="@Model.ProductType" maxlength="50" required />
+                        <div class="form-text">例：game / notgame。</div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label">流水號長度（1–30）</label>
+                        <input class="form-control" type="number" min="1" max="30" name="PadLength" value="@Model.PadLength" />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('prefixForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const resp = await fetch(form.action, { method:'POST', body: new FormData(form) });
+      const data = await resp.json();
+      if(data.ok){
+        location.reload();
+      }else{
+        alert(data.message || '發生錯誤');
+      }
+    });
+</script>

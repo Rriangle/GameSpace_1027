@@ -1,0 +1,88 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.EntityFrameworkCore
+@using GameSpace.Models
+@inject GameSpacedatabaseContext Db
+
+@{
+    var adminAuth = await Context.AuthenticateAsync("AdminCookie");
+    var principal = (User?.Identity?.IsAuthenticated == true && User.HasClaim(c => c.Type == "IsManager" && c.Value == "true")) ? User : (adminAuth?.Principal ?? User);
+    bool isAuthed = principal?.Identity?.IsAuthenticated == true;
+    int? managerId = null;
+    var idStr = principal?.FindFirst("ManagerId")?.Value ?? principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? principal?.FindFirst("uid")?.Value;
+    if (int.TryParse(idStr, out var parsed)) managerId = parsed;
+    bool hasMiniGameAccess = principal?.HasClaim("perm:Pet", "true") ?? false;
+    if (!hasMiniGameAccess && isAuthed && managerId.HasValue) {
+        var mid = managerId.Value;
+        var flags = await Db.ManagerRolePermissions.Where(p => p.Managers.Any(m => m.ManagerId == mid)).Select(p => new { p.PetRightsManagement }).ToListAsync();
+        hasMiniGameAccess = flags.Any(x => x.PetRightsManagement == true);
+    }
+}
+
+@if (isAuthed && hasMiniGameAccess) {
+    <div class="sb-sidenav-menu-heading">小遊戲管理系統</div>
+
+    <!-- 儀表板 -->
+    <a class="nav-link" asp-area="MiniGame" asp-controller="AdminHome" asp-action="Index">
+        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>儀表板
+    </a>
+
+    <!-- 會員錢包 (7個按鈕) -->
+    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWallet" aria-expanded="false">
+        <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>會員錢包
+        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+    </a>
+    <div class="collapse" id="collapseWallet">
+        <nav class="sb-sidenav-menu-nested nav">
+            <a class="nav-link" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="PointsQuery">查詢會員點數</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="CouponsQuery">查詢會員擁有商城優惠券</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="EVouchersQuery">查詢會員擁有電子禮券</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="GrantPoints">調整會員點數</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="GrantCoupon">調整會員擁有商城優惠券</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="AdjustEVoucher">調整會員擁有電子禮券</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="WalletHistory">查看會員收支明細</a>
+        </nav>
+    </div>
+
+    <!-- 簽到系統 (2個按鈕) -->
+    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSignIn" aria-expanded="false">
+        <div class="sb-nav-link-icon"><i class="fas fa-calendar-check"></i></div>簽到系統
+        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+    </a>
+    <div class="collapse" id="collapseSignIn">
+        <nav class="sb-sidenav-menu-nested nav">
+            <a class="nav-link" asp-area="MiniGame" asp-controller="SignInAdmin" asp-action="RuleSettings">簽到規則設定</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="SignInAdmin" asp-action="Records">查看會員簽到紀錄</a>
+        </nav>
+    </div>
+
+    <!-- 寵物系統 (3個按鈕) -->
+    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePets" aria-expanded="false">
+        <div class="sb-nav-link-icon"><i class="fas fa-paw"></i></div>寵物系統
+        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+    </a>
+    <div class="collapse" id="collapsePets">
+        <nav class="sb-sidenav-menu-nested nav">
+            <a class="nav-link" asp-area="MiniGame" asp-controller="AdminPet" asp-action="SystemRules">整體寵物系統規則設定</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="AdminPet" asp-action="IndividualSettings">會員個別寵物設定</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="AdminPet" asp-action="QueryPets">會員個別寵物基本資料查詢</a>
+        </nav>
+    </div>
+
+    <!-- 小遊戲系統 (2個按鈕) -->
+    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMiniGames" aria-expanded="false">
+        <div class="sb-nav-link-icon"><i class="fas fa-gamepad"></i></div>小遊戲系統
+        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+    </a>
+    <div class="collapse" id="collapseMiniGames">
+        <nav class="sb-sidenav-menu-nested nav">
+            <a class="nav-link" asp-area="MiniGame" asp-controller="AdminMiniGame" asp-action="GameRules">遊戲規則設定</a>
+            <a class="nav-link" asp-area="MiniGame" asp-controller="AdminMiniGame" asp-action="ViewGameRecords">查看會員遊戲紀錄</a>
+        </nav>
+    </div>
+} else {
+    <div class="sb-sidenav-menu-heading">權限不足</div>
+    <div class="nav-link text-muted">
+        <div class="sb-nav-link-icon"><i class="fas fa-exclamation-triangle"></i></div>您沒有權限訪問此區域
+    </div>
+}

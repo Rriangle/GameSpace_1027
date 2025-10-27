@@ -1,0 +1,116 @@
+﻿@model GameSpace.Areas.MiniGame.Models.EVoucherCreateModel
+@{
+    ViewData["Title"] = "新增電子禮券";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">新增電子禮券</h1>
+        <a href="@Url.Action("Index", "AdminEVoucher")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <!-- 新增表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">電子禮券資訊</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" id="createForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="EVoucherCode" class="control-label">禮券編號</label>
+                            <input asp-for="EVoucherCode" class="form-control" placeholder="請輸入禮券編號" />
+                            <span asp-validation-for="EVoucherCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="UserId" class="control-label">會員ID</label>
+                            <input asp-for="UserId" class="form-control" placeholder="請輸入會員ID" />
+                            <span asp-validation-for="UserId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Value" class="control-label">禮券面額</label>
+                            <input asp-for="Value" class="form-control" type="number" step="0.01" min="0" placeholder="請輸入金額" />
+                            <span asp-validation-for="Value" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ExpiryDate" class="control-label">到期日期</label>
+                            <input asp-for="ExpiryDate" class="form-control" type="date" />
+                            <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="IsUsed" class="control-label">使用狀態</label>
+                            <select asp-for="IsUsed" class="form-control">
+                                <option value="false">未使用</option>
+                                <option value="true">已使用</option>
+                            </select>
+                            <span asp-validation-for="IsUsed" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="UsedDate" class="control-label">使用日期</label>
+                            <input asp-for="UsedDate" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="UsedDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Description" class="control-label">描述說明</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="請輸入禮券說明"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 新增禮券
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> 重設
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetForm() {
+    document.getElementById("createForm").reset();
+}
+
+// 自動生成禮券編號
+document.addEventListener("DOMContentLoaded", function() {
+    const codeInput = document.getElementById("EVoucherCode");
+    if (!codeInput.value) {
+        const now = new Date();
+        const timestamp = now.getTime().toString().slice(-8);
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        codeInput.value = "EV" + timestamp + random;
+    }
+});
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

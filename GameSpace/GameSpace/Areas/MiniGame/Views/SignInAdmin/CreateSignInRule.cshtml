@@ -1,0 +1,133 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.SignInRuleInputModel
+@{
+    ViewData["Title"] = "新增簽到規則";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fas fa-plus-circle me-2"></i>新增簽到規則</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="CreateSignInRule" method="post">
+                @Html.AntiForgeryToken()
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>說明：</strong>設定連續簽到達到指定天數時，會員可獲得的獎勵。
+                </div>
+
+                <!-- 簽到天數 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="SignInDay" class="form-label">連續簽到天數 <span class="text-danger">*</span></label>
+                        <input asp-for="SignInDay" type="number" min="1" max="365" class="form-control" placeholder="例如：7 表示連續簽到第 7 天" />
+                        <span asp-validation-for="SignInDay" class="text-danger"></span>
+                        <small class="text-muted">範圍：1 到 365 天</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="IsActive" class="form-label">是否啟用</label>
+                        <div class="form-check form-switch mt-2">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                            <label asp-for="IsActive" class="form-check-label">
+                                啟用此規則
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 獎勵設定 -->
+                <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-gift me-2"></i>獎勵內容</h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Points" class="form-label">獎勵點數 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input asp-for="Points" type="number" min="0" class="form-control" placeholder="0" />
+                            <span class="input-group-text">點</span>
+                        </div>
+                        <span asp-validation-for="Points" class="text-danger"></span>
+                        <small class="text-muted">不可為負數</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Experience" class="form-label">獎勵經驗值 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input asp-for="Experience" type="number" min="0" class="form-control" placeholder="0" />
+                            <span class="input-group-text">EXP</span>
+                        </div>
+                        <span asp-validation-for="Experience" class="text-danger"></span>
+                        <small class="text-muted">不可為負數</small>
+                    </div>
+                </div>
+
+                <!-- 優惠券設定 -->
+                <div class="mb-3">
+                    <label asp-for="CouponTypeCode" class="form-label">優惠券類型代碼</label>
+                    <input asp-for="CouponTypeCode" class="form-control" placeholder="選填，例如：SIGNIN7DAY" />
+                    <span asp-validation-for="CouponTypeCode" class="text-danger"></span>
+                    <small class="text-muted">若不發放優惠券請留空。最多 50 字元。</small>
+                </div>
+
+                <!-- 規則說明 -->
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">規則說明</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="選填，例如：連續簽到 7 天獎勵"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                    <small class="text-muted">最多 500 字元</small>
+                </div>
+
+                <!-- 預覽區 -->
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-eye me-2"></i>規則預覽</h6>
+                        <p class="card-text mb-1">
+                            <strong>連續簽到 <span id="preview-days">-</span> 天</strong>，可獲得：
+                        </p>
+                        <ul class="mb-0">
+                            <li>點數：<span id="preview-points">-</span> 點</li>
+                            <li>經驗值：<span id="preview-exp">-</span> EXP</li>
+                            <li>優惠券：<span id="preview-coupon">無</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="mt-4 border-top pt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>儲存規則
+                    </button>
+                    <a asp-action="SignInRules" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // 即時預覽
+        function updatePreview() {
+            const days = document.querySelector('input[name="SignInDay"]').value || '-';
+            const points = document.querySelector('input[name="Points"]').value || '0';
+            const exp = document.querySelector('input[name="Experience"]').value || '0';
+            const coupon = document.querySelector('input[name="CouponTypeCode"]').value || '無';
+
+            document.getElementById('preview-days').textContent = days;
+            document.getElementById('preview-points').textContent = points;
+            document.getElementById('preview-exp').textContent = exp;
+            document.getElementById('preview-coupon').textContent = coupon;
+        }
+
+        document.querySelector('input[name="SignInDay"]').addEventListener('input', updatePreview);
+        document.querySelector('input[name="Points"]').addEventListener('input', updatePreview);
+        document.querySelector('input[name="Experience"]').addEventListener('input', updatePreview);
+        document.querySelector('input[name="CouponTypeCode"]').addEventListener('input', updatePreview);
+
+        // 初始化預覽
+        updatePreview();
+    </script>
+}

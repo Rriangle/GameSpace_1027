@@ -1,0 +1,29 @@
+﻿/* Topbar2 橫幅：固定框高、圖片 cover 填滿且不外露 */
+.topbar-2 {
+    margin-top: 0;
+    background: #fff;
+    border-bottom: 1px solid #e9ecef;
+    padding-top: 16px;
+    padding-bottom: 20px
+}
+
+    .topbar-2 .hero-box {
+        aspect-ratio: var(--banner-aspect);
+        max-height: var(--banner-max-h);
+        width: 100%;
+        border: 1px solid #e9ecef;
+        border-radius: .75rem;
+        overflow: hidden;
+        clip-path: inset(0 round .75rem);
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+        background-color: #fff;
+    }
+/* 右側欄 sticky（xxl+） */
+@media (min-width:1400px) {
+    .right-rail {
+        position: sticky;
+        top: calc(var(--topbar-h) + var(--topbar-gap))
+    }
+}

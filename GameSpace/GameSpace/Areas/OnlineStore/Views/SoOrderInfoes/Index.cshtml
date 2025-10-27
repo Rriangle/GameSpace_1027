@@ -1,0 +1,161 @@
+﻿@using GameSpace.Models.ViewModels   
+@model IEnumerable<OrderListItemVm>   
+@* <!-- 用 VM，不是 SoOrderInfo --> *@
+
+@{
+    ViewData["Title"] = "訂單查詢";
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" />
+
+<style>
+  #orderTable th:nth-child(1), #orderTable td:nth-child(1) { width: 180px; }  /* 訂單編號 */
+  #orderTable th:nth-child(2), #orderTable td:nth-child(2) { width: 120px; }  /* 會員ID */
+  #orderTable th:nth-child(3), #orderTable td:nth-child(3) { width: 160px; }  /* 訂單日期 */
+  #orderTable th:nth-child(4), #orderTable td:nth-child(4) { width: 120px; }  /* 出貨狀態 */
+  #orderTable th:nth-child(5), #orderTable td:nth-child(5) { width: 100px; text-align:right; } /* 總金額 */
+  #orderTable th:nth-child(6), #orderTable td:nth-child(6) { width: 90px; }   /* 操作 */
+</style>
+
+<div class="container mt-4">
+  <h3 class="mb-3">📦 訂單查詢</h3>
+
+    <form class="row g-2 mb-3" id="orderSearchForm">
+        <div class="col-auto">
+            <input type="date" id="startDate" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <input type="date" id="endDate" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <input type="text" id="qSearch" class="form-control" placeholder="訂單編號/會員ID（支援模糊）" />
+        </div>
+        <div class="col-auto">
+            <button type="button" id="btnSearch" class="btn btn-primary">搜尋</button>
+            <a href="#" id="btnClear" class="btn btn-outline-secondary">清除</a>
+        </div>
+    </form>
+
+  <table id="orderTable" class="table table-striped table-bordered align-middle" style="width:100%">
+    <thead class="table-light">
+      <tr>
+        <th>訂單編號</th>
+        <th>會員ID</th>
+        <th>訂單日期</th>
+        <th>出貨狀態</th>
+        <th>總金額</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+      <tr>
+        <td>@(item.OrderCode ?? "—")</td>
+        <td>@item.UserId</td>
+        <td>@item.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+        <td><span class="badge @item.ShipmentBadgeClass">@item.ShipmentStatusText</span></td>
+        <td>@((item.GrandTotal ?? 0).ToString("N0"))</td>
+                    <td>
+                        @{
+                            var returnUrl = Context.Request.Path + Context.Request.QueryString;
+                        }
+                        <a href='@Url.Action("Details", "SoOrderInfoes", new { id = item.OrderId, returnUrl })'
+                           class="btn btn-sm btn-primary js-open-detail">明細</a>
+                    </td>
+      </tr>
+    }
+    </tbody>
+  </table>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script>
+        // --- 安全的日期字串解析：支援 "yyyy-MM-dd HH:mm"
+        function parseDateTimeLocal(str) {
+          if (!str) return null;
+          // 例如 "2025-10-16 09:30" -> "2025-10-16T09:30:00"
+          const iso = str.trim().replace(' ', 'T');
+          const d = new Date(/\d{2}:\d{2}$/.test(iso) ? iso + ':00' : iso);
+          return isNaN(d) ? null : d;
+        }
+
+        // 1) 日期區間本地端過濾（作用在第 3 欄「訂單日期」）
+        $.fn.dataTable.ext.search.push(function (settings, data) {
+          const cell = (data[2] || '').trim();           // data[2] = "yyyy-MM-dd HH:mm"
+          const ts = parseDateTimeLocal(cell);
+          if (!ts) return true;
+
+          const s = $('#startDate').val();
+          const e = $('#endDate').val();
+          if (s) { const sd = new Date(s + 'T00:00:00'); if (ts < sd) return false; }
+          if (e) { const ed = new Date(e + 'T23:59:59'); if (ts > ed) return false; }
+          return true;
+        });
+
+        $(function () {
+          // 2) 初始化 DataTable
+          const table = $('#orderTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/zh-HANT.json" },
+            order: [[2, "desc"]],
+            stateSave: true,
+            stateDuration: -1,
+            search: { smart: true, caseInsensitive: true }
+          });
+
+          // 3) 阻止表單 submit（完全改用前端）
+          $('#orderSearchForm').on('submit', function (e) { e.preventDefault(); });
+
+          // 4) 正確版 debounce（保留 this 與 args）
+          function debounce(fn, ms = 200) {
+            let t;
+            return function (...args) {
+              const ctx = this;
+              clearTimeout(t);
+              t = setTimeout(() => fn.apply(ctx, args), ms);
+            };
+          }
+
+          // 5) q 搜尋：即時模糊搜尋（不刷新）
+          $('#qSearch').on('input', debounce(function () {
+            table.search(this.value || '').draw();
+          }, 200));
+
+          // 6) 日期區間：按下搜尋才套用（減少重繪）
+          $('#btnSearch').on('click', function () {
+            table.draw();
+          });
+
+          // 7) 清除：清空欄位 + 還原 DataTables 搜尋
+          $('#btnClear').on('click', function (e) {
+            e.preventDefault();
+            $('#startDate').val('');
+            $('#endDate').val('');
+            $('#qSearch').val('');
+            table.search('').draw();
+          });
+
+          // 8) 明細彈窗（保持原本 opener 行為）
+          document.addEventListener('click', function (e) {
+            const a = e.target.closest('.js-open-detail');
+            if (!a) return;
+            e.preventDefault();
+            const w = 1000, h = 720;
+            const y = Math.max(0, (window.outerHeight - h) / 2 + (window.screenY || 0));
+            const x = Math.max(0, (window.outerWidth  - w) / 2 + (window.screenX || 0));
+            window.open(a.href, 'order-detail',
+              `width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=no,status=no`);
+          });
+        });
+    </script>
+}

@@ -1,0 +1,84 @@
+﻿@* ============================================================
+   頁面：社群 Hub 的通知測試頁（按鈕傳參數版）
+   功能：
+     - 不需要表單與輸入欄位，直接用 <button> 的 data-* 屬性帶參數
+     - 以 fetch() POST JSON 給 /social_hub/notifications/ajax
+     - 後端服務層（NotificationStore）做驗證，通過就寫入資料庫
+   注意：
+     1) Anti-Forgery：
+        - 若控制器動作有 [ValidateAntiForgeryToken]，就必須在 Header 帶 Token
+        - Program.cs 需設定：builder.Services.AddAntiforgery(o => o.HeaderName = "RequestVerificationToken");
+        - 頁面需輸出：@Html.AntiForgeryToken()
+     2) JSON 鍵名大小寫：
+        - 這頁 JavaScript 以小駝峰鍵名處理（notificationId / reason）
+        - 控制器也會以小駝峰輸出，避免前後端對不上
+     3) data-* 命名規則（HTML 屬性不分大小寫，但「一致的小寫+短橫線」較不易踩雷）
+        - data-aaa-bbb 對應到 JS 的 dataset.aaaBbb
+     4) 同站 Cookie：
+        - fetch 設 credentials: 'same-origin'，能帶上同站 Cookie（若將來開啟授權/認證很重要）
+   ============================================================ *@
+@{
+    ViewData["Title"] = "通知測試（按鈕傳參數）";
+
+    // 用 Url.Action 產生 API 的正確路徑（避免部署在虛擬目錄時，相對路徑出錯）
+    var ajaxUrl = Url.Action("Ajax", "Notifications", new { area = "social_hub" });
+}
+
+<div class="container py-4">
+    <h2 class="mb-3">通知測試（按鈕傳參數）</h2>
+
+    @* 只有在控制器動作有 [ValidateAntiForgeryToken] 時才需要
+       - 這行會在頁面上生成隱藏欄位 __RequestVerificationToken
+       - 稍後 JS 會讀取它並放到自訂 Header "RequestVerificationToken" *@
+    @Html.AntiForgeryToken()
+
+    @* ----------------------------------------------------------------
+       每顆有 [data-notify] 的 <button> 就是一組通知指令模板。
+       可用 data-* 屬性（都可省略；服務層會做存在性與長度驗證）：
+       - data-source-id         (int)    通知來源，須存在 NotificationSources
+       - data-action-id         (int)    通知動作，須存在 NotificationActions
+       - data-to-user-id        (int?)   收件人：使用者（與 to-manager-id 擇一，至少要有其一）
+       - data-to-manager-id     (int?)   收件人：管理員
+       - data-group-id          (int?)   群組（可省略）
+       - data-sender-user-id    (int?)   寄件人：使用者（可省略）
+       - data-sender-manager-id (int?)   寄件人：管理員（可省略）
+       - data-title             (string) 標題（≤100）
+       - data-message           (string) 內容（≤255，可空）
+       ---------------------------------------------------------------- *@
+    <div class="d-flex flex-column gap-2">
+
+        @* 範例 1：發給「使用者」的通知
+           ⭕ 建議使用全小寫短橫線（data-sender-manager-id），JS 會自動映射為 dataset.senderManagerId *@
+        <button class="btn btn-primary"
+                data-notify
+                data-url="@ajaxUrl"
+                data-source-id="1"
+                data-action-id="1"
+                data-to-user-id="10000001"
+                data-sender-manager-id="30000001"
+                data-title="系統通知"
+                data-message="這是一則測試通知（發給使用者）">
+            發通知：使用者 #10000001
+        </button>
+
+        @* 範例 2：發給「管理員」的通知 *@
+        <button class="btn btn-outline-primary"
+                data-notify
+                data-url="@ajaxUrl"
+                data-source-id="1"
+                data-action-id="2"
+                data-to-manager-id="30000001"
+                data-title="後台提醒"
+                data-message="這是一則測試通知（發給管理員）">
+            發通知：管理員 #30000001
+        </button>
+
+        @* 需要更多按鈕？複製上面其中一顆，改 data-* 值即可 *@
+    </div>
+
+    <div id="status" class="mt-3 small text-muted"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/social_hub/notify.js"></script>
+}

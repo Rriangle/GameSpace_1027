@@ -1,0 +1,215 @@
+﻿@{
+    ViewData["Title"] = "遊戲統計分析";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-chart-bar mr-2"></i>遊戲統計分析
+        </h1>
+        <div class="d-flex">
+            <a href="@Url.Action("Index")" class="btn btn-secondary mr-2">
+                <i class="fas fa-arrow-left"></i> 返回
+            </a>
+        </div>
+    </div>
+
+    <!-- 統計卡片 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">總遊戲次數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalGamePlays</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gamepad fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">總發放點數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalPointsAwarded</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">活躍玩家數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActivePlayers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">平均遊戲時長</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.AverageGameDuration 分鐘</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 圖表區域 -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">每日遊戲次數趨勢</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="dailyGameChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">遊戲結果分布</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="gameResultChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細統計表格 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">詳細統計資料</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>統計項目</th>
+                                    <th>數值</th>
+                                    <th>說明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>總遊戲次數</td>
+                                    <td>@Model.TotalGamePlays</td>
+                                    <td>所有用戶的遊戲總次數</td>
+                                </tr>
+                                <tr>
+                                    <td>總發放點數</td>
+                                    <td>@Model.TotalPointsAwarded</td>
+                                    <td>遊戲獎勵發放的總點數</td>
+                                </tr>
+                                <tr>
+                                    <td>活躍玩家數</td>
+                                    <td>@Model.ActivePlayers</td>
+                                    <td>最近30天有遊戲記錄的玩家數</td>
+                                </tr>
+                                <tr>
+                                    <td>平均遊戲時長</td>
+                                    <td>@Model.AverageGameDuration 分鐘</td>
+                                    <td>單次遊戲的平均時長</td>
+                                </tr>
+                                <tr>
+                                    <td>最高單次得分</td>
+                                    <td>@Model.HighestScore</td>
+                                    <td>單次遊戲的最高得分</td>
+                                </tr>
+                                <tr>
+                                    <td>平均得分</td>
+                                    <td>@Model.AverageScore</td>
+                                    <td>所有遊戲記錄的平均得分</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 每日遊戲次數趨勢圖
+    var ctx = document.getElementById("dailyGameChart").getContext("2d");
+    var dailyGameChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.DailyGameCounts.Keys)),
+            datasets: [{
+                label: '遊戲次數',
+                data: @Html.Raw(Json.Serialize(Model.DailyGameCounts.Values)),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // 遊戲結果分布圖
+    var ctx2 = document.getElementById("gameResultChart").getContext("2d");
+    var gameResultChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['勝利', '失敗', '平局'],
+            datasets: [{
+                data: [@Model.WinCount, @Model.LoseCount, @Model.DrawCount],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 205, 86, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+</script>
+

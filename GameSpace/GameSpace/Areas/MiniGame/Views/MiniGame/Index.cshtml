@@ -1,0 +1,277 @@
+﻿@{
+    ViewData["Title"] = "小遊戲管理";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">小遊戲管理</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="搜尋遊戲...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-primary" id="addGameBtn">
+                                <i class="fas fa-plus"></i> 新增遊戲
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="gameTable">
+                            <thead>
+                                <tr>
+                                    <th>遊戲ID</th>
+                                    <th>遊戲名稱</th>
+                                    <th>遊戲類型</th>
+                                    <th>難度等級</th>
+                                    <th>獎勵點數</th>
+                                    <th>狀態</th>
+                                    <th>創建時間</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 遊戲數據將動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/編輯遊戲模態框 -->
+<div class="modal fade" id="gameModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gameModalTitle">新增遊戲</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="gameForm">
+                    <input type="hidden" id="gameId" name="Id">
+                    <div class="form-group">
+                        <label for="gameName">遊戲名稱</label>
+                        <input type="text" class="form-control" id="gameName" name="GameName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gameType">遊戲類型</label>
+                        <select class="form-control" id="gameType" name="GameType" required>
+                            <option value="">請選擇遊戲類型</option>
+                            <option value="1">益智遊戲</option>
+                            <option value="2">動作遊戲</option>
+                            <option value="3">策略遊戲</option>
+                            <option value="4">休閒遊戲</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="difficultyLevel">難度等級</label>
+                        <select class="form-control" id="difficultyLevel" name="DifficultyLevel" required>
+                            <option value="1">簡單</option>
+                            <option value="2">中等</option>
+                            <option value="3">困難</option>
+                            <option value="4">專家</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="rewardPoints">獎勵點數</label>
+                        <input type="number" class="form-control" id="rewardPoints" name="RewardPoints" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">遊戲描述</label>
+                        <textarea class="form-control" id="description" name="Description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">狀態</label>
+                        <select class="form-control" id="status" name="Status" required>
+                            <option value="1">啟用</option>
+                            <option value="0">停用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveGameBtn">儲存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadGames();
+            
+            $('#addGameBtn').click(function() {
+                $('#gameModalTitle').text('新增遊戲');
+                $('#gameForm')[0].reset();
+                $('#gameId').val('');
+                $('#gameModal').modal('show');
+            });
+            
+            $('#saveGameBtn').click(function() {
+                saveGame();
+            });
+            
+            $('#searchBtn').click(function() {
+                loadGames();
+            });
+            
+            $('#searchInput').keypress(function(e) {
+                if (e.which == 13) {
+                    loadGames();
+                }
+            });
+        });
+        
+        function loadGames() {
+            var searchTerm = $('#searchInput').val();
+            $.ajax({
+                url: '/MiniGame/MiniGame/GetGames',
+                type: 'GET',
+                data: { search: searchTerm },
+                success: function(data) {
+                    var tbody = $('#gameTable tbody');
+                    tbody.empty();
+                    
+                    if (data && data.length > 0) {
+                        $.each(data, function(index, game) {
+                            var row = '<tr>' +
+                                '<td>' + game.id + '</td>' +
+                                '<td>' + game.gameName + '</td>' +
+                                '<td>' + getGameTypeName(game.gameType) + '</td>' +
+                                '<td>' + getDifficultyName(game.difficultyLevel) + '</td>' +
+                                '<td>' + game.rewardPoints + '</td>' +
+                                '<td>' + (game.status ? '啟用' : '停用') + '</td>' +
+                                '<td>' + formatDate(game.createdAt) + '</td>' +
+                                '<td>' +
+                                    '<button class="btn btn-sm btn-primary edit-game" data-id="' + game.id + '">編輯</button> ' +
+                                    '<button class="btn btn-sm btn-danger delete-game" data-id="' + game.id + '">刪除</button>' +
+                                '</td>' +
+                            '</tr>';
+                            tbody.append(row);
+                        });
+                    } else {
+                        tbody.append('<tr><td colspan="8" class="text-center">無數據</td></tr>');
+                    }
+                },
+                error: function() {
+                    alert('載入遊戲數據失敗');
+                }
+            });
+        }
+        
+        function saveGame() {
+            var formData = $('#gameForm').serialize();
+            var isEdit = $('#gameId').val() !== '';
+            var url = isEdit ? '/MiniGame/MiniGame/Update' : '/MiniGame/MiniGame/Create';
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        $('#gameModal').modal('hide');
+                        loadGames();
+                        alert(isEdit ? '遊戲更新成功' : '遊戲新增成功');
+                    } else {
+                        alert('操作失敗: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('操作失敗');
+                }
+            });
+        }
+        
+        function getGameTypeName(type) {
+            switch(type) {
+                case 1: return '益智遊戲';
+                case 2: return '動作遊戲';
+                case 3: return '策略遊戲';
+                case 4: return '休閒遊戲';
+                default: return '未知';
+            }
+        }
+        
+        function getDifficultyName(level) {
+            switch(level) {
+                case 1: return '簡單';
+                case 2: return '中等';
+                case 3: return '困難';
+                case 4: return '專家';
+                default: return '未知';
+            }
+        }
+        
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            return date.toLocaleDateString('zh-TW');
+        }
+        
+        // 編輯遊戲
+        $(document).on('click', '.edit-game', function() {
+            var gameId = $(this).data('id');
+            $.ajax({
+                url: '/MiniGame/MiniGame/Get/' + gameId,
+                type: 'GET',
+                success: function(game) {
+                    $('#gameModalTitle').text('編輯遊戲');
+                    $('#gameId').val(game.id);
+                    $('#gameName').val(game.gameName);
+                    $('#gameType').val(game.gameType);
+                    $('#difficultyLevel').val(game.difficultyLevel);
+                    $('#rewardPoints').val(game.rewardPoints);
+                    $('#description').val(game.description);
+                    $('#status').val(game.status ? 1 : 0);
+                    $('#gameModal').modal('show');
+                },
+                error: function() {
+                    alert('載入遊戲資料失敗');
+                }
+            });
+        });
+        
+        // 刪除遊戲
+        $(document).on('click', '.delete-game', function() {
+            if (confirm('確定要刪除這個遊戲嗎？')) {
+                var gameId = $(this).data('id');
+                $.ajax({
+                    url: '/MiniGame/MiniGame/Delete/' + gameId,
+                    type: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            loadGames();
+                            alert('遊戲刪除成功');
+                        } else {
+                            alert('刪除失敗: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('刪除失敗');
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+

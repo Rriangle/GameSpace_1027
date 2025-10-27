@@ -1,0 +1,43 @@
+# === GameSpace 建議版 .gitattributes ===
+# 統一文字檔行尾，自動依平台正規化
+* text=auto
+
+# 重要：腳本在 Linux 需 LF
+*.sh      text eol=lf
+*.bash    text eol=lf
+*.ps1     text eol=crlf
+
+# 讓 Git diff 對 C# 友善（命令列支援）
+*.cs      diff=csharp
+
+# 常見二進位檔：不要做行尾或內容 diff
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.zip   binary
+*.7z    binary
+*.dll   binary
+*.pdb   binary
+*.exe   binary
+*.woff  binary
+*.woff2 binary
+*.eot   binary
+*.ttf   binary
+*.otf   binary
+*.nupkg binary
+*.snupkg binary
+
+# 專案與方案檔用文字合併（避免衝突時塞 binary）
+*.sln    text eol=crlf
+*.csproj text eol=crlf
+*.props  text eol=crlf
+*.targets text eol=crlf
+*.json   text
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.md     text
+
+# === 規則完成 ===

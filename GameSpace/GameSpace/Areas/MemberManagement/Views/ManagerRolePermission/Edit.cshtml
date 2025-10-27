@@ -1,0 +1,64 @@
+﻿@model GameSpace.Areas.MemberManagement.Models.ManagerRolePermissionVM
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>ManagerRolePermissionVM</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ManagerRoleId" />
+            <div class="form-group">
+                <label asp-for="RoleName" class="control-label"></label>
+                <input asp-for="RoleName" class="form-control" />
+                <span asp-validation-for="RoleName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AdministratorPrivilegesManagement" class="control-label"></label>
+                <input asp-for="AdministratorPrivilegesManagement" class="form-control" />
+                <span asp-validation-for="AdministratorPrivilegesManagement" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserStatusManagement" class="control-label"></label>
+                <input asp-for="UserStatusManagement" class="form-control" />
+                <span asp-validation-for="UserStatusManagement" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShoppingPermissionManagement" class="control-label"></label>
+                <input asp-for="ShoppingPermissionManagement" class="form-control" />
+                <span asp-validation-for="ShoppingPermissionManagement" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MessagePermissionManagement" class="control-label"></label>
+                <input asp-for="MessagePermissionManagement" class="form-control" />
+                <span asp-validation-for="MessagePermissionManagement" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PetRightsManagement" class="control-label"></label>
+                <input asp-for="PetRightsManagement" class="form-control" />
+                <span asp-validation-for="PetRightsManagement" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CustomerService" class="control-label"></label>
+                <input asp-for="CustomerService" class="form-control" />
+                <span asp-validation-for="CustomerService" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

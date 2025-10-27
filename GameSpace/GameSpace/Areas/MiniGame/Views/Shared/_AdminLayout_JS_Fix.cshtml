@@ -1,0 +1,42 @@
+﻿    <!-- 自定義JavaScript -->
+    <script>
+        // 確保所有JavaScript依賴都已載入
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化DataTables
+            if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
+                var dataTables = document.querySelectorAll('.data-table');
+                dataTables.forEach(function(table) {
+                    jQuery(table).DataTable({
+                        language: {
+                            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json'
+                        },
+                        responsive: true,
+                        pageLength: 10,
+                        order: [[0, 'desc']]
+                    });
+                });
+            }
+            
+            // 鍵盤導航支援
+            var interactiveElements = document.querySelectorAll('a, button');
+            interactiveElements.forEach(function(element) {
+                element.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        element.click();
+                    }
+                });
+            });
+            
+            // 無障礙設計支援
+            var formElements = document.querySelectorAll('input, button, select, textarea');
+            formElements.forEach(function(element) {
+                element.addEventListener('focus', function() {
+                    element.classList.add('focus-visible');
+                });
+                element.addEventListener('blur', function() {
+                    element.classList.remove('focus-visible');
+                });
+            });
+        });
+    </script>
+

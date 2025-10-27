@@ -1,0 +1,78 @@
+﻿@model GameSpace.Areas.MiniGame.Models.Settings.PetColorChangeSettings
+@{
+    ViewData["Title"] = "寵物換色點數設定詳情";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物換色點數設定詳情</h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">設定資訊</h6>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">設定ID</dt>
+                <dd class="col-sm-9">@Model.SettingId</dd>
+
+                <dt class="col-sm-3">設定名稱</dt>
+                <dd class="col-sm-9">@Model.SettingName</dd>
+
+                <dt class="col-sm-3">換色所需點數</dt>
+                <dd class="col-sm-9">@Model.PointsRequired.ToString("N0")</dd>
+
+                <dt class="col-sm-3">狀態</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge badge-success">啟用</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">停用</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">建立時間</dt>
+                <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+                @if (Model.UpdatedAt.HasValue)
+                {
+                    <dt class="col-sm-3">更新時間</dt>
+                    <dd class="col-sm-9">@Model.UpdatedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+                }
+
+                <dt class="col-sm-3">建立者ID</dt>
+                <dd class="col-sm-9">@Model.CreatedBy</dd>
+
+                @if (Model.UpdatedBy.HasValue)
+                {
+                    <dt class="col-sm-3">更新者ID</dt>
+                    <dd class="col-sm-9">@Model.UpdatedBy</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Remarks))
+                {
+                    <dt class="col-sm-3">備註</dt>
+                    <dd class="col-sm-9">@Model.Remarks</dd>
+                }
+            </dl>
+
+            <div class="form-group">
+                <a href="@Url.Action("Edit", new { id = Model.SettingId })" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> 編輯
+                </a>
+                <a href="@Url.Action("Delete", new { id = Model.SettingId })" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> 刪除
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

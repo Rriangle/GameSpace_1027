@@ -1,0 +1,442 @@
+﻿@model GameSpace.Areas.Admin.Controllers.MetricsController.MetricsIndexVm
+@using System.Text.Json
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@* @model GameSpace.Areas.Admin.Controllers.MetricsController.MetricsIndexVm
+@using System.Text.Json
+@using Microsoft.AspNetCore.Mvc.Rendering *@
+@{
+    ViewData["Title"] = "指標清單 / 排行預覽（Mrtrics等權重）";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (TempData["msg"] != null)
+{
+    <div class="alert alert-info">@Html.Raw(TempData["msg"])</div>
+}
+
+<!-- 篩選區 -->
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <select name="sourceId" class="form-select" asp-items="ViewBag.Sources">
+            <option value="" selected="@(ViewBag.SourceId == null ? "selected" : null)">全部來源</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <input class="form-control" type="text" name="q" value="@ViewBag.Q" placeholder="代碼/說明" />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary">查詢</button>
+        <a asp-action="Create" class="btn btn-success">新增</a>
+    </div>
+    <div class="d-flex gap-2 mb-3">
+        <a asp-area="Forum" asp-controller="Imports" asp-action="Defs" class="btn btn-outline-secondary">
+            匯入定義（Metrics/Mapping）
+        </a>
+        <a asp-area="Forum" asp-controller="Imports" asp-action="Daily" class="btn btn-outline-secondary">
+            匯入每日數據（JSON/Excel）
+        </a>
+    </div>
+</form>
+
+<div class="row g-4">
+    <!-- A. 指標清單 -->
+      <div id="metricsList" class="col-12 order-1">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Metrics 清單</h5>
+
+                <table class="table table-bordered table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width:70px;">ID</th>
+                            <th style="width:160px;">來源</th>
+                            <th style="width:120px;">代碼</th>
+                            <th style="width:80px;">單位</th>
+                            <th>說明</th>
+                            <th style="width:70px;">啟用</th>
+                            <th style="width:160px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var x in Model.List)
+                        {
+                            <tr>
+                                <td>@x.MetricId</td>
+                                <td>@x.SourceName (@x.SourceId)</td>
+                                <td class="text-monospace">@x.Code</td>
+                                <td>@x.Unit</td>
+                                <td class="text-truncate" title="@x.Description">@x.Description</td>
+                                <td>@(x.IsActive ? "✅" : "❌")</td>
+                               <td class="text-nowrap">
+  <div class="d-inline-flex align-items-center gap-2">
+    <a asp-action="Edit" asp-route-id="@x.MetricId" class="btn btn-sm btn-warning">編輯</a>
+    <form asp-action="ToggleActive" asp-route-id="@x.MetricId" method="post" class="m-0 p-0 d-inline">
+      <button class="btn btn-sm btn-secondary">啟用/停用</button>
+    </form>
+  </div>
+</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- B. 排行預覽（等權重） + 不重整更新 -->
+     <div id="previewSection" class="col-12 order-2">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title d-flex align-items-center justify-content-between">
+                    <span>排行榜預覽（等權重）</span>
+                    <small class="text-muted" id="previewDate">日期：@Model.TargetDate.ToString("yyyy-MM-dd")</small>
+                </h5>
+
+                <!-- 查詢表單（AJAX 攔截，不重整） -->
+                <form id="previewForm" method="get" class="row g-2 mb-3" aria-busy="false">
+                    <input type="hidden" name="sourceId" value="@ViewBag.SourceId" />
+                    <input type="hidden" name="q" value="@ViewBag.Q" />
+                    <div class="col-auto">
+                        <label class="form-label">日期</label>
+                        <input id="dateInput" type="date" name="date" value="@Model.TargetDate.ToString("yyyy-MM-dd")" class="form-control" />
+                    </div>
+                    <div class="col-auto align-self-end d-flex gap-2">
+                        <button id="btnPreview" class="btn btn-primary" type="submit">
+                            <span class="label">預覽</span>
+                            <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#previewModal">
+                            全螢幕預覽
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 表格（中文顯示） -->
+                <table class="table table-striped table-sm" id="previewTable">
+                    <thead>
+                        <tr><th style="width:40px;">#</th><th>遊戲</th><th style="width:120px;">Index</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Top10.Any())
+                        {
+                            var i = 1;
+                            foreach (var r in Model.Top10)
+                            {
+                                var display = string.IsNullOrWhiteSpace(r.DisplayName) ? r.GameName : r.DisplayName;
+                                <tr>
+                                    <td>@i</td>
+                                    <td class="text-truncate" title="@display">@display</td>
+                                    <td>@r.Score</td>
+                                </tr>
+                                i++;
+                            }
+                        }
+                        else
+                        {
+                            <tr class="text-muted empty-row"><td colspan="3">這一天沒有可計算的數據或沒有啟用任何指標。</td></tr>
+                        }
+                    </tbody>
+                </table>
+
+                <!-- 圖表區 -->
+                <div class="row">
+                    <div class="col-md-7 mb-3">
+                        <div class="border rounded p-2" style="height: 480px;">
+                            <canvas id="rankBar" aria-label="排行榜長條圖" role="img"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <div class="border rounded p-2" style="height: 480px;">
+                            <canvas id="sharePie" aria-label="占比圓餅圖" role="img"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 全螢幕預覽 Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-sm-down modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">排行榜全螢幕預覽</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-lg-8">
+                        <div class="border rounded p-2" style="height: 60vh;">
+                            <canvas id="rankBarFull"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="border rounded p-2 mb-3" style="height: 36vh;">
+                            <canvas id="sharePieFull"></canvas>
+                        </div>
+                        <!-- 小型排行（中文，1~10） -->
+                        <ol id="modalRankList" class="list-group list-group-numbered small" style="max-height:22vh; overflow:auto;">
+                            <!-- JS 動態填入 -->
+                        </ol>
+                    </div>
+                </div>
+                <div class="text-muted small mt-2">日期：<span id="modalDate"></span>（與頁面同步）</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // ====== 初始化資料（中文優先） ======
+        const initRows = @Html.Raw(JsonSerializer.Serialize(
+            Model.Top10.Select((x, idx) => new {
+                rank = idx + 1,
+                label = string.IsNullOrWhiteSpace(x.DisplayName) ? x.GameName : x.DisplayName,
+                value = Math.Round((double)x.Score, 4)
+            })
+        ));
+
+        const $tableBody = document.querySelector('#previewTable tbody');
+        const $previewDate = document.getElementById('previewDate');
+        const $btnPreview = document.getElementById('btnPreview');
+
+        // 建立 / 更新表格
+        function renderTable(labels, values) {
+            $tableBody.innerHTML = '';
+            if (!labels || labels.length === 0) {
+                $tableBody.innerHTML = '<tr class="text-muted empty-row"><td colspan="3">這一天沒有可計算的數據或沒有啟用任何指標。</td></tr>';
+                return;
+            }
+            labels.forEach((name, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${i + 1}</td><td class="text-truncate" title="${name}">${name}</td><td>${values[i]}</td>`;
+                $tableBody.appendChild(tr);
+            });
+        }
+        // 放在建立任何 Chart 之前
+function wrapLabel(label, maxPerLine = 8, maxLines = 2) {
+  const s = String(label);
+  if (s.length <= maxPerLine) return s;
+  const out = [];
+  for (let i = 0; i < s.length && out.length < maxLines; i += maxPerLine) {
+    out.push(s.slice(i, i + maxPerLine));
+  }
+  if (s.length > maxPerLine * maxLines) out[out.length - 1] += '…';
+  return out;
+}
+
+
+        // Chart.js：先建空圖，再填資料（方便後續 update）
+        const barCtx = document.getElementById('rankBar').getContext('2d');
+        const pieCtx = document.getElementById('sharePie').getContext('2d');
+
+
+        const barChart = new Chart(barCtx, {
+          type: 'bar',
+  data: { labels: [], datasets: [{ label: 'Index', data: [] }] },
+  options: {
+    indexAxis: 'y', // ← 橫向
+    maintainAspectRatio: false,
+    layout: { padding: { left: 8, right: 8, top: 6, bottom: 6 } },
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        ticks: {
+          autoSkip: false,
+          callback: function (value) {
+            const lbl = this.getLabelForValue ? this.getLabelForValue(value) : value;
+            return wrapLabel(lbl, 8, 2); // 每行 8 字、最多 2 行
+          }
+        }
+      },
+      x: { beginAtZero: true }
+    }
+  }
+});
+
+        const pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: { labels: [], datasets: [{ data: [] }] },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0) || 1;
+                                const v = ctx.parsed;
+                                const pct = (v / total * 100).toFixed(1);
+                                return `${ctx.label}: ${v} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 首次把伺服器資料灌進去
+        (function bootstrapFirstPaint() {
+            const labels = initRows.map(r => r.label);
+            const values = initRows.map(r => r.value);
+            barChart.data.labels = labels;
+            barChart.data.datasets[0].data = values;
+            barChart.update();
+
+            pieChart.data.labels = labels;
+            pieChart.data.datasets[0].data = values;
+            pieChart.update();
+
+            renderTable(labels, values);
+        })();
+
+        // ====== AJAX：攔截表單，不重整更新 ======
+        const form = document.getElementById('previewForm');
+
+        // 小工具：切換 loading 狀態
+        function setLoading(on) {
+            form.setAttribute('aria-busy', on ? 'true' : 'false');
+            const sp = $btnPreview.querySelector('.spinner-border');
+            const lb = $btnPreview.querySelector('.label');
+            if (on) {
+                sp.classList.remove('d-none');
+                $btnPreview.setAttribute('disabled', 'disabled');
+                lb.textContent = '載入中…';
+            } else {
+                sp.classList.add('d-none');
+                $btnPreview.removeAttribute('disabled');
+                lb.textContent = '預覽';
+            }
+        }
+
+        // 暫存最近一次資料，提供 Modal 同步
+        let lastPreviewData = null;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            setLoading(true);
+
+            // 1) 先組 FormData，修正日期格式
+            const fd = new FormData(form);
+            let date = fd.get("date");
+            if (date && date.includes("/")) {
+                date = date.replaceAll("/", "-");
+                fd.set("date", date);
+            }
+
+            // 2) 再產生 params
+            const params = new URLSearchParams(fd);
+
+            try {
+                const url = `@Url.Action("PreviewJson", "Metrics", new { area = "Forum" })?${params.toString()}`;
+                const res = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                lastPreviewData = data;
+
+                const labels = (data.labelsDisplay ?? data.labels ?? []);
+                const values = (data.values ?? []).map(v => Math.round((v + Number.EPSILON) * 10000) / 10000);
+
+                // 更新圖表
+                barChart.data.labels = labels;
+                barChart.data.datasets[0].data = values;
+                barChart.update();
+
+                pieChart.data.labels = labels;
+                pieChart.data.datasets[0].data = values;
+                pieChart.update();
+
+                // 更新表格 + 標題日期
+                renderTable(labels, values);
+                $previewDate.textContent = `日期：${data.date}`;
+
+            } catch (err) {
+                console.error(err);
+                alert('預覽載入失敗，稍後再試或檢查資料源。');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // ====== 全螢幕 Modal：同步中文圖與小排行 ======
+        let barChartFull = null, pieChartFull = null;
+
+        function syncModalCharts() {
+            const modalDate = document.getElementById('modalDate');
+            modalDate.textContent = $previewDate.textContent.replace('日期：', '');
+
+            const labels = (lastPreviewData?.labelsDisplay ?? barChart.data.labels.slice());
+            const values = (lastPreviewData?.values ?? barChart.data.datasets[0].data.slice());
+
+            const barCtxF = document.getElementById('rankBarFull').getContext('2d');
+            const pieCtxF = document.getElementById('sharePieFull').getContext('2d');
+
+            if (barChartFull) barChartFull.destroy();
+            if (pieChartFull) pieChartFull.destroy();
+
+            barChartFull = new Chart(barCtxF, {
+             type: 'bar',
+  data: { labels, datasets: [{ label: 'Index', data: values }] },
+  options: {
+    indexAxis: 'y',
+    maintainAspectRatio: false,
+    layout: { padding: { left: 10, right: 10, top: 8, bottom: 8 } },
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        ticks: {
+          autoSkip: false,
+          callback: function (value) {
+            const lbl = this.getLabelForValue ? this.getLabelForValue(value) : value;
+            return wrapLabel(lbl, 10, 3);
+          }
+        }
+      },
+      x: { beginAtZero: true }
+    }
+  }
+});
+
+            pieChartFull = new Chart(pieCtxF, {
+                type: 'pie',
+                data: { labels, datasets: [{ data: values }] },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0) || 1;
+                                    const v = ctx.parsed;
+                                    const pct = (v / total * 100).toFixed(1);
+                                    return `${ctx.label}: ${v} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 右側小清單（1~10，中文 + 分數）
+            const list = document.getElementById('modalRankList');
+            list.innerHTML = '';
+            labels.forEach((name, i) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center text-truncate';
+                li.title = `${i + 1}. ${name}  ${values[i]}`;
+                li.innerHTML = `<span class="text-truncate">${i + 1}. ${name}</span><span class="ms-2 fw-semibold">${values[i]}</span>`;
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('previewModal')
+            .addEventListener('shown.bs.modal', syncModalCharts);
+    </script>
+}

@@ -1,0 +1,19 @@
+﻿@model GameSpace.Areas.MemberManagement.Models.ManagerDatumVM
+@{
+    ViewData["Title"] = "Delete";
+}
+<h1>Delete</h1>
+
+
+<dl class="row">
+    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.ManagerName)</dt>
+    <dd class="col-sm-10">@Html.DisplayFor(m => m.ManagerName)</dd>
+    <!-- 其餘欄位照你原本 -->
+</dl>
+
+<form asp-action="Delete" method="post" asp-route-id="@Model.ManagerId">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ManagerId" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+</form>

@@ -1,0 +1,75 @@
+﻿:root {
+    --topbar-h: 56px;
+    --topbar-gap: 8px;
+    --sidebar-w-open: 260px;
+    --sidebar-w-collapsed: 72px;
+    --sidebar-w: var(--sidebar-w-open); /* 預設展開 */
+    --banner-aspect: 1440/300;
+    --banner-max-h: 260px;
+}
+
+html.sidebar-collapsed {
+    --sidebar-w: var(--sidebar-w-collapsed);
+}
+
+/* 兩欄骨架 */
+.layout-wrap {
+    display: flex;
+    min-height: calc(100vh - var(--topbar-h));
+}
+
+.layout-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: #f8f9fa;
+}
+
+.layout-footer {
+    background: #fff
+}
+
+/* 桌機：側欄固定 + 主內容右推 */
+@media (min-width:992px) {
+    .layout-sidebar {
+        position: fixed;
+        left: 0;
+        top: calc(var(--topbar-h) + var(--topbar-gap));
+        bottom: 0;
+        width: var(--sidebar-w);
+        overflow: hidden;
+        background: #fff;
+        border-right: 1px solid #e9ecef;
+        transition: width .15s ease;
+        box-sizing: border-box;
+        z-index: 100;
+    }
+
+        .layout-sidebar .sidebar-nav {
+            height: 100%;
+            overflow-y: auto;
+            padding-bottom: .5rem;
+            scrollbar-gutter: stable both-edges;
+        }
+
+    .layout-main {
+        margin-left: var(--sidebar-w);
+        transition: margin-left .15s ease;
+    }
+}
+
+/* 手機側欄走 Offcanvas */
+@media (max-width:991.98px) {
+    .layout-sidebar {
+        display: none !important;
+    }
+}
+
+/* 小元件 */
+.hover-lift {
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,.08) !important;
+    }

@@ -1,0 +1,121 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.SignInRulesModel
+@{
+    ViewData["Title"] = "簽到規則管理";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0"><i class="fas fa-calendar-check me-2"></i>簽到規則管理</h3>
+            <div>
+                <span class="badge bg-light text-dark fs-6">
+                    總數: @Model.TotalRules | 啟用: @Model.Rules.Count(r => r.IsActive)
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.Rules.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center" style="width: 100px;">規則 ID</th>
+                                <th class="text-center" style="width: 120px;">連續天數</th>
+                                <th class="text-center">獎勵點數</th>
+                                <th class="text-center">獎勵經驗值</th>
+                                <th>獎勵優惠券</th>
+                                <th class="text-center" style="width: 100px;">狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rule in Model.Rules.OrderBy(r => r.ConsecutiveDays))
+                            {
+                                <tr class="@(rule.IsActive ? "" : "table-secondary")">
+                                    <td class="text-center">
+                                        <code>#@rule.RuleId</code>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6">第 @rule.ConsecutiveDays 天</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (rule.PointsReward > 0)
+                                        {
+                                            <span class="badge bg-warning text-dark fs-6">
+                                                <i class="fas fa-coins me-1"></i>@rule.PointsReward.ToString("N0")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (rule.ExpReward > 0)
+                                        {
+                                            <span class="badge bg-info fs-6">
+                                                <i class="fas fa-star me-1"></i>@rule.ExpReward.ToString("N0")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(rule.CouponTypeName))
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-ticket-alt me-1"></i>@rule.CouponTypeName
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">無</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (rule.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>啟用
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-times-circle me-1"></i>停用
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 規則說明 -->
+                <div class="alert alert-info mt-4">
+                    <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>規則說明</h5>
+                    <ul class="mb-0">
+                        <li>每日簽到時系統將根據<strong>連續簽到天數</strong>自動套用對應的規則</li>
+                        <li>獎勵點數會直接加入會員錢包</li>
+                        <li>獎勵經驗值會增加到會員的寵物經驗</li>
+                        <li>獎勵優惠券會自動發放到會員帳戶</li>
+                        <li>只有<span class="badge bg-success">啟用</span>的規則才會生效</li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <p class="mb-0 fs-5">目前尚未設定任何簽到規則</p>
+                    <p class="text-muted">請先建立新的簽到規則</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

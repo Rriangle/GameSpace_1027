@@ -1,0 +1,73 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.DailyGameLimitDeleteViewModel
+@{
+    ViewData["Title"] = "刪除每日遊戲次數限制設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-trash"></i> 刪除每日遊戲次數限制設定
+        </h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-danger">確認刪除</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>警告：</strong>您確定要刪除此設定嗎？此操作無法復原。
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold">設定名稱</label>
+                        <p class="form-control-plaintext">@Model.SettingName</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold">每日限制</label>
+                        <p class="form-control-plaintext">@Model.DailyLimit 次/天</p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label font-weight-bold">描述</label>
+                <p class="form-control-plaintext">@(Model.Description ?? "無")</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label font-weight-bold">狀態</label>
+                <p class="form-control-plaintext">
+                    @if (Model.IsEnabled)
+                    {
+                        <span class="badge badge-success">啟用</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">停用</span>
+                    }
+                </p>
+            </div>
+            
+            <form asp-action="Delete" method="post">
+                <input asp-for="Id" type="hidden" />
+                <div class="form-group">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> 確認刪除
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

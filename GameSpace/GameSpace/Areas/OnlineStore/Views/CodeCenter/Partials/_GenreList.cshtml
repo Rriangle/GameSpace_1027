@@ -1,0 +1,189 @@
+﻿@{
+    ViewData["Title"] = "代碼中心（產品代碼 / 平台 / 類型 / 周邊）";
+    var dash = (GameSpace.Areas.OnlineStore.ViewModels.CodeCenterDashboardVM)ViewBag.Dashboard;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+<style>
+    .stat-card {
+        border: 1px solid #e9ecef;
+        border-radius: 16px;
+        padding: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(248,249,250,.9));
+        backdrop-filter: blur(5px);
+        box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    }
+
+    .card-header {
+        background: linear-gradient(180deg,#ffffff,#f8f9fa);
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .nav-pills .nav-link {
+        border-radius: 999px;
+    }
+
+    .list-group-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+
+<!-- 儀表板 -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="text-muted small"><i class="bi bi-hash"></i> 序號代號</div>
+                    <div class="fs-4 fw-bold">@dash.PrefixKinds</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="text-muted small"><i class="bi bi-controller"></i> 遊戲平台</div>
+                    <div class="fs-4 fw-bold">@dash.Platforms</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="text-muted small"><i class="bi bi-tags"></i> 遊戲類型</div>
+                    <div class="fs-4 fw-bold">@dash.Genres</div> <!-- ← 改用 Genres -->
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="text-muted small"><i class="bi bi-bag-dash"></i> 周邊類別</div>
+                    <div class="fs-4 fw-bold">@dash.MerchTypes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 其餘版面沿用你現有結構 … -->
+<!-- 你現有的表格區塊容器 ids 範例（請確保頁面上有對應容器）： -->
+<!--
+<div id="prefixList"></div>
+<div id="prefixTable"></div>
+<div id="platformTable"></div>
+<div id="genreTable"></div>        // ← 原 gametypeTable 改為 genreTable
+<div id="merchtypeTable"></div>
+-->
+<!-- Modal 容器（純容器，不要套 .modal 類） -->
+<div id="modalHost"></div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (async function(){
+          const host = document.getElementById('modalHost');
+
+          async function load(url, targetId){
+            const res = await fetch(url, { credentials:'include' });
+            if(!res.ok){ console.error('Load failed:', url); return; }
+            const html = await res.text();
+            const target = document.getElementById(targetId);
+            if (target) target.innerHTML = html;
+          }
+
+          // 初始載入（統一成 Genre）
+          await load('@Url.Action("PrefixList", "CodeCenter", new { area = "OnlineStore" })', 'prefixList');
+          await load('@Url.Action("PrefixList", "CodeCenter", new { area = "OnlineStore" })', 'prefixTable');
+          await load('@Url.Action("PlatformList", "CodeCenter", new { area = "OnlineStore" })', 'platformTable');
+          await load('@Url.Action("GenreList", "CodeCenter", new { area = "OnlineStore" })', 'genreTable');       // ← 改
+          await load('@Url.Action("MerchTypeList", "CodeCenter", new { area = "OnlineStore" })', 'merchtypeTable');
+
+          // 事件委派
+          document.body.addEventListener('click', async (e)=>{
+            const el = e.target.closest('[data-action]'); if(!el) return;
+            const act = el.getAttribute('data-action');
+
+            async function openModal(url){
+              const resp = await fetch(url, { credentials:'include' });
+              if(!resp.ok){ alert('視窗載入失敗'); return; }
+              const html = await resp.text();
+              host.innerHTML = html;
+
+              // 重要：抓容器內的第一個 .modal
+              const modalEl = host.querySelector('.modal');
+              if(!modalEl){ alert('找不到 modal 內容'); return; }
+
+              const m = new bootstrap.Modal(modalEl);
+              m.show();
+
+              // 關閉後清空，避免重複 ID 殘留
+              modalEl.addEventListener('hidden.bs.modal', ()=> { host.innerHTML = ''; }, { once:true });
+
+              hookAjaxForms(modalEl);
+            }
+
+            if (act === 'prefix-create'){
+              await openModal('@Url.Action("PrefixCreateModal", "CodeCenter", new { area = "OnlineStore" })');
+            } else if (act === 'platform-create'){
+              await openModal('@Url.Action("PlatformCreateModal", "CodeCenter", new { area = "OnlineStore" })');
+            } else if (act === 'genre-create'){ // ← 改
+              await openModal('@Url.Action("GenreCreateModal", "CodeCenter", new { area = "OnlineStore" })');
+            } else if (act === 'merchtype-create'){
+              await openModal('@Url.Action("MerchTypeCreateModal", "CodeCenter", new { area = "OnlineStore" })');
+            } else if (act === 'prefix-refresh'){
+              await load('@Url.Action("PrefixList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qPrefix'),     'prefixTable');
+            } else if (act === 'platform-refresh'){
+              await load('@Url.Action("PlatformList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qPlatform'),   'platformTable');
+            } else if (act === 'genre-refresh'){ // ← 改
+              await load('@Url.Action("GenreList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qGenre'),      'genreTable');
+            } else if (act === 'merchtype-refresh'){
+              await load('@Url.Action("MerchTypeList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qMerchType'),  'merchtypeTable');
+            }
+          });
+
+          function buildQ(inputId){
+            const v = document.getElementById(inputId)?.value?.trim() ?? "";
+            return v ? ('?q=' + encodeURIComponent(v)) : '';
+          }
+
+          // 會在開啟的 modal 範圍內掛 AJAX 提交
+          function hookAjaxForms(scopeEl){
+            (scopeEl ?? host).querySelectorAll('form.js-ajax').forEach(f => {
+              f.addEventListener('submit', async (ev)=>{
+                ev.preventDefault();
+                const res = await fetch(f.action, {
+                  method: 'POST',
+                  body: new FormData(f),   // 自動帶上 AntiForgery Token
+                  credentials: 'include'
+                });
+
+                // 支援兩種返回：JSON { ok, message } 或直接 204/302
+                const contentType = res.headers.get('content-type') || '';
+                let ok = res.ok, message = '';
+                if (contentType.includes('application/json')) {
+                  const data = await res.json();
+                  ok = !!data.ok;
+                  message = data.message || '';
+                }
+
+                if (ok){
+                  // 關閉 modal
+                  const modalEl = (scopeEl ?? host).querySelector('.modal');
+                  const inst = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                  inst?.hide();
+
+                  // 刷新四區塊
+                  await Promise.all([
+                    load('@Url.Action("PrefixList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qPrefix'),    'prefixList'),
+                    load('@Url.Action("PrefixList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qPrefix'),    'prefixTable'),
+                    load('@Url.Action("PlatformList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qPlatform'),  'platformTable'),
+                    load('@Url.Action("GenreList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qGenre'),     'genreTable'),   // ← 改
+                    load('@Url.Action("MerchTypeList", "CodeCenter", new { area = "OnlineStore" })' + buildQ('qMerchType'), 'merchtypeTable')
+                  ]);
+                } else {
+                  alert(message || '操作失敗，請稍後再試');
+                }
+              });
+            });
+          }
+        })();
+    </script>
+}

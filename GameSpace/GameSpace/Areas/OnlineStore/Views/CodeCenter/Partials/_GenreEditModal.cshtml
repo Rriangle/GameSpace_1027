@@ -1,0 +1,56 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.GenreVM
+
+<div class="modal fade" id="genreEditModal" tabindex="-1" aria-labelledby="genreEditLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content shadow-sm">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-semibold" id="genreEditLabel">
+                    @((Model?.GenreId > 0) ? "編輯類型" : "新增類型")
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+
+            <form method="post" class="js-ajax"
+                  action="@Url.Action((Model?.GenreId > 0) ? "GenreEdit" : "GenreCreate", "CodeCenter", new { area = "OnlineStore" })">
+                @Html.AntiForgeryToken()
+                @if (Model?.GenreId > 0)
+                {
+                    @Html.HiddenFor(m => m.GenreId)
+                }
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium" for="GenreName">類型名稱<span class="text-danger"> *</span></label>
+                        @Html.TextBoxFor(m => m.GenreName, new {
+                        @class = "form-control",
+                                                maxlength = "50",
+                                                placeholder = "如 RPG / ACT / RTS",
+                                                autofocus = "autofocus",
+                                                aria_required = "true"
+                                                })
+                        <span class="text-danger small" data-valmsg-for="GenreName" data-valmsg-replace="true"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="form-check">
+                                @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "genreActive" })
+                                <label class="form-check-label" for="genreActive">啟用</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-medium" for="SortOrder">排序</label>
+                            @Html.TextBoxFor(m => m.SortOrder, new { @class = "form-control", type = "number", min = "0", step = "1" })
+                            <span class="text-muted small">數字越小越前面</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary px-4">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,123 @@
+﻿@model GameSpace.Areas.Forum.Models.PostsListVm
+@{
+    ViewData["Title"] = "回覆列表";
+    string Fmt(DateTime? dt) => dt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "-";
+}
+
+@section Styles {
+    <style>
+        /* 內容最多顯示 3 行，超出省略 */
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        /* 更緊湊的數字欄位 */
+        .mono {
+            font-variant-numeric: tabular-nums;
+        }
+        /* 讓操作區按鈕有間距、不黏在一起 */
+        .action-bar {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
+        /* 更小的徽章 */
+        .badge-pill {
+            border-radius: 999px;
+            padding: .35rem .6rem;
+            font-size: .75rem;
+        }
+    </style>
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a class="btn btn-outline-secondary"
+       asp-area="Forum" asp-controller="Threads" asp-action="List"
+       asp-route-forumId="@ViewBag.ForumId">
+        ← 回主題列表
+    </a>
+    <div class="text-muted small">共 @Model?.Items?.Count() 筆</div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-sm table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width:80px" class="mono">ID</th>
+                    <th style="width:140px">作者</th>
+                    <th>內容</th>
+                    <th style="width:120px">狀態</th>
+                    <th style="width:90px" class="text-center">讚</th>
+                    <th style="width:90px" class="text-center">收藏</th>
+                    <th style="width:170px" class="mono">建立</th>
+                    <th style="width:170px" class="mono">更新</th>
+                    <th style="width:220px">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!(Model?.Items?.Any() ?? false))
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-5">沒有資料</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var p in Model.Items)
+                    {
+                        var (badgeClass, label) = p.Status switch
+                        {
+                            "normal" => ("badge bg-success badge-pill", "正常"),
+                            "hidden" => ("badge bg-warning text-dark badge-pill", "隱藏"),
+                            "deleted" => ("badge bg-danger badge-pill", "刪除"),
+                            _ => ("badge bg-secondary badge-pill", p.Status ?? "-")
+                        };
+
+                        <tr>
+                            <td class="mono">@p.Id</td>
+                            <td>@(p.AuthorName ?? $"User#{p.AuthorUserId}")</td>
+
+                            <td>
+                                <div class="line-clamp-3 text-break">@p.ContentMd</div>
+                            </td>
+
+                            <td><span class="@badgeClass">@label</span></td>
+
+                            <td class="text-center mono">@p.LikeCount</td>
+                            <td class="text-center mono">@p.BookmarkCount</td>
+
+                            <td class="mono">@Fmt(p.CreatedAt)</td>
+                            <td class="mono">@Fmt(p.UpdatedAt)</td>
+
+                            <td>
+                                <form asp-area="Forum" asp-controller="Threads" asp-action="ChangePostStatus"
+                                      method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <input type="hidden" name="threadId" value="@Model.ThreadId" />
+
+                                    <div class="action-bar">
+                                        <button type="submit" name="status" value="normal" class="btn btn-sm btn-success">
+                                            ✓ 通過
+                                        </button>
+                                        <button type="submit" name="status" value="hidden" class="btn btn-sm btn-warning">
+                                            ⚑ 隱藏
+                                        </button>
+                                        @* <button type="submit" name="status" value="deleted" class="btn btn-sm btn-danger">
+                                            ✕ 刪除
+                                        </button> *@
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

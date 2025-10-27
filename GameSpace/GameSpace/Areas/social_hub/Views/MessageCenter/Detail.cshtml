@@ -1,0 +1,116 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.NotificationDetailViewModel
+@{
+    ViewData["Title"] = "通知明細";
+    var senderBadgeClass = Model.SenderType == "user" ? "bg-primary"
+                        : Model.SenderType == "manager" ? "bg-warning text-dark"
+                        : "bg-dark";
+}
+
+@section Styles
+{
+    <link href="~/lib/social_hub/css/notification_detail.css" rel="stylesheet" />
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+@if (ViewBag.AutoRead == true)
+{
+    <div class="alert alert-success d-flex align-items-center">
+        <i class="fas fa-check-circle me-2"></i> 已將此通知標記為「已讀」。
+    </div>
+}
+
+<div class="card notice-card mb-3 shadow-sm">
+    <div class="card-header">
+        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+            <div class="me-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar me-2">
+                        @((Model.SenderName ?? "系統").Trim().Substring(0, 1))
+                    </span>
+                    <!-- 關鍵：min-w-0 避免 flex 溢位；內部加單行省略 -->
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="fw-bold h5 mb-1 title-line" title="@((Model.NotificationTitle ?? "（無標題）").Trim())">
+                            @((Model.NotificationTitle ?? "（無標題）").Trim())
+                        </div>
+                        <div class="text-muted meta-chip" title="@(Model.FullSourcePath ?? "未設定")">
+                            <span class="badge bg-secondary me-2">來源/動作</span>
+                            @(Model.FullSourcePath ?? "未設定")
+                            @if (!string.IsNullOrWhiteSpace(Model.GroupName))
+                            {
+                                <span class="meta-dot"></span>
+                                <span class="badge bg-info text-dark me-1">群組</span>
+
+                                @Model.GroupName
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <div class="mb-1">
+                    <span class="badge @(Model.IsRead ? "bg-success" : "bg-warning text-dark")">
+                        @(Model.IsRead ? "已讀" : "未讀")
+                    </span>
+                    <span class="badge @senderBadgeClass ms-1">@Model.SenderType</span>
+                </div>
+                <small class="text-muted d-flex align-items-center flex-wrap gap-2">
+                    <span><i class="far fa-clock me-1"></i>@Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                    @if (Model.ReadAt.HasValue)
+                    {
+                        <span class="meta-dot"></span>
+                        <span>
+                            <i class="fas fa-eye me-1"></i>已讀於 @Model.ReadAt.Value.ToString("yyyy/MM/dd HH:mm")
+                        </span>
+                    }
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="d-flex align-items-center mb-3 text-muted">
+            <i class="far fa-user me-2"></i>
+            <span>發送者：<strong class="text-dark">@((Model.SenderName ?? "系統").Trim())</strong></span>
+        </div>
+
+        <!-- 內容區：任何長字都不會把版面撐到 Sidebar -->
+        <div class="content-block" id="notifyContent">@((Model.NotificationMessage ?? "").Trim())</div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted small">
+                @* 預留區：將來可放附件/連結 *@
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary tool-btn" onclick="copyContent()">
+                    <i class="far fa-copy me-1"></i>複製內容
+                </button>
+                <a class="btn btn-outline-primary tool-btn"
+                   asp-action="Index" asp-controller="MessageCenter" asp-area="social_hub">
+                    <i class="fas fa-list-ul me-1"></i>返回列表
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyContent() {
+        const el = document.getElementById('notifyContent');
+        if (!el) return;
+        const text = el.innerText || el.textContent || '';
+        navigator.clipboard?.writeText(text).then(() => {
+            const btns = document.querySelectorAll('.tool-btn');
+            btns.forEach(b => {
+                const original = b.innerHTML;
+                if (b.textContent.includes('複製內容')) {
+                    b.innerHTML = '<i class="fas fa-check me-1"></i>已複製';
+                    b.classList.remove('btn-outline-secondary');
+                    b.classList.add('btn-success');
+                    setTimeout(() => { b.innerHTML = original; b.classList.add('btn-outline-secondary'); b.classList.remove('btn-success'); }, 1200);
+                }
+            });
+        });
+    }
+</script>

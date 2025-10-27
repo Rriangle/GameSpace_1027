@@ -1,0 +1,187 @@
+﻿@{
+    ViewData["Title"] = "小遊戲系統設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">小遊戲系統設定</h1>
+    </div>
+
+    <div class="row">
+        <!-- 每日遊戲次數限制設定 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-gamepad"></i> 每日遊戲次數限制設定
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="dailyLimitForm">
+                        <div class="form-group">
+                            <label for="dailyLimit">每日遊戲次數限制</label>
+                            <input type="number" class="form-control" id="dailyLimit" min="1" required>
+                            <small class="form-text text-muted">設定用戶每天可以玩小遊戲的次數</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 儲存設定
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 遊戲獎勵設定 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-gift"></i> 遊戲獎勵設定
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="rewardSettingsForm">
+                        <div class="form-group">
+                            <label for="pointsRewardRate">點數獎勵比例</label>
+                            <input type="number" class="form-control" id="pointsRewardRate" step="0.01" min="0" max="1" required>
+                            <small class="form-text text-muted">設定點數獎勵的比例 (0-1)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="expRewardRate">經驗值獎勵比例</label>
+                            <input type="number" class="form-control" id="expRewardRate" step="0.01" min="0" max="1" required>
+                            <small class="form-text text-muted">設定經驗值獎勵的比例 (0-1)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="couponRewardRate">優惠券獎勵比例</label>
+                            <input type="number" class="form-control" id="couponRewardRate" step="0.01" min="0" max="1" required>
+                            <small class="form-text text-muted">設定優惠券獎勵的比例 (0-1)</small>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="pointsRewardEnabled">
+                            <label class="form-check-label" for="pointsRewardEnabled">啟用點數獎勵</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="expRewardEnabled">
+                            <label class="form-check-label" for="expRewardEnabled">啟用經驗值獎勵</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="couponRewardEnabled">
+                            <label class="form-check-label" for="couponRewardEnabled">啟用優惠券獎勵</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="fas fa-save"></i> 儲存設定
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 載入現有設定
+    loadDailyLimit();
+    loadRewardSettings();
+
+    // 每日遊戲次數限制設定
+    $('#dailyLimitForm').on('submit', function(e) {
+        e.preventDefault();
+        const dailyLimit = $('#dailyLimit').val();
+        
+        $.ajax({
+            url: '/MiniGame/AdminMiniGame/UpdateDailyGameLimit',
+            type: 'POST',
+            data: { dailyLimit: dailyLimit },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', '每日遊戲次數限制設定成功！');
+                } else {
+                    showAlert('error', response.message || '設定失敗');
+                }
+            },
+            error: function() {
+                showAlert('error', '設定失敗，請稍後再試');
+            }
+        });
+    });
+
+    // 遊戲獎勵設定
+    $('#rewardSettingsForm').on('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            pointsRewardRate: parseFloat($('#pointsRewardRate').val()),
+            expRewardRate: parseFloat($('#expRewardRate').val()),
+            couponRewardRate: parseFloat($('#couponRewardRate').val()),
+            pointsRewardEnabled: $('#pointsRewardEnabled').is(':checked'),
+            expRewardEnabled: $('#expRewardEnabled').is(':checked'),
+            couponRewardEnabled: $('#couponRewardEnabled').is(':checked')
+        };
+        
+        $.ajax({
+            url: '/MiniGame/AdminMiniGame/UpdateGameRewardSettings',
+            type: 'POST',
+            data: data,
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', '遊戲獎勵設定更新成功！');
+                } else {
+                    showAlert('error', response.message || '設定失敗');
+                }
+            },
+            error: function() {
+                showAlert('error', '設定失敗，請稍後再試');
+            }
+        });
+    });
+
+    function loadDailyLimit() {
+        $.ajax({
+            url: '/MiniGame/AdminMiniGame/GetDailyGameLimit',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#dailyLimit').val(response.data.dailyLimit);
+                }
+            }
+        });
+    }
+
+    function loadRewardSettings() {
+        $.ajax({
+            url: '/MiniGame/AdminMiniGame/GetGameRewardSettings',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#pointsRewardRate').val(response.data.pointsRewardRate);
+                    $('#expRewardRate').val(response.data.expRewardRate);
+                    $('#couponRewardRate').val(response.data.couponRewardRate);
+                    $('#pointsRewardEnabled').prop('checked', response.data.pointsRewardEnabled);
+                    $('#expRewardEnabled').prop('checked', response.data.expRewardEnabled);
+                    $('#couponRewardEnabled').prop('checked', response.data.couponRewardEnabled);
+                }
+            }
+        });
+    }
+
+    function showAlert(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        `;
+        $('.container-fluid').prepend(alertHtml);
+        
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 3000);
+    }
+});
+</script>
+

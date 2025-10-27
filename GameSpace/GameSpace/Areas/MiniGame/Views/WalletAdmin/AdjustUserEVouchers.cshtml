@@ -1,0 +1,93 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.AdjustEVoucherInputModel
+@{
+    ViewData["Title"] = "調整電子禮券";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fas fa-gift me-2"></i>調整電子禮券</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="AdjustUserEVouchers" method="post">
+                @Html.AntiForgeryToken()
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>注意：</strong>此功能用於調整會員的電子禮券狀態（撤銷、標記已使用、恢復）。請謹慎操作。
+                </div>
+
+                <!-- 電子禮券 ID -->
+                <div class="mb-3">
+                    <label asp-for="EVoucherId" class="form-label">電子禮券 ID <span class="text-danger">*</span></label>
+                    <input asp-for="EVoucherId" class="form-control" placeholder="請輸入電子禮券 ID" />
+                    <span asp-validation-for="EVoucherId" class="text-danger"></span>
+                    <small class="text-muted">請先查詢會員擁有的電子禮券取得 ID</small>
+                </div>
+
+                <!-- 操作類型 -->
+                <div class="mb-3">
+                    <label asp-for="Action" class="form-label">操作類型 <span class="text-danger">*</span></label>
+                    <select asp-for="Action" class="form-select">
+                        <option value="">請選擇操作類型</option>
+                        <option value="Revoke">撤銷（將禮券設為無效）</option>
+                        <option value="MarkUsed">標記已使用</option>
+                        <option value="Restore">恢復（將無效禮券恢復為可用）</option>
+                    </select>
+                    <span asp-validation-for="Action" class="text-danger"></span>
+                    <small class="text-muted">
+                        <ul class="mb-0 mt-2">
+                            <li><strong>撤銷：</strong>將禮券狀態設為無效，會員將無法使用</li>
+                            <li><strong>標記已使用：</strong>手動標記禮券為已使用狀態</li>
+                            <li><strong>恢復：</strong>將已撤銷或已使用的禮券恢復為可用狀態</li>
+                        </ul>
+                    </small>
+                </div>
+
+                <!-- 備註 -->
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label">備註 <span class="text-danger">*</span></label>
+                    <textarea asp-for="Notes" class="form-control" rows="4" placeholder="請詳細說明調整原因"></textarea>
+                    <span asp-validation-for="Notes" class="text-danger"></span>
+                    <small class="text-muted">最多 500 字元。此欄位為必填，請務必說明調整原因以便日後追溯。</small>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="mt-4 border-top pt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>確認調整
+                    </button>
+                    <a asp-action="QueryUserEVouchers" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // 根據操作類型顯示不同的警告提示
+        document.querySelector('select[name="Action"]').addEventListener('change', function() {
+            const action = this.value;
+            const alertDiv = document.querySelector('.alert');
+
+            if (action === 'Revoke') {
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>警告：</strong>撤銷後，該電子禮券將無法使用，請確認操作。';
+            } else if (action === 'MarkUsed') {
+                alertDiv.className = 'alert alert-warning';
+                alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>注意：</strong>標記已使用後，該電子禮券將無法再次使用。';
+            } else if (action === 'Restore') {
+                alertDiv.className = 'alert alert-info';
+                alertDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i><strong>提示：</strong>恢復後，該電子禮券將重新變為可用狀態。';
+            } else {
+                alertDiv.className = 'alert alert-warning';
+                alertDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>注意：</strong>此功能用於調整會員的電子禮券狀態（撤銷、標記已使用、恢復）。請謹慎操作。';
+            }
+        });
+    </script>
+}

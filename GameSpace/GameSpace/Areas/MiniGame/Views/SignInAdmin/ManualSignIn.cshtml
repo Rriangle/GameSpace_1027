@@ -1,0 +1,122 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.ManualSignInInputModel
+@{
+    ViewData["Title"] = "手動補簽";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fas fa-user-edit me-2"></i>手動補簽</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="ManualSignIn" method="post">
+                @Html.AntiForgeryToken()
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>注意：</strong>此功能用於為會員補簽過去漏簽的日期。補簽將計入連續簽到天數，並發放對應獎勵。
+                </div>
+
+                <!-- 會員資訊 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="UserId" class="form-label">使用者編號 <span class="text-danger">*</span></label>
+                        <input asp-for="UserId" class="form-control" placeholder="請輸入會員 ID" />
+                        <span asp-validation-for="UserId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        @if (!string.IsNullOrEmpty(Model?.UserAccount))
+                        {
+                            <label class="form-label">會員帳號</label>
+                            <div class="form-control-plaintext">
+                                <i class="fas fa-user me-1"></i>@Model.UserAccount
+                                @if (!string.IsNullOrEmpty(Model.UserName))
+                                {
+                                    <span class="text-muted">(@Model.UserName)</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- 簽到日期 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="SignInDate" class="form-label">簽到日期 <span class="text-danger">*</span></label>
+                        <input asp-for="SignInDate" type="date" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="SignInDate" class="text-danger"></span>
+                        <small class="text-muted">只能補簽過去的日期，不能補簽未來日期</small>
+                    </div>
+                </div>
+
+                <!-- 補簽原因 -->
+                <div class="mb-3">
+                    <label asp-for="Reason" class="form-label">補簽原因 <span class="text-danger">*</span></label>
+                    <textarea asp-for="Reason" class="form-control" rows="4" placeholder="請詳細說明補簽原因，例如：系統錯誤、會員申訴核准等"></textarea>
+                    <span asp-validation-for="Reason" class="text-danger"></span>
+                    <small class="text-muted">最多 500 字元。此欄位為必填，請務必說明補簽原因以便日後追溯。</small>
+                </div>
+
+                <!-- 警告提示 -->
+                <div class="card border-warning mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-warning"><i class="fas fa-exclamation-circle me-2"></i>補簽須知</h6>
+                        <ul class="mb-0 small">
+                            <li>補簽將會計入連續簽到天數</li>
+                            <li>系統將根據簽到規則自動發放對應獎勵（點數、經驗值、優惠券等）</li>
+                            <li>若該日期已有簽到紀錄，將無法重複補簽</li>
+                            <li>所有補簽操作都會被記錄，包括操作人員和原因</li>
+                            <li>請確認會員申請合理後再進行補簽</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="mt-4 border-top pt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>確認補簽
+                    </button>
+                    <a asp-action="QuerySignInRecords" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // 設定日期選擇器最大值為今天
+        const dateInput = document.querySelector('input[name="SignInDate"]');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('max', today);
+
+        // 表單提交前再次確認
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const selectedDate = new Date(dateInput.value);
+            const todayDate = new Date(today);
+
+            if (selectedDate > todayDate) {
+                e.preventDefault();
+                alert('錯誤：不能補簽未來的日期！');
+                return false;
+            }
+
+            const reason = document.querySelector('textarea[name="Reason"]').value.trim();
+            if (!reason) {
+                e.preventDefault();
+                alert('請填寫補簽原因！');
+                return false;
+            }
+
+            const confirmMsg = `確定要為會員進行補簽嗎？\n\n日期：${dateInput.value}\n原因：${reason}`;
+            if (!confirm(confirmMsg)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+}

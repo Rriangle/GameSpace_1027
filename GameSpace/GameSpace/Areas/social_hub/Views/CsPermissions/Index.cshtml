@@ -1,0 +1,201 @@
+﻿@model IEnumerable<GameSpace.Areas.social_hub.Models.ViewModels.CsPermListItemVM>
+
+@{
+    ViewData["Title"] = "客服人員清單";
+
+    // 來自 Controller 的 ViewBag
+    bool meIsAdmin = (bool)(ViewBag.MeIsSupervisor ?? false); // 我是否 can_assign=true（主管）
+    int? myAgentId = ViewBag.MeAgentId != null ? (int?)Convert.ToInt32(ViewBag.MeAgentId) : null;
+
+    // 分頁
+    var page = (int)(ViewBag.Page ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+    var totalItems = (int)(ViewBag.TotalItems ?? 0);
+    var pageSize = (int)(ViewBag.PageSize ?? 10);
+
+    int window = 2;
+    int start = Math.Max(1, page - window);
+    int end = Math.Min(totalPages, page + window);
+    if (end - start < window * 2)
+    {
+        if (start == 1) end = Math.Min(totalPages, start + window * 2);
+        else if (end == totalPages) start = Math.Max(1, end - window * 2);
+    }
+
+    // 欄位：ID / 管理員 / 啟用 / 上限 / 建立 / 權限 / 操作
+    int colCount = meIsAdmin ? 7 : 6;
+}
+
+<div class="mutes-header">
+    <h2 class="mutes-title">
+        <span>@ViewData["Title"]</span>
+        @if (meIsAdmin)
+        {
+            <span class="badge rounded-pill badge-manage" title="你擁有最高權限（can_assign）">管理</span>
+        }
+        else
+        {
+            <span class="badge rounded-pill badge-readonly" title="僅可檢視自己的權限">唯讀</span>
+        }
+    </h2>
+    <div class="mutes-subtle">
+        @if (meIsAdmin)
+        {
+            <span><i class="fas fa-user-shield me-1" aria-hidden="true"></i>可管理全部客服與權限</span>
+        }
+        else
+        {
+            <span><i class="fas fa-user-lock me-1" aria-hidden="true"></i>僅能檢視自己的權限</span>
+        }
+    </div>
+</div>
+
+<partial name="~/Areas/social_hub/Views/Mutes/_Toast.cshtml" />
+
+<div class="mutes-toolbar">
+    <form asp-action="Index" method="get" class="d-flex gap-2 align-items-center">
+        <input type="hidden" name="page" value="1" />
+        <div class="position-relative mutes-search">
+            <i class="fas fa-search icon" aria-hidden="true"></i>
+            <input name="q" value="@Context.Request.Query["q"]"
+                   class="form-control"
+                   placeholder="搜尋：管理員名 / id:10 / mid:30000001 / 啟用 / 停用" />
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Context.Request.Query["q"]))
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index">清除</a>
+        }
+        <button type="submit" class="btn btn-outline-primary">搜尋</button>
+    </form>
+
+    <div class="d-flex gap-2">
+        @* 僅主管可見：改成導向到新增頁（GET） *@
+        @if (meIsAdmin)
+        {
+            <a class="btn btn-primary"
+               asp-area="social_hub" asp-controller="CsPermissions" asp-action="Add"
+               title="加入新的客服人員">
+                <i class="fas fa-user-plus me-1" aria-hidden="true"></i>加入客服
+            </a>
+        }
+    </div>
+</div>
+
+<div class="mutes-card">
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th style="width:90px;">ID</th>
+                    <th>管理員</th>
+                    <th style="width:120px;">啟用</th>
+                    <th style="width:120px;">同時上限</th>
+                    <th style="width:200px;">建立時間</th>
+                    <th style="width:240px;">權限</th>
+                    @if (meIsAdmin)
+                    {
+                        <th style="width:240px;">操作</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="@colCount" class="text-center text-muted py-4">目前沒有資料</td></tr>
+                }
+                else
+                {
+                    @foreach (var it in Model)
+                    {
+                        <tr>
+                            <td>@it.AgentId</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-truncate d-inline-block" style="max-width: 14rem;"
+                                          title="ManagerId: @it.ManagerId">@it.ManagerName</span>
+                                    @if (myAgentId.HasValue && myAgentId.Value == it.AgentId)
+                                    {
+                                        <span class="badge bg-light text-dark border" title="你自己">我</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                @if (it.IsActive)
+                                {
+                                    <span class="cell-chip on">啟用</span>
+                                }
+                                else
+                                {
+                                    <span class="cell-chip off">停用</span>
+                                }
+                            </td>
+                            <td>@it.MaxConcurrent</td>
+                            <td>@Html.AppTime(it.CreatedAt, "yyyy/MM/dd HH:mm")</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="cell-chip @(it.CanAssign ? "on" : "off")" title="可派單/幫轉單/結單">派</span>
+                                    <span class="cell-chip @(it.CanTransfer ? "on" : "off")" title="可轉單">轉</span>
+                                    <span class="cell-chip @(it.CanAccept ? "on" : "off")" title="可接單">接</span>
+                                    <span class="cell-chip @(it.CanEditMuteAll ? "on" : "off")" title="可編修全部穢語">穢</span>
+                                </div>
+                            </td>
+                            @if (meIsAdmin)
+                            {
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           asp-action="EditPerm" asp-route-id="@it.AgentId">權限</a>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-action="EditAgent" asp-route-id="@it.AgentId">設定</a>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@{
+    var from = totalItems == 0 ? 0 : ((page - 1) * pageSize) + 1;
+    var to = Math.Min(page * pageSize, totalItems);
+}
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="text-muted">顯示第 @from–@to 筆，共 @totalItems 筆</div>
+    <nav aria-label="agent-pagination">
+        <ul class="pagination mb-0">
+            <li class="page-item @(page <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="1"
+                   asp-route-q="@Context.Request.Query["q"]" title="第一頁">«</a>
+            </li>
+            <li class="page-item @(page <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@(page - 1)"
+                   asp-route-q="@Context.Request.Query["q"]">上一頁</a>
+            </li>
+            @for (int p = start; p <= end; p++)
+            {
+                <li class="page-item @(p == page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@p"
+                       asp-route-q="@Context.Request.Query["q"]">@p</a>
+                </li>
+            }
+            <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@(page + 1)"
+                   asp-route-q="@Context.Request.Query["q"]">下一頁</a>
+            </li>
+            <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-page="@totalPages"
+                   asp-route-q="@Context.Request.Query["q"]" title="最後一頁">»</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+@section Styles {
+    <link href="~/lib/social_hub/css/mutes.css" rel="stylesheet" asp-append-version="true" />
+}
+@section Scripts {
+    <script src="~/lib/social_hub/js/mutes.js" asp-append-version="true"></script>
+}

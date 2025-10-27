@@ -1,0 +1,291 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminCouponCreateViewModel
+@{
+    ViewData["Title"] = "新增優惠券";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">新增優惠券</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminCoupon")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">優惠券基本資料</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group">
+                            <label asp-for="CouponName" class="control-label">優惠券名稱 *</label>
+                            <input asp-for="CouponName" class="form-control" placeholder="請輸入名稱" />
+                            <span asp-validation-for="CouponName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="CouponCode" class="control-label">優惠券代碼 *</label>
+                            <input asp-for="CouponCode" class="form-control" placeholder="請輸入代碼" />
+                            <span asp-validation-for="CouponCode" class="text-danger"></span>
+                            <small class="form-text text-muted">代碼必須唯一，建議使用大寫字母和數字組合</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="DiscountType" class="control-label">折扣類型 *</label>
+                                    <select asp-for="DiscountType" class="form-control" id="discountType">
+                                        <option value="">請選擇類型</option>
+                                        <option value="percentage">百分比折扣</option>
+                                        <option value="fixed">固定金額</option>
+                                    </select>
+                                    <span asp-validation-for="DiscountType" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="DiscountValue" class="control-label">折扣值 *</label>
+                                    <input asp-for="DiscountValue" type="number" class="form-control" placeholder="請輸入折扣值" step="0.01" min="0.01" />
+                                    <span asp-validation-for="DiscountValue" class="text-danger"></span>
+                                    <small class="form-text text-muted" id="discountHint">請輸入折扣值</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="MinOrderAmount" class="control-label">最低訂單金額 *</label>
+                                    <input asp-for="MinOrderAmount" type="number" class="form-control" placeholder="請輸入最低訂單金額" step="0.01" min="0" />
+                                    <span asp-validation-for="MinOrderAmount" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="MaxDiscountAmount" class="control-label">最高折扣金額 *</label>
+                                    <input asp-for="MaxDiscountAmount" type="number" class="form-control" placeholder="請輸入最高折扣金額" step="0.01" min="0" />
+                                    <span asp-validation-for="MaxDiscountAmount" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="StartDate" class="control-label">開始日期 *</label>
+                                    <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="EndDate" class="control-label">結束日期 *</label>
+                                    <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="UsageLimit" class="control-label">使用次數限制 *</label>
+                                    <input asp-for="UsageLimit" type="number" class="form-control" placeholder="請輸入使用次數限制" min="1" />
+                                    <span asp-validation-for="UsageLimit" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="IsActive" class="control-label">啟用狀態</label>
+                                    <div class="form-check">
+                                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                        <label class="form-check-label" for="IsActive">
+                                            啟用
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">優惠券描述</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="請輸入說明"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 儲存優惠券
+                            </button>
+                            <a href="@Url.Action("Index", "AdminCoupon")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">儲存提示</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-ticket-alt fa-3x text-primary mb-3"></i>
+                        <h5>優惠券建立注意事項</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            優惠券代碼必須唯一
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            時間範圍需合理設定
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            使用次數限制需設定
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            折扣類型需選擇一種
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            啟用設定需確認後生效
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">折扣類型說明</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge badge-info">百分比折扣</span>
+                        <small class="text-muted">按比例折扣，例如 10% 折扣</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-success">固定金額</span>
+                        <small class="text-muted">固定折抵，例如折 100 元</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">快速設定</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" onclick="setQuickSettings('percentage', 'WELCOME10', '歡迎新會員', 10, 100, 50, 7, 100)">
+                            <i class="fas fa-gift"></i> 新會員優惠(10%)
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="setQuickSettings('fixed', 'SAVE50', '省錢50元', 50, 200, 50, 7, 200)">
+                            <i class="fas fa-tag"></i> 省錢優惠券 (50元)
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="setQuickSettings('percentage', 'VIP20', 'VIP專屬', 20, 500, 100, 30, 50)">
+                            <i class="fas fa-crown"></i> VIP優惠券 (20%)
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" onclick="setQuickSettings('fixed', 'FLASH100', '限時優惠', 100, 1000, 100, 1, 10)">
+                            <i class="fas fa-bolt"></i> 限時優惠券 (100元)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function setQuickSettings(type, code, name, value, minOrder, maxDiscount, days, usageLimit) {
+            document.getElementById('discountType').value = type;
+            document.getElementById('CouponCode').value = code;
+            document.getElementById('CouponName').value = name;
+            document.getElementById('DiscountValue').value = value;
+            document.getElementById('MinOrderAmount').value = minOrder;
+            document.getElementById('MaxDiscountAmount').value = maxDiscount;
+            document.getElementById('UsageLimit').value = usageLimit;
+
+            const today = new Date();
+            const endDate = new Date(today.getTime() + (days * 24 * 60 * 60 * 1000));
+
+            document.getElementById('StartDate').value = today.toISOString().slice(0, 16);
+            document.getElementById('EndDate').value = endDate.toISOString().slice(0, 16);
+        }
+
+        // 折扣類型變更
+        document.getElementById('discountType').addEventListener('change', function() {
+            const type = this.value;
+            const hint = document.getElementById('discountHint');
+            const valueInput = document.getElementById('DiscountValue');
+
+            if (type === 'percentage') {
+                hint.textContent = '請輸入百分比，例如 10 表示 10% 折扣';
+                valueInput.placeholder = '請輸入百分比';
+                valueInput.max = 100;
+            } else if (type === 'fixed') {
+                hint.textContent = '請輸入金額數值，例如 50 表示折 50 元';
+                valueInput.placeholder = '請輸入金額數值';
+                valueInput.removeAttribute('max');
+            } else {
+                hint.textContent = '請輸入折扣值';
+                valueInput.placeholder = '請輸入折扣值';
+            }
+        });
+
+        // 日期驗證
+        document.getElementById('StartDate').addEventListener('change', function() {
+            const startDate = new Date(this.value);
+            const endDateInput = document.getElementById('EndDate');
+            const endDate = new Date(endDateInput.value);
+
+            if (endDate <= startDate) {
+                const newEndDate = new Date(startDate.getTime() + (24 * 60 * 60 * 1000));
+                endDateInput.value = newEndDate.toISOString().slice(0, 16);
+            }
+        });
+
+        document.getElementById('EndDate').addEventListener('change', function() {
+            const endDate = new Date(this.value);
+            const startDateInput = document.getElementById('StartDate');
+            const startDate = new Date(startDateInput.value);
+
+            if (endDate <= startDate) {
+                alert('結束日期必須大於開始日期');
+                this.value = '';
+            }
+        });
+
+        // 數值驗證
+        document.getElementById('DiscountValue').addEventListener('input', function() {
+            const type = document.getElementById('discountType').value;
+            const value = parseFloat(this.value);
+
+            if (type === 'percentage' && value > 100) {
+                this.setCustomValidity('百分比折扣不能超過100%');
+            } else if (value <= 0) {
+                this.setCustomValidity('折扣值必須大於0');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+}

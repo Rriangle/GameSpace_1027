@@ -1,0 +1,279 @@
+@{
+    ViewData["Title"] = "電子禮券類型管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">電子禮券類型管理</h1>
+        <div>
+            <a href="@Url.Action("CreateType", "AdminEVoucher")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50"></i> 新增禮券類型
+            </a>
+        </div>
+    </div>
+
+    <!-- 訊息顯示 -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["WarningMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- 搜尋和篩選 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">搜尋與篩選</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="searchTerm">搜尋關鍵字</label>
+                        <input type="text" class="form-control" id="searchTerm" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="禮券類型名稱或說明">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="status">狀態</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="">全部</option>
+                            <option value="active" selected="@(ViewBag.Status == "active" ? "selected" : null)">進行中</option>
+                            <option value="upcoming" selected="@(ViewBag.Status == "upcoming" ? "selected" : null)">即將開始</option>
+                            <option value="expired" selected="@(ViewBag.Status == "expired" ? "selected" : null)">已過期</option>
+                            <option value="available" selected="@(ViewBag.Status == "available" ? "selected" : null)">有庫存</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="sortBy">排序方式</label>
+                        <select class="form-control" id="sortBy" name="sortBy">
+                            <option value="name" selected="@(ViewBag.SortBy == "name" ? "selected" : null)">名稱</option>
+                            <option value="value" selected="@(ViewBag.SortBy == "value" ? "selected" : null)">面額</option>
+                            <option value="points" selected="@(ViewBag.SortBy == "points" ? "selected" : null)">所需點數</option>
+                            <option value="validfrom" selected="@(ViewBag.SortBy == "validfrom" ? "selected" : null)">開始日期</option>
+                            <option value="available" selected="@(ViewBag.SortBy == "available" ? "selected" : null)">可用數量</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="pageSize">每頁顯示</label>
+                        <select class="form-control" id="pageSize" name="pageSize">
+                            <option value="10" selected="@(ViewBag.PageSize == 10 ? "selected" : null)">10 筆</option>
+                            <option value="25" selected="@(ViewBag.PageSize == 25 ? "selected" : null)">25 筆</option>
+                            <option value="50" selected="@(ViewBag.PageSize == 50 ? "selected" : null)">50 筆</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> 搜尋
+                            </button>
+                            <a href="@Url.Action("EvoucherTypes", "AdminEVoucher")" class="btn btn-secondary">
+                                <i class="fas fa-refresh"></i> 重置
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 禮券類型列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">電子禮券類型列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="evoucherTypeTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>類型ID</th>
+                            <th>名稱</th>
+                            <th>說明</th>
+                            <th>面額</th>
+                            <th>所需點數</th>
+                            <th>有效期間</th>
+                            <th>可用數量</th>
+                            <th>使用統計</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var type in Model)
+                            {
+                                var totalVouchers = ViewData[$"TotalVouchers_{type.EvoucherTypeId}"] as int? ?? 0;
+                                var usedVouchers = ViewData[$"UsedVouchers_{type.EvoucherTypeId}"] as int? ?? 0;
+                                var now = DateTime.Now;
+                                var isActive = type.ValidFrom <= now && type.ValidTo >= now;
+                                var isUpcoming = type.ValidFrom > now;
+                                var isExpired = type.ValidTo < now;
+                                
+                                <tr>
+                                    <td>@type.EvoucherTypeId</td>
+                                    <td>@type.Name</td>
+                                    <td>@(type.Description ?? "-")</td>
+                                    <td>@type.ValueAmount.ToString("C")</td>
+                                    <td>@type.PointsCost</td>
+                                    <td>
+                                        @type.ValidFrom.ToString("yyyy-MM-dd")<br>
+                                        <small class="text-muted">至</small><br>
+                                        @type.ValidTo.ToString("yyyy-MM-dd")
+                                    </td>
+                                    <td>@type.TotalAvailable</td>
+                                    <td>
+                                        <small>
+                                            總發放: @totalVouchers<br>
+                                            已使用: @usedVouchers<br>
+                                            使用率: @(totalVouchers > 0 ? ((double)usedVouchers / totalVouchers * 100).ToString("F1") : "0")%
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @if (isExpired)
+                                        {
+                                            <span class="badge badge-danger">已過期</span>
+                                        }
+                                        else if (isUpcoming)
+                                        {
+                                            <span class="badge badge-info">即將開始</span>
+                                        }
+                                        else if (isActive)
+                                        {
+                                            <span class="badge badge-success">進行中</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-secondary">未知</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="@Url.Action("EditEvoucherType", "AdminEVoucher", new { id = type.EvoucherTypeId })" class="btn btn-warning btn-sm" title="編輯">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="@Url.Action("EvoucherTypeDetails", "AdminEVoucher", new { id = type.EvoucherTypeId })" class="btn btn-info btn-sm" title="詳情">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="@Url.Action("DeleteEvoucherType", "AdminEVoucher", new { id = type.EvoucherTypeId })" class="btn btn-danger btn-sm" title="刪除" onclick="return confirm('確定要刪除這個禮券類型嗎？')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center">沒有找到禮券類型資料</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分頁 -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav aria-label="禮券類型分頁">
+                    <ul class="pagination justify-content-center">
+                        @if (ViewBag.PageNumber > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("EvoucherTypes", "AdminEVoucher", new { 
+                                    searchTerm = ViewBag.SearchTerm, 
+                                    status = ViewBag.Status, 
+                                    sortBy = ViewBag.SortBy, 
+                                    page = ViewBag.PageNumber - 1, 
+                                    pageSize = ViewBag.PageSize 
+                                })">上一頁</a>
+                            </li>
+                        }
+
+                        @for (int i = Math.Max(1, ViewBag.PageNumber - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.PageNumber + 2); i++)
+                        {
+                            <li class="page-item @(i == ViewBag.PageNumber ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("EvoucherTypes", "AdminEVoucher", new { 
+                                    searchTerm = ViewBag.SearchTerm, 
+                                    status = ViewBag.Status, 
+                                    sortBy = ViewBag.SortBy, 
+                                    page = i, 
+                                    pageSize = ViewBag.PageSize 
+                                })">@i</a>
+                            </li>
+                        }
+
+                        @if (ViewBag.PageNumber < ViewBag.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("EvoucherTypes", "AdminEVoucher", new { 
+                                    searchTerm = ViewBag.SearchTerm, 
+                                    status = ViewBag.Status, 
+                                    sortBy = ViewBag.SortBy, 
+                                    page = ViewBag.PageNumber + 1, 
+                                    pageSize = ViewBag.PageSize 
+                                })">下一頁</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+
+            <!-- 統計資訊 -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <small class="text-muted">
+                        顯示第 @((ViewBag.PageNumber - 1) * ViewBag.PageSize + 1) - @(Math.Min(ViewBag.PageNumber * ViewBag.PageSize, ViewBag.TotalCount)) 筆，共 @ViewBag.TotalCount 筆資料
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 自動提交表單當篩選條件改變
+    document.getElementById('status').addEventListener('change', function() {
+        this.form.submit();
+    });
+
+    document.getElementById('sortBy').addEventListener('change', function() {
+        this.form.submit();
+    });
+
+    document.getElementById('pageSize').addEventListener('change', function() {
+        this.form.submit();
+    });
+</script>

@@ -1,0 +1,56 @@
+﻿@model GameSpace.Areas.MiniGame.Models.Settings.PetLevelExperienceSettingViewModel
+
+@{
+    ViewData["Title"] = "刪除寵物等級經驗值設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">刪除寵物等級經驗值設定</h3>
+                    <div class="card-tools">
+                        <a asp-action="Index" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> 返回列表
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h4><i class="fas fa-exclamation-triangle"></i> 確認刪除</h4>
+                        <p>您確定要刪除這個寵物等級經驗值設定嗎？此操作無法復原。</p>
+                    </div>
+                    
+                    <dl class="row">
+                        <dt class="col-sm-2">ID:</dt>
+                        <dd class="col-sm-10">@Model.Id</dd>
+                        
+                        <dt class="col-sm-2">等級:</dt>
+                        <dd class="col-sm-10">@Model.Level</dd>
+                        
+                        <dt class="col-sm-2">所需經驗值:</dt>
+                        <dd class="col-sm-10">@Model.RequiredExperience.ToString("N0")</dd>
+                        
+                        <dt class="col-sm-2">描述:</dt>
+                        <dd class="col-sm-10">@(string.IsNullOrEmpty(Model.Description) ? "-" : Model.Description)</dd>
+                    </dl>
+                    
+                    <form asp-action="Delete" method="post">
+                        <input asp-for="Id" type="hidden" />
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 確認刪除
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

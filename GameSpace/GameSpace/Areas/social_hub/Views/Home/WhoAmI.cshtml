@@ -1,0 +1,134 @@
+﻿@{
+
+    ViewData["Title"] = "GamiPort";
+
+    var msg = (string?)ViewData["msg"] ?? "";
+    var id = (string?)ViewData["id"] ?? "（未登入）";   // 由 HomeController.WhoAmI() 以 ILoginIdentity 填入
+    var kind = (string?)ViewData["kind"] ?? "(未設定)";
+
+    bool isUnifiedAuth = !string.Equals(id, "（未登入）", StringComparison.Ordinal);
+    bool isManager = string.Equals(kind, "manager", StringComparison.OrdinalIgnoreCase);
+    string badgeClass = isManager ? "bg-warning text-dark"
+                                  : (string.Equals(kind, "user", StringComparison.OrdinalIgnoreCase) ? "bg-primary" : "bg-secondary");
+}
+
+<h2 class="mb-3">測試登入狀態（統一身分）</h2>
+
+@if (!string.IsNullOrEmpty(msg))
+{
+    <div class="alert alert-info">@msg</div>
+}
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header">
+        <strong>目前身分（以 ILoginIdentity 為準）</strong>
+    </div>
+    <div class="card-body">
+        <p class="mb-1">
+            <strong>類型：</strong>
+            <span class="badge @badgeClass">@kind</span>
+        </p>
+        <p class="mb-1"><strong>有效 ID：</strong> @id</p>
+        <p class="text-muted mb-0">
+            狀態：@(isUnifiedAuth ? "已登入" : "未登入")
+        </p>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <!-- 改用 QuickLogin -->
+    <a class="btn btn-outline-primary"
+       href="@Url.Action("QuickLogin", "Home", new { area = "social_hub", kind = "user", id = 10000012 })">
+        假登入 User（#10000012）
+    </a>
+    <a class="btn btn-outline-primary"
+       href="@Url.Action("QuickLogin", "Home", new { area = "social_hub", kind = "user", id = 10000001 })">
+        假登入 User（#10000001）
+    </a>
+    <a class="btn btn-outline-primary"
+       href="@Url.Action("QuickLogin", "Home", new { area = "social_hub", kind = "user", id = 10000002 })">
+        假登入 User（#10000002）
+    </a>
+    <a class="btn btn-outline-secondary"
+       href="@Url.Action("QuickLogin", "Home", new { area = "social_hub", kind = "manager", id = 30000001 })">
+        假登入 Manager（#30000001）
+    </a>
+    <a class="btn btn-outline-secondary"
+       href="@Url.Action("QuickLogin", "Home", new { area = "social_hub", kind = "manager", id = 30000099 })">
+        假登入 Manager（#30000099）
+    </a>
+    <a class="btn btn-outline-secondary"
+       href="@Url.Action("QuickLogin", "Home", new { area = "social_hub", kind = "manager", id = 30000100 })">
+        假登入 Manager（#30000100）
+    </a>
+    <a class="btn btn-outline-danger"
+       href="@Url.Action("Logout", "Home", new { area = "social_hub" })">
+        登出
+    </a>
+</div>
+
+<!-- 偵錯資訊 -->
+<div class="accordion" id="debugAccordion">
+    <!-- Claims / Identity 狀態 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="dbg1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dbg1Body">
+                偵錯：Claims / Identity 狀態（來自 AdminCookie）
+            </button>
+        </h2>
+        <div id="dbg1Body" class="accordion-collapse collapse" data-bs-parent="#debugAccordion">
+            <div class="accordion-body">
+                <p class="mb-1"><strong>User.Identity.IsAuthenticated：</strong> @User?.Identity?.IsAuthenticated</p>
+                <p class="mb-1"><strong>User.Identity.AuthenticationType：</strong> @User?.Identity?.AuthenticationType</p>
+                <p class="mb-2"><strong>Claims：</strong></p>
+                <ul class="mb-0">
+                    @foreach (var c in User.Claims)
+                    {
+                        <li><code>@c.Type</code> = <code>@c.Value</code></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 中間變數（Items） -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="dbgItems">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dbgItemsBody">
+                偵錯：中間變數（HttpContext.Items["gs_id"] / ["gs_kind"]）
+            </button>
+        </h2>
+        <div id="dbgItemsBody" class="accordion-collapse collapse" data-bs-parent="#debugAccordion">
+            <div class="accordion-body">
+                @{
+                    var itemsId = (Context.Items["gs_id"] is int i) ? i.ToString() : "(無)";
+                    var itemsKind = Context.Items["gs_kind"] as string ?? "(無)";
+                }
+                <p class="mb-1"><strong>Items["gs_id"]：</strong> @itemsId</p>
+                <p class="mb-1"><strong>Items["gs_kind"]：</strong> @itemsKind</p>
+                <p class="text-muted mb-0">
+                    備註：若此處顯示為「(無)」，代表本動作未套用 <code>[SocialHubAuth]</code>，
+                    或該過濾器尚未執行；不影響上方以 <code>ILoginIdentity</code> 顯示的主狀態。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cookie 概況（AdminCookie 是否存在） -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="dbgCookie">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dbgCookieBody">
+                偵錯：Cookie 概況（GameSpace.Admin）
+            </button>
+        </h2>
+        <div id="dbgCookieBody" class="accordion-collapse collapse" data-bs-parent="#debugAccordion">
+            <div class="accordion-body">
+                @{
+                    // Program.cs 裡 opt.Cookie.Name = "GameSpace.Admin"
+                    var adminCookieExists = Context.Request.Cookies.ContainsKey("GameSpace.Admin");
+                }
+                <p class="mb-0"><strong>GameSpace.Admin：</strong> @(adminCookieExists ? "存在" : "無")</p>
+            </div>
+        </div>
+    </div>
+</div>

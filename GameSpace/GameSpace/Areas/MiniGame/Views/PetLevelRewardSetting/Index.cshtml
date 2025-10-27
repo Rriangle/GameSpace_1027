@@ -1,0 +1,296 @@
+@model IEnumerable<GameSpace.Areas.MiniGame.Models.ViewModels.PetLevelRewardSettingListViewModel>
+@{
+    ViewData["Title"] = "寵物升級獎勵設定管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物升級獎勵設定管理</h1>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> 新增獎勵設定
+        </a>
+    </div>
+
+    <!-- 統計卡片 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">總設定數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCount">@ViewBag.TotalCount</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">啟用設定</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="enabledCount">
+                                @(ViewBag.Statistics != null && ViewBag.Statistics.ContainsKey("EnabledCount") ? ViewBag.Statistics["EnabledCount"] : 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">停用設定</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="disabledCount">
+                                @(ViewBag.Statistics != null && ViewBag.Statistics.ContainsKey("DisabledCount") ? ViewBag.Statistics["DisabledCount"] : 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">涵蓋等級範圍</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="levelRangeCount">
+                                @(ViewBag.Statistics != null && ViewBag.Statistics.ContainsKey("MinLevelCovered") && ViewBag.Statistics.ContainsKey("MaxLevelCovered")
+                                    ? ViewBag.Statistics["MinLevelCovered"].ToString() + " - " + ViewBag.Statistics["MaxLevelCovered"].ToString()
+                                    : "N/A")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜尋表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">搜尋條件</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" asp-action="Index">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="LevelRangeStart">等級範圍起始</label>
+                            <input type="number" class="form-control" name="LevelRangeStart" value="@ViewBag.LevelRangeStart" min="1" max="200" placeholder="輸入起始等級">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="LevelRangeEnd">等級範圍結束</label>
+                            <input type="number" class="form-control" name="LevelRangeEnd" value="@ViewBag.LevelRangeEnd" min="1" max="200" placeholder="輸入結束等級">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="IsActive">啟用狀態</label>
+                            <select class="form-control" name="IsActive">
+                                <option value="">全部</option>
+                                <option value="true" selected="@(ViewBag.IsActive == true ? "selected" : null)">啟用</option>
+                                <option value="false" selected="@(ViewBag.IsActive == false ? "selected" : null)">停用</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="PageSize">每頁筆數</label>
+                            <select class="form-control" name="PageSize">
+                                <option value="10" selected="@(ViewBag.PageSize == 10 ? "selected" : null)">10</option>
+                                <option value="25" selected="@(ViewBag.PageSize == 25 ? "selected" : null)">25</option>
+                                <option value="50" selected="@(ViewBag.PageSize == 50 ? "selected" : null)">50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> 搜尋
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i> 重置
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 資料表格 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">獎勵設定列表</h6>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>設定ID</th>
+                                <th>等級範圍</th>
+                                <th>獎勵點數</th>
+                                <th>顯示順序</th>
+                                <th>描述</th>
+                                <th>狀態</th>
+                                <th>建立時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge badge-primary">@item.SettingId</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">Level @item.LevelRangeStart - @item.LevelRangeEnd</span>
+                                    </td>
+                                    <td>
+                                        <strong>@item.PointsReward.ToString("N0")</strong> 點
+                                    </td>
+                                    <td>@item.DisplayOrder</td>
+                                    <td>@(item.Description?.Length > 30 ? item.Description.Substring(0, 30) + "..." : item.Description)</td>
+                                    <td>
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="badge badge-success">啟用</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-danger">停用</span>
+                                        }
+                                    </td>
+                                    <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@item.SettingId" class="btn btn-info btn-sm" title="詳細資料">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.SettingId" class="btn btn-warning btn-sm" title="編輯">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-@(item.IsActive ? "danger" : "success") btn-sm toggle-status"
+                                                    data-id="@item.SettingId" data-status="@item.IsActive"
+                                                    title="@(item.IsActive ? "停用" : "啟用")">
+                                                <i class="fas fa-@(item.IsActive ? "times" : "check")"></i>
+                                            </button>
+                                            <a asp-action="Delete" asp-route-id="@item.SettingId" class="btn btn-danger btn-sm" title="刪除">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁 -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <nav aria-label="分頁導航">
+                        <ul class="pagination justify-content-center">
+                            @if (ViewBag.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(ViewBag.CurrentPage - 1)&pageSize=@ViewBag.PageSize">上一頁</a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="?page=@i&pageSize=@ViewBag.PageSize">@i</a>
+                                </li>
+                            }
+
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(ViewBag.CurrentPage + 1)&pageSize=@ViewBag.PageSize">下一頁</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-600">沒有找到任何獎勵設定</h5>
+                    <p class="text-gray-500">請新增獎勵設定或調整搜尋條件</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 新增獎勵設定
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // 狀態切換
+            $('.toggle-status').click(function() {
+                var id = $(this).data('id');
+                var currentStatus = $(this).data('status');
+                var newStatus = !currentStatus;
+
+                if (confirm('確定要' + (newStatus ? '啟用' : '停用') + '這個獎勵設定嗎？')) {
+                    $.ajax({
+                        url: '@Url.Action("ToggleStatus", "PetLevelRewardSetting")',
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert('操作失敗：' + response.message);
+                            }
+                        },
+                        error: function() {
+                            alert('操作失敗，請稍後再試');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

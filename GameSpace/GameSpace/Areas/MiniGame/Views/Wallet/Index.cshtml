@@ -1,0 +1,248 @@
+﻿@{
+    ViewData["Title"] = "錢包管理";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">錢包管理</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="搜尋錢包...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-primary" id="addWalletBtn">
+                                <i class="fas fa-plus"></i> 新增錢包
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="walletTable">
+                            <thead>
+                                <tr>
+                                    <th>錢包ID</th>
+                                    <th>用戶ID</th>
+                                    <th>錢包類型</th>
+                                    <th>餘額</th>
+                                    <th>狀態</th>
+                                    <th>創建時間</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 錢包數據將動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/編輯錢包模態框 -->
+<div class="modal fade" id="walletModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="walletModalTitle">新增錢包</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="walletForm">
+                    <input type="hidden" id="walletId" name="Id">
+                    <div class="form-group">
+                        <label for="userId">用戶ID</label>
+                        <input type="text" class="form-control" id="userId" name="UserId" placeholder="輸入會員ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="walletType">錢包類型</label>
+                        <select class="form-control" id="walletType" name="WalletType" required>
+                            <option value="">請選擇錢包類型</option>
+                            <option value="1">遊戲幣</option>
+                            <option value="2">點數</option>
+                            <option value="3">代幣</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="balance">餘額</label>
+                        <input type="number" class="form-control" id="balance" name="Balance" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">狀態</label>
+                        <select class="form-control" id="status" name="Status" required>
+                            <option value="1">啟用</option>
+                            <option value="0">停用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveWalletBtn">儲存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadWallets();
+            
+            $('#addWalletBtn').click(function() {
+                $('#walletModalTitle').text('新增錢包');
+                $('#walletForm')[0].reset();
+                $('#walletId').val('');
+                $('#walletModal').modal('show');
+            });
+            
+            $('#saveWalletBtn').click(function() {
+                saveWallet();
+            });
+            
+            $('#searchBtn').click(function() {
+                loadWallets();
+            });
+            
+            $('#searchInput').keypress(function(e) {
+                if (e.which == 13) {
+                    loadWallets();
+                }
+            });
+        });
+        
+        function loadWallets() {
+            var searchTerm = $('#searchInput').val();
+            $.ajax({
+                url: '/MiniGame/Wallet/GetWallets',
+                type: 'GET',
+                data: { search: searchTerm },
+                success: function(data) {
+                    var tbody = $('#walletTable tbody');
+                    tbody.empty();
+                    
+                    if (data && data.length > 0) {
+                        $.each(data, function(index, wallet) {
+                            var row = '<tr>' +
+                                '<td>' + wallet.id + '</td>' +
+                                '<td>' + wallet.userId + '</td>' +
+                                '<td>' + getWalletTypeName(wallet.walletType) + '</td>' +
+                                '<td>' + wallet.balance.toFixed(2) + '</td>' +
+                                '<td>' + (wallet.status ? '啟用' : '停用') + '</td>' +
+                                '<td>' + formatDate(wallet.createdAt) + '</td>' +
+                                '<td>' +
+                                    '<button class="btn btn-sm btn-primary edit-wallet" data-id="' + wallet.id + '">編輯</button> ' +
+                                    '<button class="btn btn-sm btn-danger delete-wallet" data-id="' + wallet.id + '">刪除</button>' +
+                                '</td>' +
+                            '</tr>';
+                            tbody.append(row);
+                        });
+                    } else {
+                        tbody.append('<tr><td colspan="7" class="text-center">無數據</td></tr>');
+                    }
+                },
+                error: function() {
+                    alert('載入錢包數據失敗');
+                }
+            });
+        }
+        
+        function saveWallet() {
+            var formData = $('#walletForm').serialize();
+            var isEdit = $('#walletId').val() !== '';
+            var url = isEdit ? '/MiniGame/Wallet/Update' : '/MiniGame/Wallet/Create';
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        $('#walletModal').modal('hide');
+                        loadWallets();
+                        alert(isEdit ? '錢包更新成功' : '錢包新增成功');
+                    } else {
+                        alert('操作失敗: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('操作失敗');
+                }
+            });
+        }
+        
+        function getWalletTypeName(type) {
+            switch(type) {
+                case 1: return '遊戲幣';
+                case 2: return '點數';
+                case 3: return '代幣';
+                default: return '未知';
+            }
+        }
+        
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            return date.toLocaleDateString('zh-TW');
+        }
+        
+        // 編輯錢包
+        $(document).on('click', '.edit-wallet', function() {
+            var walletId = $(this).data('id');
+            $.ajax({
+                url: '/MiniGame/Wallet/Get/' + walletId,
+                type: 'GET',
+                success: function(wallet) {
+                    $('#walletModalTitle').text('編輯錢包');
+                    $('#walletId').val(wallet.id);
+                    $('#userId').val(wallet.userId);
+                    $('#walletType').val(wallet.walletType);
+                    $('#balance').val(wallet.balance);
+                    $('#status').val(wallet.status ? 1 : 0);
+                    $('#walletModal').modal('show');
+                },
+                error: function() {
+                    alert('載入錢包資料失敗');
+                }
+            });
+        });
+        
+        // 刪除錢包
+        $(document).on('click', '.delete-wallet', function() {
+            if (confirm('確定要刪除這個錢包嗎？')) {
+                var walletId = $(this).data('id');
+                $.ajax({
+                    url: '/MiniGame/Wallet/Delete/' + walletId,
+                    type: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            loadWallets();
+                            alert('錢包刪除成功');
+                        } else {
+                            alert('刪除失敗: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('刪除失敗');
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+

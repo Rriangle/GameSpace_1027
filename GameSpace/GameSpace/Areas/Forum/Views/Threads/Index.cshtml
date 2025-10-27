@@ -1,0 +1,85 @@
+﻿@model IEnumerable<GameSpace.Models.Forum>
+@{
+    ViewData["Title"] = "論壇列表(社群管理)";
+    string sort = (string)(ViewBag.Sort ?? "created");
+    string dir = (string)(ViewBag.Dir ?? "desc");
+    string Flip(string d) => d == "desc" ? "asc" : "desc";
+    string Arrow(string d) => d == "desc" ? "▼" : "▲";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4 col-sm-6">
+        <input type="text" name="q" value="@ViewBag.Q" class="form-control" placeholder="搜尋論壇名稱">
+    </div>
+    <div class="col-auto d-flex gap-2">
+        <button class="btn btn-primary" type="submit">查詢</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">重置</a>
+    </div>
+    <!-- 保留目前排序參數 -->
+    <input type="hidden" name="sort" value="@sort" />
+    <input type="hidden" name="dir" value="@dir" />
+</form>
+
+<div class="d-flex gap-2 mb-2">
+    <div class="btn-group" role="group" aria-label="Sort Field">
+        <a class="btn @(sort=="id"?"btn-primary":"btn-outline-primary")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)"
+           asp-route-sort="id" asp-route-dir="@(sort=="id"?Flip(dir):"asc")">
+            ID @(sort == "id" ? Arrow(dir) : "")
+        </a>
+        <a class="btn @(sort=="name"?"btn-primary":"btn-outline-primary")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)"
+           asp-route-sort="name" asp-route-dir="@(sort=="name"?Flip(dir):"asc")">
+            名稱 @(sort == "name" ? Arrow(dir) : "")
+        </a>
+        <a class="btn @(sort=="created"?"btn-primary":"btn-outline-primary")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)"
+           asp-route-sort="created" asp-route-dir="@(sort=="created"?Flip(dir):"desc")">
+            建立時間 @(sort == "created" ? Arrow(dir) : "")
+        </a>
+    </div>
+
+    <div class="btn-group" role="group" aria-label="Sort Dir">
+        <a class="btn @(dir == "asc" ? "btn-success" : "btn-outline-success")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)"
+           asp-route-sort="@sort" asp-route-dir="asc">升冪 ▲</a>
+        <a class="btn @(dir == "desc" ? "btn-success" : "btn-outline-success")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)"
+           asp-route-sort="@sort" asp-route-dir="desc">降冪 ▼</a>
+    </div>
+</div>
+
+<table class="table table-sm table-striped table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th style="width:90px">ID</th>
+            <th>名稱</th>
+            <th style="width:200px">建立時間</th>
+            <th style="width:120px">操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="4" class="text-center text-muted py-4">沒有資料</td></tr>
+        }
+        else
+        {
+            @foreach (var f in Model)
+            {
+                <tr>
+                    <td>@f.ForumId</td>
+                    <td>@f.Name</td>
+                    <td>@(f.CreatedAt?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "-")</td>
+                    <td>
+                        <a class="btn btn-sm btn-primary"
+                           asp-area="Forum" asp-controller="Threads" asp-action="List"
+                           asp-route-forumId="@f.ForumId">進入</a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

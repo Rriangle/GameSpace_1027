@@ -1,0 +1,133 @@
+/* === GameSpace Cat Ears v2 (ear styles) ===============================
+ * 新增：可切換耳朵樣式（triangle/rounded/bunny/fox/emoji/image）
+ * 用法：在 .cat-ear-wrapper 上加入 data-ear="rounded" 等
+ * 可自訂：--cat-ear-color, --cat-ear-size, --cat-ear-gap
+ * 進階形變：--ear-sx (X縮放), --ear-sy (Y縮放)
+ * ==================================================================== */
+.cat-ear-wrapper{
+  --cat-ear-color:#AAA;
+  --cat-ear-size:28px;
+  --cat-ear-gap:16px;
+  --cat-ear-tilt:8deg;
+  position: relative;
+  padding: 1.25rem;
+  border: 1px solid var(--cat-ear-color);
+  border-radius: 1rem;
+  background: #fff;
+  transition: box-shadow .25s ease, border-color .25s ease;
+  overflow: visible;
+}
+
+.cat-ear-wrapper:hover{
+  box-shadow: 0 12px 24px rgba(0,0,0,.12);
+  border-color: color-mix(in oklab, var(--cat-ear-color) 85%, black);
+}
+
+/* 基本耳（左右） */
+.cat-ear-wrapper::before,
+.cat-ear-wrapper::after{
+  content:"";
+  position:absolute;
+  width:var(--cat-ear-size);
+  height:var(--cat-ear-size);
+  top: calc(-1 * var(--cat-ear-size) + 8px);
+  background: var(--cat-ear-color);
+  /* 預設三角耳 */
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  transform-origin: 50% 90%;
+  /* 允許外部用變數疊加 scale 形變 */
+  transform: rotate(0deg) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));
+  transition: transform .18s ease;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,.06));
+  z-index: 2;
+}
+.cat-ear-wrapper::before{ left: var(--cat-ear-gap); }
+.cat-ear-wrapper::after{  right: var(--cat-ear-gap); }
+
+/* 滑過時微微外翻（保留 scale） */
+.cat-ear-wrapper:hover::before{
+  transform: rotate(var(--cat-ear-tilt)) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));
+}
+.cat-ear-wrapper:hover::after{
+  transform: rotate(calc(-1 * var(--cat-ear-tilt))) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));
+}
+
+/* JS 動態傾斜（data-tilt="1"）：由 JS 寫入 --ear-left/right 角度 */
+.cat-ear-wrapper[data-tilt="1"]::before{
+  transform: rotate(var(--ear-left, 0deg)) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));
+}
+.cat-ear-wrapper[data-tilt="1"]::after{
+  transform: rotate(var(--ear-right, 0deg)) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));
+}
+
+/* 點擊扭耳動畫 */
+@keyframes ear-wiggle{
+  0%{transform: rotate(0deg) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));}
+  25%{transform: rotate(7deg) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));}
+  50%{transform: rotate(-7deg) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));}
+  100%{transform: rotate(0deg) scaleX(var(--ear-sx,1)) scaleY(var(--ear-sy,1));}
+}
+.cat-ear-wrapper.ear-wiggle::before{ animation: ear-wiggle .4s ease; }
+.cat-ear-wrapper.ear-wiggle::after { animation: ear-wiggle .4s ease reverse; }
+
+/* ========== 耳型樣式切換（data-ear） ================================ */
+/* 1) 圓角貓耳（使用 path()） */
+.cat-ear-wrapper[data-ear="rounded"]::before,
+.cat-ear-wrapper[data-ear="rounded"]::after{
+  clip-path: path('M50 1 C44 12 28 52 2 100 L98 100 C72 52 56 12 50 1 Z');
+}
+
+/* 2) 兔耳（較高且偏瘦） */
+.cat-ear-wrapper[data-ear="bunny"]{
+  --ear-sx: .70;
+  --ear-sy: 1.55;
+}
+.cat-ear-wrapper[data-ear="bunny"]::before,
+.cat-ear-wrapper[data-ear="bunny"]::after{
+  top: calc(-1.35 * var(--cat-ear-size)); /* 耳根更高 */
+}
+
+/* 3) 狐耳（更銳利、帶內耳色） */
+.cat-ear-wrapper[data-ear="fox"]{
+  --ear-sx: .90;
+  --ear-sy: 1.15;
+}
+.cat-ear-wrapper[data-ear="fox"]::before,
+.cat-ear-wrapper[data-ear="fox"]::after{
+  background:
+    conic-gradient(from 180deg at 50% 70%,
+      var(--cat-ear-color) 0 18%,
+      #ffc7ad 0 55%,
+      var(--cat-ear-color) 0 100%);
+  clip-path: polygon(50% 0%, 10% 100%, 90% 100%);
+}
+
+/* 4) Emoji 耳（用文字當耳朵） */
+.cat-ear-wrapper[data-ear="emoji"]::before,
+.cat-ear-wrapper[data-ear="emoji"]::after{
+  content: attr(data-emoji);
+  width: auto; height: auto;
+  top: -6px;
+  clip-path: none;
+  background: none;
+  font-size: calc(var(--cat-ear-size) * 0.95);
+  line-height: 1;
+  filter: none;
+}
+
+/* 5) 圖片耳（用圖片當耳朵，自行指定 --ear-image:url(...)） */
+.cat-ear-wrapper[data-ear="image"]::before,
+.cat-ear-wrapper[data-ear="image"]::after{
+  background: var(--ear-image) center/cover no-repeat;
+  clip-path: none;
+  border-radius: 6px;
+  width: calc(var(--cat-ear-size) * 1.1);
+  height: calc(var(--cat-ear-size) * 1.1);
+  top: calc(-1 * var(--cat-ear-size));
+}
+
+/* 深色背景適配 */
+[data-bs-theme="dark"] .cat-ear-wrapper{
+  background:#111;
+  border-color:color-mix(in oklab, var(--cat-ear-color) 70%, white);
+}

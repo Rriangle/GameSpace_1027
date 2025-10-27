@@ -1,0 +1,112 @@
+@model IEnumerable<GameSpace.Models.Pet>
+@{
+    ViewData["Title"] = "選擇寵物進行設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">會員個別寵物設定</h1>
+        <a href="@Url.Action("Index", "AdminPet")" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回寵物管理
+        </a>
+    </div>
+
+    <!-- Info Message -->
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i> 請從下方列表中選擇要設定的寵物
+    </div>
+
+    <!-- Pets List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">寵物列表</h6>
+        </div>
+        <div class="card-body">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>寵物ID</th>
+                                <th>用戶ID</th>
+                                <th>寵物名稱</th>
+                                <th>等級</th>
+                                <th>經驗值</th>
+                                <th>膚色</th>
+                                <th>背景色</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pet in Model)
+                            {
+                                <tr>
+                                    <td>@pet.PetId</td>
+                                    <td>@pet.UserId</td>
+                                    <td>@(string.IsNullOrEmpty(pet.PetName) ? "未命名" : pet.PetName)</td>
+                                    <td>
+                                        <span class="badge badge-primary">@pet.Level</span>
+                                    </td>
+                                    <td>@pet.Experience</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(pet.SkinColor))
+                                        {
+                                            <span class="badge" style="background-color: @pet.SkinColor; color: white;">@pet.SkinColor</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">未設定</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(pet.BackgroundColor))
+                                        {
+                                            <span class="badge" style="background-color: @pet.BackgroundColor; color: white;">@pet.BackgroundColor</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">未設定</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="@Url.Action("IndividualSettings", "AdminPet", new { petId = pet.PetId })" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit"></i> 設定
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-paw fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">目前沒有可設定的寵物</p>
+                    <a href="@Url.Action("QueryPets", "AdminPet")" class="btn btn-primary">
+                        <i class="fas fa-search"></i> 查看所有寵物
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+}

@@ -1,0 +1,556 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.GameRuleViewModel
+@{
+    ViewData["Title"] = "遊戲規則設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-gamepad text-primary me-2"></i>遊戲規則設定
+        </h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>返回列表
+        </a>
+    </div>
+
+    <!-- TempData Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">總遊戲次數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.TotalGamesPlayed</div>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-gamepad fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">今日遊戲次數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.TodayGamesPlayed</div>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-calendar-day fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-start border-info border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">每日次數限制</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.DailyPlayLimit</div>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-stopwatch fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card shadow-sm border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">遊戲狀態</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success rounded-pill">啟用中</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary rounded-pill">已停用</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-toggle-on fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Game Configuration Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-cog me-2"></i>基本遊戲設定</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="UpdateGameRules" method="post" id="gameRulesForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control rounded" id="GameName" name="GameName" value="@Model.GameName" maxlength="100" required placeholder="請輸入遊戲名稱">
+                            <label for="GameName"><i class="fas fa-tag me-1"></i>遊戲名稱 *</label>
+                        </div>
+                        <small class="form-text text-muted d-block mb-3">遊戲顯示名稱，最多100個字元</small>
+
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control rounded" id="Description" name="Description" rows="3" maxlength="500" placeholder="請輸入遊戲描述" style="height: 100px;">@Model.Description</textarea>
+                            <label for="Description"><i class="fas fa-align-left me-1"></i>遊戲描述</label>
+                        </div>
+                        <small class="form-text text-muted d-block mb-3">遊戲簡介，最多500個字元</small>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control rounded" id="MinDurationSeconds" name="MinDurationSeconds" min="0" max="3600" step="1" placeholder="請輸入最小時長">
+                                    <label for="MinDurationSeconds"><i class="fas fa-clock me-1"></i>最小遊戲時長（秒）</label>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">遊戲最短時間，0-3600秒</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control rounded" id="MaxDurationSeconds" name="MaxDurationSeconds" min="0" max="3600" step="1" placeholder="請輸入最大時長">
+                                    <label for="MaxDurationSeconds"><i class="fas fa-hourglass-end me-1"></i>最大遊戲時長（秒）</label>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">遊戲最長時間，0-3600秒</small>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input type="checkbox" class="form-check-input" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : "")>
+                            <label class="form-check-label" for="IsActive">
+                                <i class="fas fa-toggle-on me-1"></i>啟用遊戲
+                            </label>
+                        </div>
+                        <small class="form-text text-muted d-block mb-3">關閉後，玩家將無法進行此遊戲</small>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill me-2">
+                                <i class="fas fa-save me-2"></i>儲存遊戲設定
+                            </button>
+                            <button type="reset" class="btn btn-secondary btn-lg rounded-pill">
+                                <i class="fas fa-undo me-2"></i>重置
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Daily Limit Configuration -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-calendar-check me-2"></i>每日次數限制設定</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="dailyLimitForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control rounded" id="MaxPlaysPerDay" name="MaxPlaysPerDay" value="@Model.DailyPlayLimit" min="1" max="100" required placeholder="請輸入每日次數限制">
+                                    <label for="MaxPlaysPerDay"><i class="fas fa-hashtag me-1"></i>每日最大遊戲次數 *</label>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">設定玩家每天可以玩的次數（1-100次）</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control rounded" id="DailyLimitRemarks" name="Remarks" maxlength="200" placeholder="請輸入設定說明（選填）">
+                                    <label for="DailyLimitRemarks"><i class="fas fa-comment me-1"></i>設定說明</label>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">此設定的備註說明</small>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-success btn-lg rounded-pill" onclick="updateDailyLimit()">
+                            <i class="fas fa-save me-2"></i>更新每日次數
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Level Settings Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-warning text-white">
+                    <h4 class="mb-0"><i class="fas fa-layer-group me-2"></i>關卡設定（等級1-3）</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        @foreach (var level in Model.LevelSettings.OrderBy(l => l.Level))
+                        {
+                            <div class="col-lg-12 mb-4">
+                                <div class="card border-start border-warning border-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="fw-bold text-warning mb-0">
+                                            <i class="fas fa-star me-2"></i>第 @level.Level 關設定
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form class="level-settings-form" data-level="@level.Level">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Level" value="@level.Level">
+
+                                            <div class="row">
+                                                <!-- 難度設定 -->
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-sliders-h me-2"></i>難度設定</h6>
+                                                    <div class="form-floating mb-3">
+                                                        <input type="number" class="form-control rounded" name="MonsterCount" value="@level.MonsterCount" min="1" max="50" required placeholder="請輸入怪物數量">
+                                                        <label><i class="fas fa-dragon me-1"></i>怪物數量</label>
+                                                    </div>
+
+                                                    <div class="form-floating mb-3">
+                                                        <input type="number" class="form-control rounded" name="SpeedMultiplier" value="@level.SpeedMultiplier" min="0.5" max="5.0" step="0.1" required placeholder="請輸入速度倍率">
+                                                        <label><i class="fas fa-tachometer-alt me-1"></i>移動速度倍率</label>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 獲勝獎勵 -->
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold text-success mb-3"><i class="fas fa-trophy me-2"></i>獲勝獎勵</h6>
+                                                    <div class="row">
+                                                        <div class="col-4">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="number" class="form-control rounded" name="WinPointsReward" value="@level.WinPointsReward" min="0" max="10000" required placeholder="點數">
+                                                                <label class="small"><i class="fas fa-coins me-1"></i>點數</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="number" class="form-control rounded" name="WinExpReward" value="@level.WinExpReward" min="0" max="10000" required placeholder="經驗值">
+                                                                <label class="small"><i class="fas fa-star me-1"></i>經驗值</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="number" class="form-control rounded" name="WinCouponReward" value="@level.WinCouponReward" min="0" max="10" placeholder="優惠券數量">
+                                                                <label class="small"><i class="fas fa-ticket-alt me-1"></i>優惠券</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 失敗/中止獎勵 -->
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold text-danger mb-3"><i class="fas fa-times-circle me-2"></i>失敗獎勵</h6>
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="number" class="form-control rounded" name="LosePointsReward" value="@level.LosePointsReward" min="0" max="10000" placeholder="點數">
+                                                                <label class="small"><i class="fas fa-coins me-1"></i>點數</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="number" class="form-control rounded" name="LoseExpReward" value="@level.LoseExpReward" min="0" max="10000" placeholder="經驗值">
+                                                                <label class="small"><i class="fas fa-star me-1"></i>經驗值</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-ban me-2"></i>中止獎勵</h6>
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="number" class="form-control rounded" name="AbortPointsReward" value="@level.AbortPointsReward" min="0" max="10000" placeholder="點數">
+                                                                <label class="small"><i class="fas fa-coins me-1"></i>點數</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="form-floating mb-3">
+                                                                <input type="number" class="form-control rounded" name="AbortExpReward" value="@level.AbortExpReward" min="0" max="10000" placeholder="經驗值">
+                                                                <label class="small"><i class="fas fa-star me-1"></i>經驗值</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="form-floating mb-3">
+                                                        <textarea class="form-control rounded" name="Description" rows="2" maxlength="200" placeholder="請輸入關卡描述" style="height: 80px;">@level.Description</textarea>
+                                                        <label><i class="fas fa-comment-alt me-1"></i>關卡描述</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button type="button" class="btn btn-warning btn-lg rounded-pill w-100" onclick="updateLevelSettings(@level.Level)">
+                                                <i class="fas fa-save me-2"></i>更新第 @level.Level 關
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-info text-white">
+                    <h6 class="m-0 fw-bold">
+                        <i class="fas fa-info-circle me-2"></i>設定說明
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold">基本設定</h6>
+                    <ul class="list-unstyled mb-3">
+                        <li><i class="fas fa-check text-success me-2"></i>遊戲名稱為必填欄位</li>
+                        <li><i class="fas fa-check text-success me-2"></i>時長設定影響遊戲時限</li>
+                        <li><i class="fas fa-check text-success me-2"></i>停用後玩家無法遊玩</li>
+                    </ul>
+
+                    <h6 class="fw-bold">每日次數</h6>
+                    <ul class="list-unstyled mb-3">
+                        <li><i class="fas fa-check text-success me-2"></i>限制玩家每日遊戲次數</li>
+                        <li><i class="fas fa-check text-success me-2"></i>可設定1-100次</li>
+                        <li><i class="fas fa-check text-success me-2"></i>每日午夜12點重置</li>
+                    </ul>
+
+                    <h6 class="fw-bold">關卡設定</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>可設定多個難度關卡</li>
+                        <li><i class="fas fa-check text-success me-2"></i>各關卡獨立獎勵設定</li>
+                        <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>修改立即生效</li>
+                    </ul>
+                </div>
+            </div>
+
+            @if (Model.LastUpdated.HasValue)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-gradient-secondary text-white">
+                        <h6 class="m-0 fw-bold">
+                            <i class="fas fa-clock me-2"></i>更新資訊
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>最後更新時間：</strong></p>
+                        <p class="text-muted">@Model.LastUpdated.Value.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+
+            // Form validation for main game rules
+            $('#gameRulesForm').on('submit', function(e) {
+                var minDuration = parseInt($('#MinDurationSeconds').val()) || 0;
+                var maxDuration = parseInt($('#MaxDurationSeconds').val()) || 0;
+
+                if (minDuration > 0 && maxDuration > 0 && minDuration > maxDuration) {
+                    e.preventDefault();
+                    alert('最小遊戲時長不能大於最大遊戲時長');
+                    return false;
+                }
+
+                return confirm('確定要儲存遊戲設定嗎？修改後將立即生效。');
+            });
+        });
+
+        // Update daily limit via AJAX
+        function updateDailyLimit() {
+            var form = $('#dailyLimitForm');
+            var formData = {
+                MaxPlaysPerDay: parseInt($('#MaxPlaysPerDay').val()),
+                Remarks: $('#DailyLimitRemarks').val()
+            };
+
+            // Validation
+            if (formData.MaxPlaysPerDay < 1 || formData.MaxPlaysPerDay > 100) {
+                alert('每日次數必須在1-100之間');
+                return;
+            }
+
+            if (!confirm('確定要更新每日次數限制為 ' + formData.MaxPlaysPerDay + ' 次嗎？')) {
+                return;
+            }
+
+            // Get anti-forgery token
+            var token = form.find('input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '@Url.Action("UpdateDailyLimit", "AdminMiniGame")',
+                type: 'POST',
+                data: formData,
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                beforeSend: function() {
+                    $('button').prop('disabled', true);
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showSuccessMessage(response.message);
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showErrorMessage(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showErrorMessage('更新失敗：' + error);
+                },
+                complete: function() {
+                    $('button').prop('disabled', false);
+                }
+            });
+        }
+
+        // Update level settings via AJAX
+        function updateLevelSettings(level) {
+            var form = $('.level-settings-form[data-level="' + level + '"]');
+            var formData = {
+                Level: level,
+                MonsterCount: parseInt(form.find('input[name="MonsterCount"]').val()),
+                SpeedMultiplier: parseFloat(form.find('input[name="SpeedMultiplier"]').val()),
+                WinPointsReward: parseInt(form.find('input[name="WinPointsReward"]').val()),
+                WinExpReward: parseInt(form.find('input[name="WinExpReward"]').val()),
+                WinCouponReward: parseInt(form.find('input[name="WinCouponReward"]').val()) || 0,
+                LosePointsReward: parseInt(form.find('input[name="LosePointsReward"]').val()) || 0,
+                LoseExpReward: parseInt(form.find('input[name="LoseExpReward"]').val()) || 0,
+                AbortPointsReward: parseInt(form.find('input[name="AbortPointsReward"]').val()) || 0,
+                AbortExpReward: parseInt(form.find('input[name="AbortExpReward"]').val()) || 0,
+                Description: form.find('textarea[name="Description"]').val()
+            };
+
+            // Validation
+            if (formData.MonsterCount < 1 || formData.MonsterCount > 50) {
+                alert('怪物數量必須在1-50之間');
+                return;
+            }
+
+            if (formData.SpeedMultiplier < 0.5 || formData.SpeedMultiplier > 5.0) {
+                alert('速度倍率必須在0.5-5.0之間');
+                return;
+            }
+
+            if (!confirm('確定要更新第 ' + level + ' 關的設定嗎？')) {
+                return;
+            }
+
+            // Get anti-forgery token
+            var token = form.find('input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '@Url.Action("UpdateLevelSettings", "AdminMiniGame")',
+                type: 'POST',
+                data: formData,
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                beforeSend: function() {
+                    $('button').prop('disabled', true);
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showSuccessMessage(response.message);
+                    } else {
+                        showErrorMessage(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showErrorMessage('更新失敗：' + error);
+                },
+                complete: function() {
+                    $('button').prop('disabled', false);
+                }
+            });
+        }
+
+        // Show success message
+        function showSuccessMessage(message) {
+            var alertHtml = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                           '<i class="fas fa-check-circle"></i> ' + message +
+                           '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                           '<span aria-hidden="true">&times;</span></button></div>';
+
+            $('.container-fluid').prepend(alertHtml);
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(function() {
+                $('.alert-success').fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 5000);
+
+            // Scroll to top to show message
+            $('html, body').animate({ scrollTop: 0 }, 'fast');
+        }
+
+        // Show error message
+        function showErrorMessage(message) {
+            var alertHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                           '<i class="fas fa-exclamation-circle"></i> ' + message +
+                           '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                           '<span aria-hidden="true">&times;</span></button></div>';
+
+            $('.container-fluid').prepend(alertHtml);
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(function() {
+                $('.alert-danger').fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 5000);
+
+            // Scroll to top to show message
+            $('html, body').animate({ scrollTop: 0 }, 'fast');
+        }
+    </script>
+}

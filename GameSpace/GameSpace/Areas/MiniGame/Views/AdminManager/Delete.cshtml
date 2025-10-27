@@ -1,0 +1,208 @@
+﻿@model GameSpace.Models.ManagerDatum
+@{
+    ViewData["Title"] = "刪除管理者";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">刪除管理者</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminManager")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">確認刪除管理者</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>警告：</strong>您確定要刪除此管理者嗎？此操作將永久刪除管理者帳號和相關數據。
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>管理者資訊</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>管理者ID:</strong></td>
+                                    <td>@Model.ManagerId</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>管理者名稱:</strong></td>
+                                    <td>@Model.ManagerName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>帳號:</strong></td>
+                                    <td>@Model.ManagerAccount</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>電子郵件:</strong></td>
+                                    <td>@Model.ManagerEmail</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>註冊日期:</strong></td>
+                                    <td>@Model.AdministratorRegistrationDate?.ToString("yyyy-MM-dd HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>狀態:</strong></td>
+                                    <td>
+                                        <span class="badge @(Model.ManagerLockoutEnabled && Model.ManagerLockoutEnd.HasValue && Model.ManagerLockoutEnd > DateTime.Now ? "badge-danger" : "badge-success")">
+                                            @(Model.ManagerLockoutEnabled && Model.ManagerLockoutEnd.HasValue && Model.ManagerLockoutEnd > DateTime.Now ? "鎖定" : "啟用")
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>相關數據統計</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>角色數量:</strong></td>
+                                    <td>@(Model.ManagerRoles?.Count ?? 0) 個</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>最後登入:</strong></td>
+                                    <td>@(Model.ManagerLockoutEnd?.ToString("yyyy-MM-dd HH:mm") ?? "從未登入")</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" method="post" class="mt-4">
+                        <input asp-for="ManagerId" type="hidden" />
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 確認刪除
+                            </button>
+                            <a href="@Url.Action("Index", "AdminManager")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">刪除須知</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                        <h5>刪除管理者注意事項</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            此操作為永久刪除，無法復原
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            管理者帳號將被完全移除
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            相關角色分配將被清除
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            操作記錄將被保留
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            建議先備份重要數據
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">替代方案</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Edit", "AdminManager", new { id = Model.ManagerId })" class="btn btn-outline-warning">
+                            <i class="fas fa-edit"></i> 編輯管理者
+                        </a>
+                        <button type="button" class="btn btn-outline-info" onclick="toggleLockStatus()">
+                            <i class="fas fa-lock"></i> 切換鎖定狀態
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetPassword()">
+                            <i class="fas fa-key"></i> 重置密碼
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleLockStatus() {
+            if (confirm('確定要切換鎖定狀態嗎？')) {
+                fetch('@Url.Action("ToggleStatus", "AdminManager")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ id: @Model.ManagerId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('狀態已更新');
+                        location.reload();
+                    } else {
+                        alert('操作失敗');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失敗');
+                });
+            }
+        }
+
+        function resetPassword() {
+            const newPassword = prompt('請輸入新密碼：');
+            if (newPassword && newPassword.length >= 6) {
+                fetch('@Url.Action("ResetPassword", "AdminManager")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ id: @Model.ManagerId, newPassword: newPassword })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('密碼已重置');
+                    } else {
+                        alert('操作失敗');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失敗');
+                });
+            } else if (newPassword) {
+                alert('密碼長度至少需要6個字符');
+            }
+        }
+    </script>
+}
+

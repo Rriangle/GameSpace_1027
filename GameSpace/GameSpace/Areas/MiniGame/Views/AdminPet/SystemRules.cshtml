@@ -1,0 +1,441 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.PetSystemRulesInputModel
+@{
+    ViewData["Title"] = "寵物系統規則設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-paw text-primary me-2"></i>寵物系統規則設定
+        </h1>
+        <a href="@Url.Action("QueryPets", "AdminPet")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>返回寵物列表
+        </a>
+    </div>
+
+    <!-- TempData Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- 統計卡片區 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">升級經驗基數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@(Model?.LevelUpExpBase ?? 100)</div>
+                        </div>
+                        <div class="text-primary opacity-50">
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">經驗值倍數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@(Model?.ExpBonus ?? 1)x</div>
+                        </div>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-bolt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">換色點數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@(Model?.ColorChangePoints ?? 1000)</div>
+                        </div>
+                        <div class="text-warning opacity-50">
+                            <i class="fas fa-palette fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">換背景點數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@(Model?.BackgroundChangePoints ?? 500)</div>
+                        </div>
+                        <div class="text-info opacity-50">
+                            <i class="fas fa-image fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="UpdateSystemRules" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <!-- 左側配置區域 -->
+            <div class="col-lg-8">
+                <!-- 寵物系統配置 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-cog me-2"></i>寵物系統配置</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="LevelUpExpBase" class="form-control rounded" placeholder="請輸入基礎經驗值" />
+                                    <label asp-for="LevelUpExpBase">
+                                        <i class="fas fa-star me-1"></i>升級基礎經驗值 *
+                                    </label>
+                                    <span asp-validation-for="LevelUpExpBase" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">升級所需的基礎經驗值</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="ExpBonus" class="form-control rounded" placeholder="請輸入倍數" />
+                                    <label asp-for="ExpBonus">
+                                        <i class="fas fa-bolt me-1"></i>經驗值獎勵倍數 *
+                                    </label>
+                                    <span asp-validation-for="ExpBonus" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">獲得經驗值的倍數</small>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="LevelUpFormula" class="form-control rounded" readonly style="background-color: #f8f9fc;" />
+                            <label asp-for="LevelUpFormula">
+                                <i class="fas fa-calculator me-1"></i>升級經驗值公式
+                            </label>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>升級公式說明：</strong><br>
+                            <strong>Level 1-10:</strong> 40×level+60<br>
+                            <strong>Level 11-100:</strong> 0.8×level²+380<br>
+                            <strong>Level 101+:</strong> 285.69×1.06^level
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 互動獎勵設定 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0"><i class="fas fa-heart me-2"></i>互動獎勵設定</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="FeedBonus" class="form-control rounded" placeholder="請輸入餵食獎勵值" />
+                                    <label asp-for="FeedBonus">
+                                        <i class="fas fa-utensils me-1"></i>餵食獎勵值(飢餓) *
+                                    </label>
+                                    <span asp-validation-for="FeedBonus" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">餵食增加的飢餓度</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="PlayBonus" class="form-control rounded" placeholder="請輸入玩耍獎勵值" />
+                                    <label asp-for="PlayBonus">
+                                        <i class="fas fa-gamepad me-1"></i>玩耍獎勵值(心情) *
+                                    </label>
+                                    <span asp-validation-for="PlayBonus" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">玩耍增加的心情值</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="CleanBonus" class="form-control rounded" placeholder="請輸入清潔獎勵值" />
+                                    <label asp-for="CleanBonus">
+                                        <i class="fas fa-shower me-1"></i>清潔獎勵值(洗澡) *
+                                    </label>
+                                    <span asp-validation-for="CleanBonus" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">洗澡增加的清潔度</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="SleepBonus" class="form-control rounded" placeholder="請輸入哄睡獎勵值" />
+                                    <label asp-for="SleepBonus">
+                                        <i class="fas fa-bed me-1"></i>哄睡獎勵值(體力) *
+                                    </label>
+                                    <span asp-validation-for="SleepBonus" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">哄睡增加的體力值</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 外觀變更成本 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-warning text-white">
+                        <h4 class="mb-0"><i class="fas fa-palette me-2"></i>外觀變更成本</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="ColorChangePoints" class="form-control rounded" placeholder="請輸入所需點數" />
+                                    <label asp-for="ColorChangePoints">
+                                        <i class="fas fa-paint-brush me-1"></i>顏色更換所需點數 *
+                                    </label>
+                                    <span asp-validation-for="ColorChangePoints" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">更換膚色所需的點數</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="BackgroundChangePoints" class="form-control rounded" placeholder="請輸入所需點數" />
+                                    <label asp-for="BackgroundChangePoints">
+                                        <i class="fas fa-image me-1"></i>背景更換所需點數 *
+                                    </label>
+                                    <span asp-validation-for="BackgroundChangePoints" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">更換背景所需的點數</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 可用顏色配置 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0"><i class="fas fa-swatchbook me-2"></i>可用顏色配置</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="AvailableColors" class="form-control rounded" rows="3" placeholder="請輸入顏色代碼，以逗號分隔" style="height: 100px;"></textarea>
+                            <label asp-for="AvailableColors">
+                                <i class="fas fa-list me-1"></i>可用顏色列表
+                            </label>
+                            <span asp-validation-for="AvailableColors" class="text-danger"></span>
+                        </div>
+                        <small class="form-text text-muted d-block mb-3">可用膚色列表,以逗號分隔的十六進位顏色碼 (例如: #FFFFFF, #FFD700, #FF6B6B)</small>
+
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="AvailableBackgrounds" class="form-control rounded" rows="3" placeholder="請輸入背景顏色代碼，以逗號分隔" style="height: 100px;"></textarea>
+                            <label asp-for="AvailableBackgrounds">
+                                <i class="fas fa-list me-1"></i>可用背景列表
+                            </label>
+                            <span asp-validation-for="AvailableBackgrounds" class="text-danger"></span>
+                        </div>
+                        <small class="form-text text-muted d-block mb-3">可用背景列表,以逗號分隔的十六進位顏色碼 (例如: #FFFFFF, #F0F0F0, #E8F5E9)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側資訊區域 -->
+            <div class="col-lg-4">
+                <!-- 規則說明 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-gradient-success text-white">
+                        <h6 class="m-0 fw-bold">
+                            <i class="fas fa-info-circle me-2"></i>規則說明
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                升級經驗值決定寵物等級
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                互動獎勵影響寵物屬性成長
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                外觀變更需要消耗點數
+                            </li>
+                        </ul>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            修改後立即生效,影響所有寵物
+                        </div>
+
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            顏色代碼格式: #RRGGBB
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 每日狀態衰減 -->
+                <div class="card shadow-sm mb-4 border-start border-danger border-4">
+                    <div class="card-header bg-gradient-danger text-white">
+                        <h6 class="m-0 fw-bold">
+                            <i class="fas fa-calendar-minus me-2"></i>每日狀態衰減
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-2">寵物狀態每日自動衰減（系統固定）：</p>
+                        <ul class="list-unstyled small">
+                            <li class="mb-1">
+                                <span class="badge bg-danger rounded-pill">飽食度</span>
+                                <strong class="text-danger"> -20</strong>
+                            </li>
+                            <li class="mb-1">
+                                <span class="badge bg-warning rounded-pill text-dark">心情</span>
+                                <strong class="text-danger"> -30</strong>
+                            </li>
+                            <li class="mb-1">
+                                <span class="badge bg-primary rounded-pill">體力</span>
+                                <strong class="text-danger"> -10</strong>
+                            </li>
+                            <li class="mb-1">
+                                <span class="badge bg-info rounded-pill">清潔度</span>
+                                <strong class="text-danger"> -20</strong>
+                            </li>
+                        </ul>
+                        <div class="alert alert-success mt-3 mb-0 py-2 px-3">
+                            <small>
+                                <i class="fas fa-star text-warning"></i>
+                                <strong>全滿獎勵：</strong>所有狀態達100時，每日額外獲得 <strong class="text-success">+100 經驗值</strong>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 建議值 -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h6 class="m-0 fw-bold">
+                            <i class="fas fa-lightbulb me-2"></i>建議值
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled small">
+                            <li class="mb-2">
+                                <strong>升級基礎經驗值:</strong> 100-500
+                            </li>
+                            <li class="mb-2">
+                                <strong>互動獎勵:</strong> 5-20
+                            </li>
+                            <li class="mb-2">
+                                <strong>經驗值倍數:</strong> 1-5
+                            </li>
+                            <li class="mb-2">
+                                <strong>換色點數:</strong> 1000-5000
+                            </li>
+                            <li class="mb-2">
+                                <strong>換背景點數:</strong> 500-3000
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部按鈕 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-end mb-4">
+                    <button type="submit" class="btn btn-primary btn-lg me-2 rounded-pill">
+                        <i class="fas fa-save me-2"></i>儲存設定
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg rounded-pill" onclick="location.reload()">
+                        <i class="fas fa-redo me-2"></i>重置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                // Validate exp base
+                var expBase = parseInt($('#LevelUpExpBase').val());
+                if (isNaN(expBase) || expBase < 1 || expBase > 1000) {
+                    e.preventDefault();
+                    alert('升級經驗基數必須在 1-1000 之間');
+                    return false;
+                }
+
+                // Validate interaction bonuses
+                var feedBonus = parseInt($('#FeedBonus').val());
+                var cleanBonus = parseInt($('#CleanBonus').val());
+                var playBonus = parseInt($('#PlayBonus').val());
+                var sleepBonus = parseInt($('#SleepBonus').val());
+
+                if (isNaN(feedBonus) || feedBonus < 0 || isNaN(cleanBonus) || cleanBonus < 0 ||
+                    isNaN(playBonus) || playBonus < 0 || isNaN(sleepBonus) || sleepBonus < 0) {
+                    e.preventDefault();
+                    alert('互動獎勵值必須為正數');
+                    return false;
+                }
+
+                // Validate exp bonus
+                var expBonus = parseInt($('#ExpBonus').val());
+                if (isNaN(expBonus) || expBonus < 1 || expBonus > 10) {
+                    e.preventDefault();
+                    alert('經驗值倍數必須在 1-10 之間');
+                    return false;
+                }
+
+                // Validate costs
+                var colorCost = parseInt($('#ColorChangePoints').val());
+                var bgCost = parseInt($('#BackgroundChangePoints').val());
+
+                if (isNaN(colorCost) || colorCost < 0 || colorCost > 10000 ||
+                    isNaN(bgCost) || bgCost < 0 || bgCost > 10000) {
+                    e.preventDefault();
+                    alert('外觀變更成本必須在 0-10000 之間');
+                    return false;
+                }
+
+                // Final confirmation
+                return confirm('確定要儲存寵物系統規則設定嗎？\n\n修改後將立即生效，請確認設定無誤。');
+            });
+        });
+    </script>
+}

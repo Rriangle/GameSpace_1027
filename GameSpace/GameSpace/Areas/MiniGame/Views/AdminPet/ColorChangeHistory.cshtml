@@ -1,0 +1,165 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.PetColorChangeHistoryPagedResult
+@{
+    ViewData["Title"] = "寵物皮膚/背景更換歷史";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物皮膚/背景更換歷史</h1>
+    </div>
+
+    <!-- 搜尋表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">查詢條件</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="UserId" class="form-label">用戶ID</label>
+                    <input type="text" class="form-control" id="UserId" name="UserId" value="@Model.UserId" placeholder="輸入用戶ID">
+                </div>
+                <div class="col-md-3">
+                    <label for="PetId" class="form-label">寵物ID</label>
+                    <input type="text" class="form-control" id="PetId" name="PetId" value="@Model.PetId" placeholder="輸入寵物ID">
+                </div>
+                <div class="col-md-3">
+                    <label for="ChangeType" class="form-label">更換類型</label>
+                    <select class="form-control" id="ChangeType" name="ChangeType">
+                        <option value="">全部</option>
+                        <option value="Skin" selected="@(Model.ChangeType == "Skin" ? "selected" : null)">皮膚</option>
+                        <option value="Background" selected="@(Model.ChangeType == "Background" ? "selected" : null)">背景</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="StartDate" class="form-label">開始日期</label>
+                    <input type="date" class="form-control" id="StartDate" name="StartDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label for="EndDate" class="form-label">結束日期</label>
+                    <input type="date" class="form-control" id="EndDate" name="EndDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label for="PageSize" class="form-label">每頁筆數</label>
+                    <select class="form-control" id="PageSize" name="PageSize">
+                        <option value="10" selected="@(Model.PageSize == 10 ? "selected" : null)">10</option>
+                        <option value="20" selected="@(Model.PageSize == 20 ? "selected" : null)">20</option>
+                        <option value="50" selected="@(Model.PageSize == 50 ? "selected" : null)">50</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> 查詢
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> 重置
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 查詢結果 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">更換歷史記錄</h6>
+            <span class="badge badge-info">共 @Model.TotalCount 筆記錄</span>
+        </div>
+        <div class="card-body">
+            @if (Model.TotalCount > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>記錄ID</th>
+                                <th>用戶ID</th>
+                                <th>寵物ID</th>
+                                <th>寵物名稱</th>
+                                <th>更換類型</th>
+                                <th>更換前</th>
+                                <th>更換後</th>
+                                <th>消耗點數</th>
+                                <th>更換時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var record in Model.Items)
+                            {
+                                <tr>
+                                    <td>@record.LogId</td>
+                                    <td>@record.UserId</td>
+                                    <td>@record.PetId</td>
+                                    <td>@record.PetName</td>
+                                    <td>
+                                        <span class="badge @(record.ChangeType == "Skin" ? "badge-primary" : "badge-success")">
+                                            @(record.ChangeType == "Skin" ? "皮膚" : "背景")
+                                        </span>
+                                    </td>
+                                    <td>@record.OldColor</td>
+                                    <td>@record.NewColor</td>
+                                    <td class="text-danger">-@record.PointsCost</td>
+                                    <td>@record.ChangedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁 -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="分頁導航">
+                        <ul class="pagination justify-content-center">
+                            @if (Model.PageNumber > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?PageNumber=@(Model.PageNumber - 1)&PageSize=@Model.PageSize&UserId=@Model.UserId&PetId=@Model.PetId&ChangeType=@Model.ChangeType&StartDate=@Model.StartDate?.ToString("yyyy-MM-dd")&EndDate=@Model.EndDate?.ToString("yyyy-MM-dd")">上一頁</a>
+                                </li>
+                            }
+                            
+                            @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link" href="?PageNumber=@i&PageSize=@Model.PageSize&UserId=@Model.UserId&PetId=@Model.PetId&ChangeType=@Model.ChangeType&StartDate=@Model.StartDate?.ToString("yyyy-MM-dd")&EndDate=@Model.EndDate?.ToString("yyyy-MM-dd")">@i</a>
+                                </li>
+                            }
+                            
+                            @if (Model.PageNumber < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?PageNumber=@(Model.PageNumber + 1)&PageSize=@Model.PageSize&UserId=@Model.UserId&PetId=@Model.PetId&ChangeType=@Model.ChangeType&StartDate=@Model.StartDate?.ToString("yyyy-MM-dd")&EndDate=@Model.EndDate?.ToString("yyyy-MM-dd")">下一頁</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">沒有找到符合條件的記錄</h5>
+                    <p class="text-muted">請調整查詢條件後重新搜尋</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+function resetForm() {
+    document.getElementById("UserId").value = "";
+    document.getElementById("PetId").value = "";
+    document.getElementById("ChangeType").value = "";
+    document.getElementById("StartDate").value = "";
+    document.getElementById("EndDate").value = "";
+    document.getElementById("PageSize").value = "10";
+}
+</script>
+

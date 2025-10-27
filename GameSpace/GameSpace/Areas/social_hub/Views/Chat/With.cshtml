@@ -1,0 +1,544 @@
+﻿@using GameSpace.Areas.social_hub.Models.ViewModels
+@model ChatThreadVM
+@{
+    ViewData["Title"] = "對話";
+
+    // ★ 由控制器提供的對象 Id（ChatThreadVM.OtherId）
+    var otherId = Model?.OtherId ?? 0;
+
+    // ★ me-id 來源：
+    //    1) 建議控制器透過 ViewBag.MeId 帶進來（ILoginIdentity 讀當前身分）
+    //    2) 若未提供，退回你現有的測試 cookie（gs_id/sh_uid），僅作前端判斷之用
+    var meIdFromBag = (int?)ViewBag.MeId ?? 0;
+    var meIdFromCookie = 0;
+    {
+        var gsId = Context.Request.Cookies["gs_id"] ?? Context.Request.Cookies["sh_uid"];
+        meIdFromCookie = int.TryParse(gsId, out var tmp) ? tmp : 0;
+    }
+    var meIdForMeta = meIdFromBag > 0 ? meIdFromBag : meIdFromCookie;
+}
+
+@section Styles {
+    <link href="~/lib/social_hub/css/chat-1to1.css" rel="stylesheet" />
+    <style>
+        /* 版面高度：視窗 70% */
+        .chat-pane, .contact-pane {
+            height: 70vh;
+        }
+
+        .contact-pane {
+            overflow: auto;
+            border-right: 1px solid #e9ecef;
+        }
+
+        #contactList .btn {
+            border-radius: 0;
+            padding: .5rem .75rem;
+        }
+
+        .chat-surface {
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: .5rem;
+        }
+
+            .message .content {
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+
+            .message.mine {
+                text-align: right;
+            }
+
+                .message.mine .content {
+                    background: #0d6efd;
+                    color: #fff;
+                    display: inline-block;
+                    padding: .5rem .75rem;
+                    border-radius: .5rem;
+                }
+
+            .message.other .content {
+                background: #fff;
+                border: 1px solid #e9ecef;
+                display: inline-block;
+                padding: .5rem .75rem;
+                border-radius: .5rem;
+            }
+
+            .message .meta {
+                font-size: .75rem;
+                color: #6c757d;
+                margin-top: .125rem;
+            }
+
+        .readmark {
+            opacity: .35;
+        }
+
+            .readmark.on {
+                opacity: 1;
+            }
+    </style>
+}
+
+<!-- 供前端使用的簡易標頭（不含敏感資訊） -->
+<meta name="me-id" content="@meIdForMeta" />
+<meta name="me-name" content="User @meIdForMeta" />
+
+<div class="container my-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="mb-0">聊天中心</h3>
+        <div class="small text-muted">對象ID：@otherId</div>
+    </div>
+    <div class="row">
+        <!-- 左側：聯絡人 -->
+        <div class="col-12 col-md-3">
+            <div class="contact-pane bg-white rounded shadow-sm">
+                <div class="p-2 border-bottom d-flex justify-content-between align-items-center">
+                    <strong>聯絡人</strong>
+                    <span class="badge bg-secondary" id="unreadTotal">0</span>
+                </div>
+                <ul id="contactList" class="list-unstyled mb-0">
+                    <li class="px-2 py-2 text-muted">載入中…</li>
+                </ul>
+                <div class="p-2 border-top small text-muted">
+                    <a asp-action="Index" class="text-decoration-none">返回列表</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：對話 -->
+        <div class="col-12 col-md-9">
+            <div class="chat-surface rounded shadow-sm p-0 d-flex flex-column chat-pane">
+                <div class="p-2 border-bottom bg-white d-flex align-items-center justify-content-between">
+                    <div id="peerTitle"><strong>與 #@otherId 的對話</strong></div>
+                    <div class="small text-muted">即時 / 輪詢備援</div>
+                </div>
+
+                <!-- ★ 控制器已「倒序取 50 → 正序顯示」，這裡直接照 Model.Messages 的順序渲染（由舊到新） -->
+                <div id="chatBox" class="flex-fill p-3">
+                    @if (Model?.Messages != null && Model.Messages.Any())
+                    {
+                        foreach (var m in Model.Messages)
+                        {
+                            <div class="message @(m.IsMine ? "mine" : "other")"
+                                 data-id="@m.MessageId"
+                                 data-at="@m.At.ToString("o")">
+                                <div class="content">@m.Text</div> <!-- 伺服器已做遮罩；Razor自動HTML編碼 -->
+                                <div class="meta">
+                                    <span class="time">@m.At.ToLocalTime().ToString("HH:mm")</span>
+                                    @if (m.IsMine)
+                                    {
+                                        <span class="readmark @(m.IsRead ? "on" : "")" data-read="badge">✓</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted small">（尚無訊息）</div>
+                    }
+                </div>
+
+                <div class="p-2 border-top bg-white">
+                    <form id="chatSendForm" class="d-flex gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="otherId" name="otherId" value="@otherId" />
+                        <input id="messageInput" name="text" class="form-control"
+                               placeholder="[輸入訊息]" maxlength="255" autocomplete="off" />
+                        <button id="sendBtn" class="btn btn-success" type="submit">送出</button>
+                    </form>
+                    <small class="text-muted d-block mt-1">
+                        提示：畫面只顯示遮罩後文字；資料庫保留原文以利稽核。
+                        排序為「由舊到新」，來源為控制器：先以 EditedAt 倒序取 50 筆，再正序回傳。
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          // -------------------- 路由設定（用 Razor 產生，避免路徑錯誤） --------------------
+          const URLS = {
+            hub: "@Url.Content("~/social_hub/chatHub")",
+            contacts: "@Url.Action("Contacts", "Chat", new { area = "social_hub" })",
+            history: "@Url.Action("History", "Chat", new { area = "social_hub" })",
+            send: "@Url.Action("Send", "Chat", new { area = "social_hub" })",
+            read: "@Url.Action("MarkRead", "Chat", new { area = "social_hub" })",
+            unread: "@Url.Action("UnreadSummary", "Chat", new { area = "social_hub" })"
+          };
+
+          // -------------------- 常用工具（時間解析：容錯 + 一律本地顯示） --------------------
+          const POLL_MS = 2500;
+          const $ = s => document.querySelector(s);
+
+          // ✅ 安全解析 ISO：截到 3 位毫秒；缺時區則補 Z（當作 UTC）；Safari 友善
+          const parseIsoSafe = (iso) => {
+            if (!iso) return null;
+            let s = String(iso).replace(/(\.\d{3})\d+/, "$1");
+            if (!/[zZ]$/.test(s) && !/[+\-]\d{2}:\d{2}$/.test(s)) s += "Z";
+            const d = new Date(s);
+            return isNaN(d.getTime()) ? null : d;
+          };
+          const hhmm = (iso) => {
+            const d = parseIsoSafe(iso);
+            return d ? d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
+          };
+          const isNearBottom = (el, th=36) => (el.scrollTop + el.clientHeight) >= (el.scrollHeight - th);
+          const normIso = iso => { const d = parseIsoSafe(iso); return d ? d.toISOString() : null; };
+
+          const chatBox = $("#chatBox");
+          const form = $("#chatSendForm");
+          const input = $("#messageInput");
+          const sendBtn = $("#sendBtn");
+          const otherId = parseInt($("#otherId")?.value || "0", 10) || 0;
+          const csrf = document.querySelector('input[name="__RequestVerificationToken"]')?.value || "";
+          const peerTitle = $("#peerTitle");
+          const contactList = $("#contactList");
+          const unreadTotal = $("#unreadTotal");
+          const meId = parseInt(document.querySelector('meta[name="me-id"]')?.content || "0", 10) || 0;
+
+          // -------------------- 動態載入 SignalR（CDN，失敗就走輪詢） --------------------
+          async function ensureSignalR() {
+            if (window.signalR) return true;
+            const cdns = [
+              "https://cdn.jsdelivr.net/npm/%40microsoft/signalr%408.0.5/dist/browser/signalr.min.js",
+              "https://unpkg.com/%40microsoft/signalr%408.0.5/dist/browser/signalr.min.js",
+              "https://cdn.jsdelivr.net/npm/%40microsoft/signalr%407.0.14/dist/browser/signalr.min.js",
+              "https://unpkg.com/%40microsoft/signalr%407.0.14/dist/browser/signalr.min.js"
+            ];
+            for (const src of cdns) {
+              try {
+                await new Promise((res, rej) => {
+                  const s = document.createElement("script");
+                  s.src = src; s.defer = true; s.onload = res; s.onerror = rej;
+                  document.head.appendChild(s);
+                });
+                if (window.signalR) return true;
+              } catch {}
+            }
+            console.warn("[SignalR] 載入失敗，將使用輪詢模式");
+            return false;
+          }
+
+          // -------------------- 聯絡人清單 / 徽章 --------------------
+          const contactNameMap = new Map();
+          function setContactUnread(uid, count){
+            const badge = document.querySelector(`[data-unread="${uid}"]`);
+            if (!badge) return;
+            const n = Number(count) || 0;
+            if (n > 0) {
+              badge.textContent = String(n);
+              badge.classList.remove("d-none","bg-secondary");
+              badge.classList.add("bg-danger");
+            } else {
+              badge.textContent = "0";
+              badge.classList.remove("bg-danger");
+              badge.classList.add("bg-secondary","d-none");
+            }
+          }
+
+          async function loadContacts() {
+            try {
+              const r = await fetch(URLS.contacts);
+              const arr = await r.json();
+              contactList.innerHTML = "";
+              if (!Array.isArray(arr) || arr.length === 0) {
+                contactList.innerHTML = `<li class="px-2 py-2 text-muted">沒有好友</li>`;
+                return;
+              }
+              for (const c of arr) {
+                const label = c.nick ? `[${c.nick}] ${c.name}` : (c.name ?? `User ${c.id}`);
+                contactNameMap.set(String(c.id), label);
+                const li = document.createElement("li");
+                li.innerHTML = `
+                  <button class="btn w-100 text-start d-flex justify-content-between align-items-center ${c.id === otherId ? "active" : ""}" data-id="${c.id}">
+                    <span>${label}</span>
+                    ${c.unread > 0
+                      ? `<span class="badge bg-danger ms-1" data-unread="${c.id}">${c.unread}</span>`
+                      : `<span data-unread="${c.id}" class="badge bg-secondary d-none">0</span>`}
+                  </button>`;
+                li.querySelector("button").addEventListener("click", () => {
+                  if (c.id === otherId) return;
+                  window.location.href = "@Url.Action("With", "Chat", new { area = "social_hub" })?otherId=" + c.id;
+                });
+                contactList.appendChild(li);
+              }
+              if (otherId) {
+                const title = contactNameMap.get(String(otherId)) || `User ${otherId}`;
+                peerTitle.innerHTML = `<strong>${title}</strong>`;
+              }
+            } catch {
+              contactList.innerHTML = `<li class="px-2 py-2 text-danger">載入失敗</li>`;
+            }
+          }
+
+          // -------------------- 未讀總數（HTTP 備援） --------------------
+          async function refreshUnread() {
+            try {
+              const r = await fetch(URLS.unread);
+              if (!r.ok) return;
+              const data = await r.json();
+              if (unreadTotal) unreadTotal.textContent = data.total ?? 0;
+            } catch {}
+          }
+
+          // -------------------- 訊息泡泡 / 增量 --------------------
+          const seen = new Set();
+          let lastIso = null, pollTimer = 0, fetching = false;
+
+          // ✅ 啟動時：從現有 DOM 建立 seen/lastIso，並把畫面所有時間統一重算為本地
+          (function bootstrapFromServer() {
+            chatBox.querySelectorAll(".message[data-id]").forEach(el => {
+              const id = parseInt(el.getAttribute("data-id")||"0",10)||0;
+              if (id) seen.add(id);
+            });
+            let maxT = 0;
+            chatBox.querySelectorAll(".message[data-at]").forEach(el => {
+              const iso = el.getAttribute("data-at") || "";
+              const d = parseIsoSafe(iso);
+              if (d) {
+                if (d.getTime() > maxT) maxT = d.getTime();
+                // 重新計算顯示（避免伺服器渲染與推播時間格式不一致）
+                const t = el.querySelector(".time");
+                if (t) t.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              }
+            });
+            if (maxT > 0) { lastIso = new Date(maxT).toISOString(); }
+            if (lastIso) markRead(lastIso); // 進頁即清到當前游標
+            chatBox.scrollTop = chatBox.scrollHeight;
+          })();
+
+          function buildBubble({id, mine, text, iso, isRead}) {
+            const msg = document.createElement("div");
+            msg.className = `message ${mine ? "mine" : "other"}`;
+            if (id) msg.setAttribute("data-id", String(id));
+            if (iso) msg.setAttribute("data-at", iso);
+
+            const content = document.createElement("div");
+            content.className = "content";
+            content.textContent = text ?? ""; // 安全顯示遮罩後文字
+
+            const meta = document.createElement("div");
+            meta.className = "meta";
+
+            const time = document.createElement("span");
+            time.className = "time";
+            time.textContent = hhmm(iso); // 本地時間顯示
+            meta.appendChild(time);
+
+            if (mine) {
+              const read = document.createElement("span");
+              read.className = "readmark";
+              read.setAttribute("data-read","badge");
+              read.textContent = "✓";
+              meta.appendChild(document.createTextNode(" "));
+              meta.appendChild(read);
+              if (isRead) read.classList.add("on");
+            }
+
+            msg.appendChild(content);
+            msg.appendChild(meta);
+            return msg;
+          }
+
+          function appendMessage({id, mine, text, iso, isRead}) {
+            if (id) {
+              if (chatBox.querySelector(`.message[data-id="${id}"]`)) return;
+              if (seen.has(id)) return;
+              seen.add(id);
+            }
+            const wasBottom = isNearBottom(chatBox);
+            chatBox.appendChild(buildBubble({id, mine, text, iso, isRead}));
+            if (wasBottom) chatBox.scrollTop = chatBox.scrollHeight;
+
+            // 非我方訊息立即回報已讀
+            if (!mine && iso) {
+              const up = normIso(iso);
+              if (up) markRead(up);
+            }
+            // 更新 lastIso
+            if (iso) {
+              const d = parseIsoSafe(iso);
+              const cur = lastIso ? parseIsoSafe(lastIso) : null;
+              if (d && (!cur || d.getTime() > cur.getTime())) lastIso = d.toISOString();
+            }
+          }
+
+          // 輪詢備援：直接取最近 50 → 用 seen 去重
+          async function fetchDelta() {
+            if (!otherId || fetching) return;
+            fetching = true;
+            try {
+              const url = new URL(URLS.history, window.location.origin);
+              url.searchParams.set("otherId", String(otherId));
+              const r = await fetch(url, { headers: { "Accept":"application/json" } });
+              if (!r.ok) return;
+              const arr = await r.json();
+              if (!Array.isArray(arr)) return;
+              for (const m of arr) {
+                appendMessage({
+                  id: m.messageId ?? m.MessageId ?? 0,
+                  mine: (m.isMine ?? m.IsMine) === true,
+                  text: m.content ?? m.text ?? m.Content ?? m.Text ?? "",
+                  iso: m.time ?? m.at ?? m.Time ?? m.At ?? null,
+                  isRead: (m.isRead ?? m.IsRead) === true
+                });
+              }
+            } catch {} finally { fetching = false; }
+          }
+
+          // -------------------- 已讀（Header + Form 欄位雙保險） --------------------
+          async function markRead(upToIso /* 可省略 */) {
+            try {
+              const params = new URLSearchParams({ otherId: String(otherId) });
+              if (upToIso) params.set("upToIso", upToIso);
+              if (csrf) params.set("__RequestVerificationToken", csrf);
+
+              await fetch(URLS.read, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type":"application/x-www-form-urlencoded", "RequestVerificationToken": csrf || "" },
+                body: params
+              });
+            } catch {}
+            try { if (window.__chatConn) await window.__chatConn.invoke("NotifyRead", otherId, upToIso || null); } catch {}
+            refreshUnread();
+            setContactUnread(otherId, 0);
+          }
+
+          // -------------------- 送出（Hub ack → 失敗回退 HTTP） --------------------
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const txt = (input.value || "").trim();
+            if (!txt || !otherId) return;
+            sendBtn.disabled = true;
+
+            // 先走 Hub
+            if (window.__chatConn && window.__chatConn.invoke) {
+              try {
+                const res = await window.__chatConn.invoke("SendMessageTo", otherId, txt);
+                if (res && res.ok === true) { input.value = ""; sendBtn.disabled = false; return; }
+                console.warn("[Hub ack 非 ok，改走 HTTP]", res);
+              } catch (err) {
+                console.warn("[Hub 送出失敗，改走 HTTP]", err);
+              }
+            }
+
+            // HTTP 回退
+            try {
+              const fd = new FormData(form);
+              const r = await fetch(URLS.send, { method: "POST", body: fd, credentials: "same-origin" });
+              if (r.ok) {
+                const res = await r.json().catch(()=>({}));
+                const display = (res && typeof res.text === "string") ? res.text : txt;
+                appendMessage({
+                  id: res.messageId ?? 0,
+                  mine: true,
+                  text: display,
+                  iso: res.at ?? new Date().toISOString(),
+                  isRead: false
+                });
+                input.value = "";
+              } else {
+                const msg = await r.text().catch(()=> "");
+                console.error("[HTTP 送出失敗]", r.status, msg);
+                alert("送出失敗：" + (msg || r.status));
+              }
+            } catch (e2) {
+              console.error("[HTTP 送出例外]", e2);
+              alert("網路異常，請稍後再試");
+            } finally {
+              sendBtn.disabled = false;
+            }
+          });
+
+          // -------------------- 連線（SignalR → 備援輪詢） --------------------
+          async function connectHub() {
+            const ok = await ensureSignalR();
+            if (!ok) { pollTimer = window.setInterval(fetchDelta, POLL_MS); return false; }
+
+            const conn = new signalR.HubConnectionBuilder()
+              .withUrl(URLS.hub)
+              .withAutomaticReconnect()
+              .build();
+
+            window.__chatConn = conn;
+
+            conn.on("ReceiveDirect", p => {
+              if (!p) return;
+              const from = p.senderId ?? 0, to = p.receiverId ?? 0;
+
+              const inThis = (meId > 0)
+                ? ((from === otherId && to === meId) || (from === meId && to === otherId))
+                : (from === otherId || to === otherId);
+
+              if (!inThis) { refreshUnread(); return; }
+
+              const mine = (meId > 0) ? (from === meId) : (from !== otherId);
+              appendMessage({
+                id: p.messageId ?? 0,
+                mine,
+                text: p.content ?? "",        // 伺服器已遮罩
+                iso: p.sentAtIso ?? null,
+                isRead: mine ? false : true
+              });
+            });
+
+            conn.on("UnreadUpdate", data => {
+              if (!data) return;
+              if (typeof data.total === "number" && unreadTotal) unreadTotal.textContent = String(data.total);
+              if (data.peerId != null && typeof data.unread === "number") {
+                setContactUnread(data.peerId, data.unread);
+                if (Number(data.peerId) === Number(otherId) && data.unread === 0) setContactUnread(otherId, 0);
+              }
+            });
+
+            conn.on("ReadReceipt", info => {
+              if (!info || info.fromUserId !== otherId) return;
+              const upTo = parseIsoSafe(info.upToIso); // ✅ 用安全解析
+              if (!upTo) return;
+              chatBox.querySelectorAll(".message.mine").forEach(msg => {
+                const iso = msg.getAttribute("data-at") || "";
+                const d = parseIsoSafe(iso);
+                if (d && d.getTime() <= upTo.getTime()) {
+                  const badge = msg.querySelector('[data-read="badge"], .readmark');
+                  if (badge) badge.classList.add("on");
+                }
+              });
+            });
+
+            conn.onreconnected(async () => { await fetchDelta(); refreshUnread(); });
+            conn.onclose(() => { if (!pollTimer) pollTimer = window.setInterval(fetchDelta, POLL_MS); });
+
+            try {
+              await conn.start();
+              const meName = document.querySelector('meta[name="me-name"]')?.content || "";
+              if (meName) { try { await conn.invoke("RegisterUser", meName); } catch {} }
+              await fetchDelta();
+            } catch (e) {
+              console.warn("[Hub 連線失敗，使用輪詢]", e);
+              pollTimer = window.setInterval(fetchDelta, POLL_MS);
+            }
+          }
+
+          // -------------------- 啟動 --------------------
+          loadContacts();
+          refreshUnread();
+          connectHub();
+
+          // 視窗回前景時，同步已讀到目前游標
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && lastIso) markRead(lastIso);
+          });
+        })();
+    </script>
+}

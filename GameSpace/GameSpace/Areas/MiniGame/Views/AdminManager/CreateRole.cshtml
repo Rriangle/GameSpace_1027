@@ -1,0 +1,225 @@
+@using GameSpace.Models
+@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminManagerRoleCreateViewModel
+@{
+    ViewData["Title"] = "新增角色";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">新增角色</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminManager")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">角色資料</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateRole" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group">
+                            <label asp-for="role_name" class="control-label">角色名稱 *</label>
+                            <input asp-for="role_name" class="form-control" placeholder="請輸入角色名稱" />
+                            <span asp-validation-for="role_name" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="role_description" class="control-label">角色說明 *</label>
+                            <textarea asp-for="role_description" class="form-control" rows="3" placeholder="請輸入角色描述"></textarea>
+                            <span asp-validation-for="role_description" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label">權限選擇 *</label>
+                            <div class="row">
+                                @if (ViewBag.Permissions != null)
+                                {
+                                    @foreach (var permission in ViewBag.Permissions)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="PermissionIds" value="@permission.Permission_Id" id="permission_@permission.Permission_Id" />
+                                                <label class="form-check-label" for="permission_@permission.Permission_Id">
+                                                    @permission.Permission_Name
+                                                </label>
+                                                <small class="form-text text-muted">@permission.Permission_Description</small>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label class="form-check-label" for="IsActive">
+                                    啟用
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 儲存角色
+                            </button>
+                            <a href="@Url.Action("Index", "AdminManager")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">儲存提示</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-user-tag fa-3x text-primary mb-3"></i>
+                        <h5>角色儲存前請注意</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            角色名稱請勿重複
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            說明欄位請具體說明角色功能
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            須選擇至少一項權限
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            可選擇上傳圖片
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            權限設定請謹慎配置權限範圍
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">權限說明</h6>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Permissions != null && ((List<GameSpace.Models.ManagerRolePermission>)ViewBag.Permissions).Any())
+                    {
+                        @foreach (var permission in ViewBag.Permissions)
+                        {
+                            <div class="mb-3">
+                                <span class="badge badge-info">@permission.Permission_Name</span>
+                                <small class="text-muted">@permission.Permission_Description</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">尚無權限，請先新增權限</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">快速功能</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" onclick="selectAllPermissions()">
+                            <i class="fas fa-check-square"></i> 全選權限
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearAllPermissions()">
+                            <i class="fas fa-square"></i> 清除選擇
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="selectCommonPermissions()">
+                            <i class="fas fa-star"></i> 選擇常用權限
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function selectAllPermissions() {
+            const checkboxes = document.querySelectorAll('input[name="PermissionIds"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+
+        function clearAllPermissions() {
+            const checkboxes = document.querySelectorAll('input[name="PermissionIds"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+
+        function selectCommonPermissions() {
+            // 選擇常用的權限
+            const commonPermissions = ['view_dashboard', 'view_users', 'view_reports'];
+            const checkboxes = document.querySelectorAll('input[name="PermissionIds"]');
+            checkboxes.forEach(checkbox => {
+                if (commonPermissions.some(perm => checkbox.value.includes(perm))) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+
+        // 角色選擇驗證
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const permissionCheckboxes = document.querySelectorAll('input[name="PermissionIds"]:checked');
+            if (permissionCheckboxes.length === 0) {
+                e.preventDefault();
+                alert('請至少選擇一項權限');
+            }
+        });
+
+        // 角色名稱驗證
+        document.getElementById('role_name').addEventListener('input', function() {
+            const name = this.value;
+            if (name.length < 2) {
+                this.setCustomValidity('角色名稱長度至少需要2個字');
+            } else if (name.length > 50) {
+                this.setCustomValidity('角色名稱不得超過50個字');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // 角色說明驗證
+        document.getElementById('role_description').addEventListener('input', function() {
+            const description = this.value;
+            if (description.length < 10) {
+                this.setCustomValidity('角色說明長度至少需要10個字');
+            } else if (description.length > 200) {
+                this.setCustomValidity('角色說明不得超過200個字');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+}

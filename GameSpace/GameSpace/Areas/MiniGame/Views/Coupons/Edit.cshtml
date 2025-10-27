@@ -1,0 +1,57 @@
+﻿@{
+    ViewData["Title"] = "編輯優惠券";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">編輯優惠券</h1>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="post">
+                <input type="hidden" name="couponId" value="1">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="couponCode" class="form-label">優惠券序號</label>
+                        <input type="text" class="form-control" id="couponCode" name="couponCode" value="CPN-2508-AAG049" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="couponTypeId" class="form-label">優惠券類型</label>
+                        <select class="form-select" id="couponTypeId" name="couponTypeId" required>
+                            <option value="1" selected>折扣券</option>
+                            <option value="2">現金券</option>
+                            <option value="3">免運券</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="userId" class="form-label">會員ID</label>
+                        <input type="number" class="form-control" id="userId" name="userId" value="10000171" placeholder="輸入會員ID" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="isUsed" class="form-label">使用狀態</label>
+                        <select class="form-select" id="isUsed" name="isUsed">
+                            <option value="0" selected>未使用</option>
+                            <option value="1">已使用</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="description" class="form-label">描述</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="輸入優惠券描述"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>送出
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>返回
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

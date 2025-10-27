@@ -1,0 +1,122 @@
+﻿:root {
+    --gs-card-radius: 14px;
+    --gs-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+
+.mutes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .75rem;
+}
+
+.mutes-title {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin: 0;
+}
+
+.mutes-subtle {
+    color: #6c757d;
+    font-size: .925rem;
+}
+
+.mutes-card {
+    border-radius: var(--gs-card-radius);
+    box-shadow: var(--gs-shadow);
+    overflow: hidden;
+}
+
+    .mutes-card .table {
+        margin: 0;
+    }
+
+        .mutes-card .table thead th {
+            background: linear-gradient(180deg,#f8f9fa,#eef1f4);
+            font-weight: 600;
+        }
+
+        .mutes-card .table tbody tr:hover {
+            background: #fcfdff;
+        }
+
+        .mutes-card .table td, .mutes-card .table th {
+            vertical-align: middle;
+        }
+
+.badge.rounded-pill {
+    font-weight: 600;
+    letter-spacing: .2px;
+}
+
+.badge-readonly {
+    background: #adb5bd;
+}
+
+.badge-manage {
+    background: #2fb380;
+}
+
+.mutes-toolbar {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+}
+
+.mutes-search {
+    max-width: 320px;
+}
+
+    .mutes-search .form-control {
+        padding-left: 2.25rem;
+    }
+
+    .mutes-search .icon {
+        position: absolute;
+        left: .75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        pointer-events: none;
+    }
+
+.cell-chip {
+    padding: .35rem .6rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .85rem;
+}
+
+    .cell-chip.on {
+        background: #e9f7ef;
+        color: #16784b;
+        border: 1px solid #cdeedb;
+    }
+
+    .cell-chip.off {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+    }
+
+.copyable {
+    cursor: pointer;
+}
+
+    .copyable:hover {
+        text-decoration: underline;
+    }
+
+.dl-clean dt {
+    color: #6c757d;
+    width: 140px;
+}
+
+.dl-clean dd {
+    margin-bottom: .5rem;
+}

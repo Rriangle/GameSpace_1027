@@ -1,0 +1,187 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.WalletHistoryViewModel
+@{
+    ViewData["Title"] = "查看交易紀錄";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>查看交易紀錄</h3>
+        </div>
+        <div class="card-body">
+            <!-- 搜尋條件區 -->
+            <form method="get" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="userId" class="form-label">會員 ID</label>
+                        <input type="number" class="form-control" id="userId" name="Query.UserId" value="@Model.Query.UserId" placeholder="請輸入會員 ID">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchTerm" class="form-label">關鍵字</label>
+                        <input type="text" class="form-control" id="searchTerm" name="Query.SearchTerm" value="@Model.Query.SearchTerm" placeholder="帳號或姓名">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="changeType" class="form-label">變更類型</label>
+                        <select class="form-select" id="changeType" name="Query.ChangeType">
+                            <option value="">全部</option>
+                            <option value="增加" selected="@(Model.Query.ChangeType == "增加")">增加</option>
+                            <option value="減少" selected="@(Model.Query.ChangeType == "減少")">減少</option>
+                            <option value="每日簽到" selected="@(Model.Query.ChangeType == "每日簽到")">每日簽到</option>
+                            <option value="兌換優惠券" selected="@(Model.Query.ChangeType == "兌換優惠券")">兌換優惠券</option>
+                            <option value="兌換電子禮券" selected="@(Model.Query.ChangeType == "兌換電子禮券")">兌換電子禮券</option>
+                            <option value="後台調整" selected="@(Model.Query.ChangeType == "後台調整")">後台調整</option>
+                            <option value="系統獎勵" selected="@(Model.Query.ChangeType == "系統獎勵")">系統獎勵</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sortBy" class="form-label">排序方式</label>
+                        <select class="form-select" id="sortBy" name="Query.SortBy">
+                            <option value="ChangeTime" selected="@(Model.Query.SortBy == "ChangeTime")">變更時間</option>
+                            <option value="PointsChanged" selected="@(Model.Query.SortBy == "PointsChanged")">點數變化</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label">開始日期</label>
+                        <input type="date" class="form-control" id="startDate" name="Query.StartDate" value="@Model.Query.StartDate?.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label">結束日期</label>
+                        <input type="date" class="form-control" id="endDate" name="Query.EndDate" value="@Model.Query.EndDate?.ToString("yyyy-MM-dd")">
+                    </div>
+                    <div class="col-md-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>查詢
+                        </button>
+                        <a href="@Url.Action("QueryUserTransactions")" class="btn btn-secondary">
+                            <i class="fas fa-redo me-1"></i>重置
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 結果列表 -->
+            @if (Model.Results.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>記錄 ID</th>
+                                <th>會員</th>
+                                <th>變更類型</th>
+                                <th class="text-end">點數變化</th>
+                                <th class="text-end">餘額</th>
+                                <th>說明</th>
+                                <th>變更時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Results.Items)
+                            {
+                                <tr>
+                                    <td>@item.LogId</td>
+                                    <td>
+                                        <div>@item.UserName</div>
+                                        <small class="text-muted">@item.UserAccount (ID: @item.UserId)</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@item.ChangeType</span>
+                                    </td>
+                                    <td class="text-end">
+                                        @if (item.PointsChanged > 0)
+                                        {
+                                            <span class="text-success fw-bold">+@item.PointsChanged.ToString("N0")</span>
+                                        }
+                                        else if (item.PointsChanged < 0)
+                                        {
+                                            <span class="text-danger fw-bold">@item.PointsChanged.ToString("N0")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">0</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge bg-secondary">@item.BalanceAfter.ToString("N0")</span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(item.Description))
+                                        {
+                                            <small>@item.Description</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>@item.ChangeTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁 -->
+                @if (Model.Results.TotalPages > 1)
+                {
+                    <nav aria-label="分頁導覽">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(!Model.Results.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("QueryUserTransactions", new {
+                                    UserId = Model.Query.UserId,
+                                    SearchTerm = Model.Query.SearchTerm,
+                                    ChangeType = Model.Query.ChangeType,
+                                    StartDate = Model.Query.StartDate,
+                                    EndDate = Model.Query.EndDate,
+                                    SortBy = Model.Query.SortBy,
+                                    PageNumber = Model.Results.CurrentPage - 1
+                                })">上一頁</a>
+                            </li>
+
+                            @for (int i = Math.Max(1, Model.Results.CurrentPage - 2); i <= Math.Min(Model.Results.TotalPages, Model.Results.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.Results.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("QueryUserTransactions", new {
+                                        UserId = Model.Query.UserId,
+                                        SearchTerm = Model.Query.SearchTerm,
+                                        ChangeType = Model.Query.ChangeType,
+                                        StartDate = Model.Query.StartDate,
+                                        EndDate = Model.Query.EndDate,
+                                        SortBy = Model.Query.SortBy,
+                                        PageNumber = i
+                                    })">@i</a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.Results.HasNextPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("QueryUserTransactions", new {
+                                    UserId = Model.Query.UserId,
+                                    SearchTerm = Model.Query.SearchTerm,
+                                    ChangeType = Model.Query.ChangeType,
+                                    StartDate = Model.Query.StartDate,
+                                    EndDate = Model.Query.EndDate,
+                                    SortBy = Model.Query.SortBy,
+                                    PageNumber = Model.Results.CurrentPage + 1
+                                })">下一頁</a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <div class="text-center text-muted">
+                        顯示第 @((Model.Results.CurrentPage - 1) * Model.Results.PageSize + 1) - @Math.Min(Model.Results.CurrentPage * Model.Results.PageSize, Model.Results.TotalCount) 筆，共 @Model.Results.TotalCount 筆資料
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info text-center py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <p class="mb-0 fs-5">查無交易紀錄</p>
+                    <p class="text-muted">請調整搜尋條件後重試</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

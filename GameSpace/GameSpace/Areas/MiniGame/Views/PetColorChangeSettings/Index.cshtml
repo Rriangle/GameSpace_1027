@@ -1,0 +1,87 @@
+﻿@model IEnumerable<GameSpace.Areas.MiniGame.Models.Settings.PetColorChangeSettings>
+@{
+    ViewData["Title"] = "寵物換色點數設定管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物換色點數設定管理</h1>
+        <a href="@Url.Action("Create")" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> 新增設定
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">寵物換色點數設定列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>設定名稱</th>
+                            <th>換色所需點數</th>
+                            <th>狀態</th>
+                            <th>建立時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.SettingName</td>
+                                <td>@item.PointsRequired.ToString("N0")</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge badge-success">啟用</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">停用</span>
+                                    }
+                                </td>
+                                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <a href="@Url.Action("Details", new { id = item.SettingId })" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> 詳情
+                                    </a>
+                                    <a href="@Url.Action("Edit", new { id = item.SettingId })" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i> 編輯
+                                    </a>
+                                    <a href="@Url.Action("Delete", new { id = item.SettingId })" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i> 刪除
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

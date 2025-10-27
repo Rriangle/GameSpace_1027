@@ -1,0 +1,96 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.WalletDeductPointsViewModel
+@{
+    ViewData["Title"] = "扣除會員點數";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="fas fa-minus-circle me-2"></i>扣除會員點數</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" asp-action="DeductPoints">
+            @Html.AntiForgeryToken()
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="userId" class="form-label">會員 ID <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="userId" name="userId" placeholder="輸入會員ID" required min="1" />
+                </div>
+                <div class="col-md-3">
+                    <label for="pointsToDeduct" class="form-label">扣除點數 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="pointsToDeduct" name="pointsToDeduct" required min="1" placeholder="請輸入正整數" />
+                </div>
+                <div class="col-md-4">
+                    <label for="reason" class="form-label">扣除原因 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="reason" name="reason" required maxlength="200" placeholder="例如：違規處罰、誤發回收" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-minus-circle me-1"></i>扣除
+                    </button>
+                </div>
+            </div>
+            <div class="text-muted small">
+                <i class="fas fa-info-circle me-1"></i>扣除後會自動記錄於錢包異動歷史中。系統會檢查會員是否有足夠的點數。
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="fas fa-users me-2"></i>目前有點數的會員（前 20 名）</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.Candidates.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                查無資料。
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>會員ID</th>
+                            <th>帳號</th>
+                            <th>姓名</th>
+                            <th>Email</th>
+                            <th class="text-end">點數</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var candidate in Model.Candidates)
+                        {
+                            <tr>
+                                <td>@candidate.UserId</td>
+                                <td>@candidate.UserAccount</td>
+                                <td>@candidate.UserName</td>
+                                <td>@candidate.Email</td>
+                                <td class="text-end">@candidate.Points</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

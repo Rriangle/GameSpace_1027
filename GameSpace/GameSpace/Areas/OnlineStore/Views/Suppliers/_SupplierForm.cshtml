@@ -1,0 +1,28 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.SupplierVM
+<div data-panel-title="@((Model?.SupplierId > 0) ? "編輯供應商" : "新增供應商")">
+    <form method="post" class="js-ajax"
+          action="@Url.Action((Model?.SupplierId>0) ? "Edit" : "Create","Suppliers",new{area="OnlineStore"})">
+        @Html.AntiForgeryToken()
+        @if (Model?.SupplierId > 0)
+        {
+            @Html.HiddenFor(m => m.SupplierId)
+        }
+        <div class="mb-3">
+            <label class="form-label">供應商名稱 *</label>
+            @Html.TextBoxFor(m => m.SupplierName, new { @class = "form-control", maxlength = "200", placeholder = "請輸入供應商名稱" })
+            @Html.ValidationMessageFor(m => m.SupplierName, "", new { @class = "text-danger small" })
+        </div>
+        @if (Model?.IsActive != null)
+        {
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="chkActive" name="IsActive" value="true" @(Model.IsActive == true ? "checked" : null) />
+                <label class="form-check-label" for="chkActive">啟用</label>
+                <input type="hidden" name="IsActive" value="false" />
+            </div>
+        }
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">關閉</button>
+            <button type="submit" class="btn btn-primary">儲存</button>
+        </div>
+    </form>
+</div>

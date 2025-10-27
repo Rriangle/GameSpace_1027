@@ -1,0 +1,244 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminPetCreateViewModel
+@{
+    ViewData["Title"] = "新增寵物";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">新增寵物</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminPet")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">寵物資訊</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group">
+                            <label asp-for="PetName" class="control-label">寵物名稱 *</label>
+                            <input asp-for="PetName" class="form-control" placeholder="請輸入寵物名稱" />
+                            <span asp-validation-for="PetName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="PetDescription" class="control-label">寵物描述 *</label>
+                            <textarea asp-for="PetDescription" class="form-control" rows="4" placeholder="請輸入寵物描述"></textarea>
+                            <span asp-validation-for="PetDescription" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="PetType" class="control-label">寵物類型 *</label>
+                                    <select asp-for="PetType" class="form-control">
+                                        <option value="">請選擇寵物類型</option>
+                                        <option value="貓">貓</option>
+                                        <option value="狗">狗</option>
+                                        <option value="鳥">鳥</option>
+                                        <option value="魚">魚</option>
+                                        <option value="兔子">兔子</option>
+                                        <option value="倉鼠">倉鼠</option>
+                                        <option value="烏龜">烏龜</option>
+                                        <option value="其他">其他</option>
+                                    </select>
+                                    <span asp-validation-for="PetType" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Rarity" class="control-label">稀有度 *</label>
+                                    <select asp-for="Rarity" class="form-control" id="raritySelect">
+                                        <option value="">請選擇稀有度</option>
+                                        <option value="普通">普通</option>
+                                        <option value="稀有">稀有</option>
+                                        <option value="傳說">傳說</option>
+                                        <option value="神話">神話</option>
+                                    </select>
+                                    <span asp-validation-for="Rarity" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="DropRate" class="control-label">獲得機率 *</label>
+                                    <input asp-for="DropRate" type="number" class="form-control" placeholder="請輸入獲得機率" step="0.01" min="0.01" max="100" />
+                                    <span asp-validation-for="DropRate" class="text-danger"></span>
+                                    <small class="form-text text-muted">機率範圍：0.01% - 100%</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="IsActive" class="control-label">狀態</label>
+                                    <div class="form-check">
+                                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                        <label class="form-check-label" for="IsActive">
+                                            啟用
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="PetImageUrl" class="control-label">寵物圖片網址</label>
+                            <input asp-for="PetImageUrl" type="url" class="form-control" placeholder="請輸入寵物圖片網址" />
+                            <span asp-validation-for="PetImageUrl" class="text-danger"></span>
+                            <small class="form-text text-muted">選填，或稍後上傳寵物圖片</small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 建立寵物
+                            </button>
+                            <a href="@Url.Action("Index", "AdminPet")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">建立提示</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-paw fa-3x text-primary mb-3"></i>
+                        <h5>寵物建立注意事項</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            寵物名稱要獨特、生動迷人
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            描述要簡潔有力
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            稀有度影響獲得機率
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            獲得機率要合理設定
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            可以選擇是否立即啟用
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">稀有度說明</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge badge-secondary">普通</span>
+                        <small class="text-muted">獲得機率：10% - 50%</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-primary">稀有</span>
+                        <small class="text-muted">獲得機率：1% - 10%</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-info">傳說</span>
+                        <small class="text-muted">獲得機率：0.1% - 1%</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-warning">神話</span>
+                        <small class="text-muted">獲得機率：0.01% - 0.1%</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">快速設定</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-secondary" onclick="setQuickSettings('普通', '貓', 25)">
+                            <i class="fas fa-cat"></i> 普通貓咪 (25%)
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="setQuickSettings('稀有', '狗', 5)">
+                            <i class="fas fa-dog"></i> 稀有狗狗 (5%)
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="setQuickSettings('傳說', '鳥', 0.5)">
+                            <i class="fas fa-dove"></i> 傳說鳳凰 (0.5%)
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" onclick="setQuickSettings('神話', '龍', 0.05)">
+                            <i class="fas fa-dragon"></i> 神話巨龍 (0.05%)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function setQuickSettings(rarity, type, rate) {
+            document.getElementById('raritySelect').value = rarity;
+            document.getElementById('PetType').value = type;
+            document.getElementById('DropRate').value = rate;
+        }
+
+        // 稀有度變更時的機率提示
+        document.getElementById('raritySelect').addEventListener('change', function() {
+            const rarity = this.value;
+            const rateInput = document.getElementById('DropRate');
+
+            switch(rarity) {
+                case '普通':
+                    rateInput.placeholder = '建議機率：10% - 50%';
+                    break;
+                case '稀有':
+                    rateInput.placeholder = '建議機率：1% - 10%';
+                    break;
+                case '傳說':
+                    rateInput.placeholder = '建議機率：0.1% - 1%';
+                    break;
+                case '神話':
+                    rateInput.placeholder = '建議機率：0.01% - 0.1%';
+                    break;
+                default:
+                    rateInput.placeholder = '請輸入獲得機率';
+            }
+        });
+
+        // 機率驗證
+        document.getElementById('DropRate').addEventListener('input', function() {
+            const rate = parseFloat(this.value);
+            if (rate < 0.01) {
+                this.setCustomValidity('機率不能小於0.01%');
+            } else if (rate > 100) {
+                this.setCustomValidity('機率不能大於100%');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+}

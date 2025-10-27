@@ -1,0 +1,356 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.PetUpdateModel
+@{
+    ViewData["Title"] = "會員個別寵物設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-paw text-primary me-2"></i>會員個別寵物設定
+        </h1>
+        <a href="@Url.Action("QueryPets", "AdminPet")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>返回寵物列表
+        </a>
+    </div>
+
+    <!-- TempData Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Validation Summary -->
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <!-- 統計卡片區 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">寵物等級</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">Lv. @Model.Level</div>
+                        </div>
+                        <div class="text-primary opacity-50">
+                            <i class="fas fa-level-up-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">經驗值</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.Experience</div>
+                        </div>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">平均狀態</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@(((double)(Model.Hunger + Model.Mood + Model.Stamina + Model.Cleanliness + Model.Health) / 5).ToString("F0"))%</div>
+                        </div>
+                        <div class="text-warning opacity-50">
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-info border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">健康度</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.Health / 100</div>
+                        </div>
+                        <div class="text-info opacity-50">
+                            <i class="fas fa-heartbeat fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 左側 - 寵物當前狀態 -->
+        <div class="col-lg-4">
+            <!-- Pet Information Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h6 class="m-0 fw-bold"><i class="fas fa-info-circle me-2"></i>寵物基本資訊</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">寵物ID</label>
+                        <p class="h6 mb-0"><span class="badge bg-secondary">@ViewBag.PetId</span></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">用戶ID</label>
+                        <p class="h6 mb-0"><span class="badge bg-secondary">@ViewBag.UserId</span></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">當前寵物名稱</label>
+                        <p class="h6 mb-0"><strong>@ViewBag.CurrentPetName</strong></p>
+                    </div>
+                    <hr>
+                    <div class="mb-2">
+                        <label class="text-muted small">等級</label>
+                        <p class="mb-0"><span class="badge bg-primary fs-6">Lv. @Model.Level</span></p>
+                    </div>
+                    <div class="mb-2">
+                        <label class="text-muted small">經驗值</label>
+                        <p class="mb-0"><strong>@Model.Experience</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pet Stats Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-success text-white">
+                    <h6 class="m-0 fw-bold"><i class="fas fa-chart-bar me-2"></i>五大屬性狀態</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Hunger -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="small mb-0"><i class="fas fa-utensils text-danger me-1"></i>飢餓度</label>
+                            <span class="badge @(Model.Hunger >= 70 ? "bg-success" : Model.Hunger >= 30 ? "bg-warning text-dark" : "bg-danger")">@Model.Hunger%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar @(Model.Hunger >= 70 ? "bg-success" : Model.Hunger >= 30 ? "bg-warning" : "bg-danger")"
+                                 role="progressbar"
+                                 style="width: @Model.Hunger%;"
+                                 aria-valuenow="@Model.Hunger"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                @Model.Hunger%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mood -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="small mb-0"><i class="fas fa-smile text-warning me-1"></i>心情</label>
+                            <span class="badge @(Model.Mood >= 70 ? "bg-success" : Model.Mood >= 30 ? "bg-warning text-dark" : "bg-danger")">@Model.Mood%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar @(Model.Mood >= 70 ? "bg-success" : Model.Mood >= 30 ? "bg-warning" : "bg-danger")"
+                                 role="progressbar"
+                                 style="width: @Model.Mood%;"
+                                 aria-valuenow="@Model.Mood"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                @Model.Mood%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stamina -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="small mb-0"><i class="fas fa-running text-primary me-1"></i>體力</label>
+                            <span class="badge @(Model.Stamina >= 70 ? "bg-success" : Model.Stamina >= 30 ? "bg-warning text-dark" : "bg-danger")">@Model.Stamina%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar @(Model.Stamina >= 70 ? "bg-success" : Model.Stamina >= 30 ? "bg-warning" : "bg-danger")"
+                                 role="progressbar"
+                                 style="width: @Model.Stamina%;"
+                                 aria-valuenow="@Model.Stamina"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                @Model.Stamina%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cleanliness -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="small mb-0"><i class="fas fa-shower text-info me-1"></i>清潔度</label>
+                            <span class="badge @(Model.Cleanliness >= 70 ? "bg-success" : Model.Cleanliness >= 30 ? "bg-warning text-dark" : "bg-danger")">@Model.Cleanliness%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar @(Model.Cleanliness >= 70 ? "bg-success" : Model.Cleanliness >= 30 ? "bg-warning" : "bg-danger")"
+                                 role="progressbar"
+                                 style="width: @Model.Cleanliness%;"
+                                 aria-valuenow="@Model.Cleanliness"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                @Model.Cleanliness%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Health -->
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="small mb-0"><i class="fas fa-heartbeat text-danger me-1"></i>健康度</label>
+                            <span class="badge @(Model.Health >= 70 ? "bg-success" : Model.Health >= 30 ? "bg-warning text-dark" : "bg-danger")">@Model.Health%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar @(Model.Health >= 70 ? "bg-success" : Model.Health >= 30 ? "bg-warning" : "bg-danger")"
+                                 role="progressbar"
+                                 style="width: @Model.Health%;"
+                                 aria-valuenow="@Model.Health"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                @Model.Health%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側 - 編輯表單 -->
+        <div class="col-lg-8">
+            <!-- Edit Form -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-warning text-white">
+                    <h6 class="m-0 fw-bold"><i class="fas fa-edit me-2"></i>編輯寵物設定</h6>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="EditPet" asp-controller="AdminPet" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="PetId" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="PetName" class="form-control rounded" placeholder="輸入新的寵物名稱" />
+                                    <label asp-for="PetName"><i class="fas fa-paw me-1"></i>寵物名稱</label>
+                                    <span asp-validation-for="PetName" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">留空則不變更名稱</small>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select asp-for="SkinColor" class="form-control rounded">
+                                        <option value="">-- 不變更 --</option>
+                                        <option value="#FFD700">🟡 金色 (#FFD700)</option>
+                                        <option value="#FF6B6B">🔴 紅色 (#FF6B6B)</option>
+                                        <option value="#4ECDC4">🔵 青色 (#4ECDC4)</option>
+                                        <option value="#45B7D1">🔵 藍色 (#45B7D1)</option>
+                                        <option value="#FFA07A">🟠 橙色 (#FFA07A)</option>
+                                        <option value="#98D8C8">🟢 綠色 (#98D8C8)</option>
+                                        <option value="#F7DC6F">🟡 黃色 (#F7DC6F)</option>
+                                        <option value="#BB8FCE">🟣 紫色 (#BB8FCE)</option>
+                                        <option value="#85C1E2">🔵 淺藍 (#85C1E2)</option>
+                                        <option value="#FFFFFF">⚪ 白色 (#FFFFFF)</option>
+                                    </select>
+                                    <label asp-for="SkinColor"><i class="fas fa-palette me-1"></i>膚色</label>
+                                    <span asp-validation-for="SkinColor" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">選擇 "不變更" 則保持原膚色</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select asp-for="BackgroundColor" class="form-control rounded">
+                                        <option value="">-- 不變更 --</option>
+                                        <option value="#FFFFFF">⚪ 白色 (#FFFFFF)</option>
+                                        <option value="#F0F0F0">⚪ 淺灰 (#F0F0F0)</option>
+                                        <option value="#E8F5E9">🟢 淺綠 (#E8F5E9)</option>
+                                        <option value="#E3F2FD">🔵 淺藍 (#E3F2FD)</option>
+                                        <option value="#FFF3E0">🟠 淺橙 (#FFF3E0)</option>
+                                        <option value="#FCE4EC">🔴 淺粉 (#FCE4EC)</option>
+                                        <option value="#F3E5F5">🟣 淺紫 (#F3E5F5)</option>
+                                        <option value="#E0F2F1">🔵 淺青 (#E0F2F1)</option>
+                                        <option value="#FFF8E1">🟡 淺黃 (#FFF8E1)</option>
+                                        <option value="#EFEBE9">🟤 米色 (#EFEBE9)</option>
+                                    </select>
+                                    <label asp-for="BackgroundColor"><i class="fas fa-image me-1"></i>背景顏色</label>
+                                    <span asp-validation-for="BackgroundColor" class="text-danger"></span>
+                                </div>
+                                <small class="form-text text-muted d-block mb-3">選擇 "不變更" 則保持原背景</small>
+                            </div>
+                        </div>
+
+                        <!-- Current Values Display -->
+                        <div class="alert alert-info">
+                            <strong><i class="fas fa-info-circle me-2"></i>目前設定：</strong><br />
+                            <div class="mt-2">
+                                <span class="me-3">
+                                    <strong>膚色：</strong>
+                                    <span class="badge" style="background-color: @Model.SkinColor; color: #fff; padding: 8px 12px;">@Model.SkinColor</span>
+                                </span>
+                                <span>
+                                    <strong>背景：</strong>
+                                    <span class="badge" style="background-color: @Model.BackgroundColor; color: #333; border: 1px solid #ddd; padding: 8px 12px;">@Model.BackgroundColor</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary btn-lg me-2 rounded-pill">
+                                <i class="fas fa-save me-2"></i>儲存變更
+                            </button>
+                            <a href="@Url.Action("QueryPets", "AdminPet")" class="btn btn-secondary btn-lg rounded-pill">
+                                <i class="fas fa-times me-2"></i>取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+}

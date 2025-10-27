@@ -1,0 +1,133 @@
+﻿# MiniGame Area 技術細節補充文件
+
+
+## 管理員帳號密碼對應表
+
+### 測試管理員帳號 (script_manager.sql)
+| 管理員ID | 姓名 | 帳號 | 密碼 | 信箱 | 註冊日期 |
+|----------|------|------|------|------|----------|
+| 30000001 | 張志明 | zhang_zhiming_01 | AdminPass001@ | zhang.zhiming@company.com | 2019-01-15 |
+| 30000002 | 李小華 | li_xiaohua_02 | SecurePass002# | li.xiaohua@company.com | 2019-01-16 |
+| 30000003 | 王美玲 | wang_meiling_03 | StrongPwd003! | wang.meiling@company.com | 2019-01-17 |
+| 30000004 | 陳大偉 | chen_dawei_04 | SafeLogin004$ | chen.dawei@company.com | 2019-01-18 |
+| 30000005 | 林雅婷 | lin_yating_05 | Manager005% | lin.yating@company.com | 2019-01-19 |
+| 30000006 | John Anderson | john_anderson_06 | AdminJohn006^ | john.anderson@company.com | 2019-01-20 |
+| 30000007 | 劉建國 | liu_jianguo_07 | BuildNation007& | liu.jianguo@company.com | 2019-01-21 |
+| 30000008 | Sarah Johnson | sarah_johnson_08 | SarahMgr008* | sarah.johnson@company.com | 2019-01-22 |
+| 30000009 | 黃金龍 | huang_jinlong_09 | GoldenDragon009( | huang.jinlong@company.com | 2019-01-23 |
+| 30000010 | Michael Chen | michael_chen_10 | MikeChen010) | michael.chen@company.com | 2019-01-24 |
+
+### 推薦測試帳號
+- **主要測試**: zhang_zhiming_01 / AdminPass001@ (全權限管理員)
+- **次要測試**: li_xiaohua_02 / SecurePass002# (使用者與論壇管理)
+
+
+## 權限角色定義對應表
+
+### 管理員角色權限 (ManagerRolePermission)
+| 角色ID | 角色名稱 | 管理員權限 | 使用者管理 | 購物管理 | 論壇管理 | 寵物管理 | 客服 |
+|--------|----------|------------|------------|----------|----------|----------|------|
+| 1 | 管理者平台管理人員 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 2 | 使用者與論壇管理精理 | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ |
+| 3 | 商城與寵物管理經理 | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| 4 | 使用者平台管理人員 | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 5 | 購物平台管理人員 | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| 6 | 論壇平台管理人員 | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| 7 | 寵物平台管理人員 | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| 8 | 客服與交友管理員 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+### 權限說明
+- **管理員權限管理**: 可管理其他管理員帳號、角色分配
+- **使用者管理**: 可查看、編輯、停權使用者帳號
+- **購物管理**: 可管理商城商品、訂單、優惠券
+- **論壇管理**: 可管理論壇文章、留言、版塊
+- **寵物管理**: 可管理寵物系統設定、使用者寵物資料
+- **客服**: 可處理客服工單、使用者問題
+
+
+## 資料庫約束詳細資訊
+
+### 唯一約束 (Unique Constraints)
+| 資料表 | 欄位 | 約束名稱 | 說明 |
+|--------|------|----------|------|
+| ManagerData | Manager_Account | UQ__ManagerD__62B5E21119A93877 | 管理員帳號唯一 |
+| ManagerData | Manager_Email | UQ__ManagerD__0890969EC9C76047 | 管理員信箱唯一 |
+| Users | User_name | UQ__Users__5F1A108682A83552 | 使用者名稱唯一 |
+| Users | User_Account | UQ__Users__899F4A91E5EF8DB8 | 使用者帳號唯一 |
+
+### 外鍵約束 (Foreign Key Constraints)
+| 子表 | 子欄位 | 父表 | 父欄位 | 約束名稱 | 說明 |
+|------|--------|------|--------|----------|------|
+| User_Wallet | User_Id | Users | User_ID | FK_User_Wallet_Users | 錢包對應使用者 |
+| UserSignInStats | UserID | Users | User_ID | FK_UserSignInStats_Users | 簽到記錄對應使用者 |
+| Pet | UserID | Users | User_ID | FK_Pet_Users | 寵物對應使用者 |
+| MiniGame | UserID | Users | User_ID | FK_MiniGame_Users | 遊戲記錄對應使用者 |
+| MiniGame | PetID | Pet | PetID | FK_MiniGame_Pet | 遊戲記錄對應寵物 |
+| WalletHistory | UserID | Users | User_ID | FK_WalletHistory_Users | 錢包異動對應使用者 |
+| ManagerRole | Manager_Id | ManagerData | Manager_Id | FK__ManagerRo__Manag__0BE6BFCF | 管理員角色對應管理員 |
+| ManagerRole | ManagerRole_Id | ManagerRolePermission | ManagerRole_Id | FK__ManagerRo__Manag__0CDAE408 | 管理員角色對應權限 |
+
+### 預設值 (Default Values)
+| 資料表 | 欄位 | 預設值 | 說明 |
+|--------|------|--------|------|
+| ManagerData | Manager_EmailConfirmed | 0 | 信箱未確認 |
+| ManagerData | Manager_AccessFailedCount | 0 | 登入失敗次數 |
+| ManagerData | Manager_LockoutEnabled | 1 | 啟用鎖定功能 |
+| Users | User_EmailConfirmed | 0 | 信箱未確認 |
+| Users | User_PhoneNumberConfirmed | 0 | 手機未確認 |
+| Users | User_TwoFactorEnabled | 0 | 未啟用雙因子認證 |
+| Users | User_AccessFailedCount | 0 | 登入失敗次數 |
+| Users | User_LockoutEnabled | 1 | 啟用鎖定功能 |
+
+
+## 資料庫索引策略
+
+### 主鍵索引 (Primary Key Indexes)
+- 所有資料表都有主鍵索引，使用 CLUSTERED 索引
+- 主鍵欄位通常為 int IDENTITY(1,1) 自增欄位
+
+### 唯一索引 (Unique Indexes)
+- 帳號相關欄位建立唯一索引確保不重複
+- 使用 NONCLUSTERED 索引以提升查詢效能
+
+### 外鍵索引 (Foreign Key Indexes)
+- 外鍵欄位自動建立索引以提升關聯查詢效能
+- 支援複雜的 JOIN 查詢操作
+
+## 資料完整性規則
+
+### 參照完整性 (Referential Integrity)
+- 所有外鍵關係都設定為 CASCADE 或 RESTRICT
+- 刪除父記錄時會檢查子記錄是否存在
+- 確保資料關聯的一致性
+
+### 檢查約束 (Check Constraints)
+- 數值欄位設定合理範圍 (如點數 >= 0)
+- 日期欄位確保邏輯順序 (如結束時間 > 開始時間)
+- 狀態欄位限制有效值 (如性別只能是 'M' 或 'F')
+
+### 觸發器 (Triggers)
+- 自動更新時間戳記
+- 維護資料異動記錄
+- 執行複雜的業務規則驗證
+
+## 效能優化建議
+
+### 查詢優化
+- 複雜查詢使用適當的索引
+- 避免 SELECT * 查詢
+- 使用參數化查詢防止 SQL 注入
+
+### 資料庫維護
+- 定期更新統計資訊
+- 監控查詢執行計畫
+- 適時重建或重組索引
+
+### 備份策略
+- 每日完整備份
+- 每小時差異備份
+- 交易記錄備份
+
+
+
+

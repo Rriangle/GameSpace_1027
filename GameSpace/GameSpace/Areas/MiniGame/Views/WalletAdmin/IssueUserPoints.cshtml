@@ -1,0 +1,89 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.IssuePointsInputModel
+@{
+    ViewData["Title"] = "發放會員點數";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fas fa-coins me-2"></i>發放會員點數</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="IssueUserPoints" method="post">
+                @Html.AntiForgeryToken()
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>說明：</strong>此功能用於手動發放或扣除會員點數。請謹慎操作，所有操作將被記錄。
+                </div>
+
+                <!-- 會員資訊區 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="UserId" class="form-label">會員 ID <span class="text-danger">*</span></label>
+                        <input asp-for="UserId" class="form-control" placeholder="請輸入會員 ID" />
+                        <span asp-validation-for="UserId" class="text-danger"></span>
+                        @if (!string.IsNullOrEmpty(Model?.UserName))
+                        {
+                            <small class="text-muted">目前會員：@Model.UserName</small>
+                        }
+                    </div>
+                    @if (Model?.CurrentPoints != null)
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label">目前點數</label>
+                            <div class="form-control-plaintext fw-bold text-primary">
+                                <i class="fas fa-wallet me-1"></i>@Model.CurrentPoints.Value 點
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- 點數操作區 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Points" class="form-label">點數 <span class="text-danger">*</span></label>
+                        <input asp-for="Points" type="number" class="form-control" placeholder="正數為發放，負數為扣除" />
+                        <span asp-validation-for="Points" class="text-danger"></span>
+                        <small class="text-muted">範圍：-1,000,000 到 1,000,000</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="TransactionType" class="form-label">交易類型</label>
+                        <input asp-for="TransactionType" class="form-control" readonly />
+                        <small class="text-muted">系統自動判定</small>
+                    </div>
+                </div>
+
+                <!-- 原因與備註 -->
+                <div class="mb-3">
+                    <label asp-for="Reason" class="form-label">發放原因 <span class="text-danger">*</span></label>
+                    <input asp-for="Reason" class="form-control" placeholder="請說明發放或扣除點數的原因" />
+                    <span asp-validation-for="Reason" class="text-danger"></span>
+                    <small class="text-muted">最多 200 字元</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label">備註</label>
+                    <textarea asp-for="Notes" class="form-control" rows="3" placeholder="補充說明（選填）"></textarea>
+                    <span asp-validation-for="Notes" class="text-danger"></span>
+                    <small class="text-muted">最多 500 字元</small>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="mt-4 border-top pt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>確認發放
+                    </button>
+                    <a asp-action="QueryUserPoints" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

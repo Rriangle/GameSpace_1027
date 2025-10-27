@@ -1,0 +1,50 @@
+﻿@model IEnumerable<GameSpace.Areas.MemberManagement.Models.ManagerWithRoleVM>
+@{
+    ViewData["Title"] = "管理者角色明細";
+    var header = Model?.FirstOrDefault();
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+@if (header == null)
+{
+    <div class="alert alert-warning">找不到資料。</div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <div class="form-text">管理者編號</div>
+                    <div class="fw-semibold fs-5">@header.ManagerId</div>
+                </div>
+                <div class="col-md-8">
+                    <div class="form-text">管理者姓名</div>
+                    <div class="fw-semibold fs-5">@header.ManagerName</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="mb-2">擁有角色</h5>
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th style="width:160px;">角色編號</th>
+                <th>角色名稱</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@(r.ManagerRoleId == 0 ? "" : r.ManagerRoleId.ToString())</td>
+                    <td>@r.RoleName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a asp-action="Index" class="btn btn-secondary">返回清單</a>
+}

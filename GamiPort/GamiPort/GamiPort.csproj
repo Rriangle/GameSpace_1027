@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-GamiPort-f671c6f1-0385-48dd-b8ea-6e0b1e4c6e25</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Areas\Forum\Models\**" />
+    <Compile Remove="Areas\NewFolder - 複製 %282%29\**" />
+    <Compile Remove="Areas\NewFolder - 複製 %283%29\**" />
+    <Compile Remove="Areas\NewFolder - 複製 %284%29\**" />
+    <Compile Remove="Areas\NewFolder - 複製\**" />
+    <Compile Remove="Areas\NewFolder\**" />
+    <Content Remove="Areas\Forum\Models\**" />
+    <Content Remove="Areas\NewFolder - 複製 %282%29\**" />
+    <Content Remove="Areas\NewFolder - 複製 %283%29\**" />
+    <Content Remove="Areas\NewFolder - 複製 %284%29\**" />
+    <Content Remove="Areas\NewFolder - 複製\**" />
+    <Content Remove="Areas\NewFolder\**" />
+    <EmbeddedResource Remove="Areas\Forum\Models\**" />
+    <EmbeddedResource Remove="Areas\NewFolder - 複製 %282%29\**" />
+    <EmbeddedResource Remove="Areas\NewFolder - 複製 %283%29\**" />
+    <EmbeddedResource Remove="Areas\NewFolder - 複製 %284%29\**" />
+    <EmbeddedResource Remove="Areas\NewFolder - 複製\**" />
+    <EmbeddedResource Remove="Areas\NewFolder\**" />
+    <None Remove="Areas\Forum\Models\**" />
+    <None Remove="Areas\NewFolder - 複製 %282%29\**" />
+    <None Remove="Areas\NewFolder - 複製 %283%29\**" />
+    <None Remove="Areas\NewFolder - 複製 %284%29\**" />
+    <None Remove="Areas\NewFolder - 複製\**" />
+    <None Remove="Areas\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.20" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\Forum\Data\" />
+    <Folder Include="Areas\MemberManagement\Data\" />
+    <Folder Include="Areas\MiniGame\Data\" />
+    <Folder Include="Areas\MiniGame\Models\" />
+    <Folder Include="Areas\OnlineStore\Data\" />
+    <Folder Include="Areas\OnlineStore\Models\" />
+    <Folder Include="Areas\social_hub\Data\" />
+    <Folder Include="Areas\social_hub\Models\" />
+  </ItemGroup>
+
+</Project>

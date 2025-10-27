@@ -1,0 +1,244 @@
+﻿@using System.Text.Json
+@{
+    ViewData["Title"] = "互動 / 排行管理中心";
+    var dash = (GameSpace.Areas.OnlineStore.ViewModels.EngagementDashboardVM)ViewBag.Dashboard;
+    string ratingsTrendJson = JsonSerializer.Serialize(dash.RatingsTrend ?? new(), new JsonSerializerOptions { WriteIndented = false });
+    string favsTrendJson = JsonSerializer.Serialize(dash.FavoritesTrend ?? new(), new JsonSerializerOptions { WriteIndented = false });
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-xxl-3 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">評分數（區間）</div>
+                <div class="fs-3 fw-bold">@dash.RatingCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xxl-3 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">收藏數（區間）</div>
+                <div class="fs-3 fw-bold">@dash.FavoriteCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xxl-3 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">平均星等（區間）</div>
+                <div class="fs-3 fw-bold">@dash.AvgRating</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xxl-3 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">最新排行榜</div>
+                @if (dash.LastRankingDate is null)
+                {
+                    <div class="fs-6 text-muted">尚無</div>
+                }
+                else
+                {
+                    <div class="fs-6 fw-bold">@dash.LastRankingDate:yyyy/MM/dd</div>
+                    <div class="text-muted small">筆數 @dash.LastRankingRows</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-activity"></i> 互動趨勢（近 7 日）</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-12 col-lg-6"><canvas id="chartRatings"></canvas></div>
+            <div class="col-12 col-lg-6"><canvas id="chartFavorites"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex align-items-center gap-3">
+        <ul class="nav nav-pills">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-ratings"><i class="bi bi-star-half"></i> 評分</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-favorites"><i class="bi bi-heart"></i> 收藏</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-rankings"><i class="bi bi-trophy"></i> 排行</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-revenue"><i class="bi bi-cash-coin"></i> 營收</a></li>
+        </ul>
+    </div>
+    <div class="card-body tab-content">
+        <div class="tab-pane fade show active" id="tab-ratings">
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                <input class="form-control w-auto" id="qRating" placeholder="關鍵字（評論文字）" />
+                <input class="form-control w-auto" id="pidRating" type="number" placeholder="ProductId" />
+                <input class="form-control w-auto" id="fromRating" type="date" />
+                <input class="form-control w-auto" id="toRating" type="date" />
+                <div class="ms-auto btn-group">
+                    <a class="btn btn-outline-secondary btn-sm" id="btnRatingCsv"><i class="bi bi-download"></i> 匯出 CSV</a>
+                    <button class="btn btn-primary btn-sm" id="btnRatingSearch"><i class="bi bi-search"></i> 查詢</button>
+                </div>
+            </div>
+            <div id="ratingsTable">載入中...</div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-favorites">
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                <input class="form-control w-auto" id="pidFav" type="number" placeholder="ProductId" />
+                <input class="form-control w-auto" id="uidFav" type="number" placeholder="UserId" />
+                <input class="form-control w-auto" id="fromFav" type="date" />
+                <input class="form-control w-auto" id="toFav" type="date" />
+                <div class="ms-auto btn-group">
+                    <a class="btn btn-outline-secondary btn-sm" id="btnFavCsv"><i class="bi bi-download"></i> 匯出 CSV</a>
+                    <button class="btn btn-primary btn-sm" id="btnFavSearch"><i class="bi bi-search"></i> 查詢</button>
+                </div>
+            </div>
+            <div id="favoritesTable">載入中...</div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-rankings">
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                <select class="form-select w-auto" id="ptRank">
+                    <option value="">週期</option>
+                    <option value="1">DAILY</option>
+                    <option value="2">WEEKLY</option>
+                    <option value="3">MONTHLY</option>
+                    <option value="4">QUARTERLY</option>
+                    <option value="5">YEARLY</option>
+                </select>
+                <select class="form-select w-auto" id="metricRank">
+                    <option value="">指標</option>
+                    <option>rating</option>
+                    <option>click</option>
+                    <option>purchase</option>
+                    <option>revenue</option>
+                    <option>volume</option>
+                </select>
+                <input class="form-control w-auto" id="dateRank" type="date" />
+                <div class="ms-auto btn-group">
+                    <a class="btn btn-outline-secondary btn-sm" id="btnRankCsv"><i class="bi bi-download"></i> 匯出 CSV</a>
+                    <button class="btn btn-primary btn-sm" id="btnRankSearch"><i class="bi bi-search"></i> 查詢</button>
+                </div>
+            </div>
+            <div id="rankingsTable">載入中...</div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-revenue">
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                <select class="form-select w-auto" id="ptRev">
+                    <option value="">週期</option>
+                    <option value="1">DAILY</option>
+                    <option value="2">WEEKLY</option>
+                    <option value="3">MONTHLY</option>
+                    <option value="4">QUARTERLY</option>
+                    <option value="5">YEARLY</option>
+                </select>
+                <input class="form-control w-auto" id="fromRev" type="date" />
+                <input class="form-control w-auto" id="toRev" type="date" />
+                <div class="ms-auto btn-group">
+                    <a class="btn btn-outline-secondary btn-sm" id="btnRevCsv"><i class="bi bi-download"></i> 匯出 CSV</a>
+                    <button class="btn btn-primary btn-sm" id="btnRevSearch"><i class="bi bi-search"></i> 查詢</button>
+                </div>
+            </div>
+            <div id="revenueTable">載入中...</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalHost" tabindex="-1" aria-hidden="true"></div>
+
+@section Scripts {
+    <script>
+        (function(){
+          function parseTrend(json){
+            try { return JSON.parse(json); } catch { return []; }
+          }
+          const rt = parseTrend('@ratingsTrendJson');
+          const ft = parseTrend('@favsTrendJson');
+          const labels = [...new Set(rt.concat(ft).map(x => x.Day.substring(0,10)))].sort();
+          function makeSeries(series, labels){
+            const map = new Map(series.map(x => [x.Day.substring(0,10), x.Count]));
+            return labels.map(d => map.get(d) || 0);
+          }
+          const rc = document.getElementById('chartRatings').getContext('2d');
+          new Chart(rc, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: '評分數', data: makeSeries(rt, labels) }] },
+            options: { responsive: true, plugins:{legend:{display:true}} }
+          });
+          const fc = document.getElementById('chartFavorites').getContext('2d');
+          new Chart(fc, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: '收藏數', data: makeSeries(ft, labels) }] },
+            options: { responsive: true, plugins:{legend:{display:true}} }
+          });
+
+          async function load(url, targetId){
+            const html = await (await fetch(url, { credentials:'include' })).text();
+            document.getElementById(targetId).innerHTML = html;
+          }
+          function val(id){ return document.getElementById(id)?.value?.trim() ?? ""; }
+          function qs(obj){
+            const p = new URLSearchParams(Object.entries(obj).filter(([k,v])=>v!=="" && v!=null));
+            const s = p.toString(); return s ? ("?"+s) : "";
+          }
+
+          // initial
+          load('@Url.Action("Ratings", "Engagement", new { area = "OnlineStore" })', 'ratingsTable');
+          load('@Url.Action("Favorites", "Engagement", new { area = "OnlineStore" })', 'favoritesTable');
+          load('@Url.Action("Rankings", "Engagement", new { area = "OnlineStore" })', 'rankingsTable');
+          load('@Url.Action("Revenue", "Engagement", new { area = "OnlineStore" })', 'revenueTable');
+
+          // handlers
+          document.getElementById('btnRatingSearch').addEventListener('click', ()=>{
+            load('@Url.Action("Ratings", "Engagement", new { area = "OnlineStore" })'+qs({
+              q: val('qRating'), productId: val('pidRating'), from: val('fromRating'), to: val('toRating')
+            }), 'ratingsTable');
+          });
+          document.getElementById('btnRatingCsv').addEventListener('click', ()=>{
+            location.href='@Url.Action("ExportRatingsCsv", "Engagement", new { area = "OnlineStore" })'+qs({
+              q: val('qRating'), productId: val('pidRating'), from: val('fromRating'), to: val('toRating')
+            });
+          });
+
+          document.getElementById('btnFavSearch').addEventListener('click', ()=>{
+            load('@Url.Action("Favorites", "Engagement", new { area = "OnlineStore" })'+qs({
+              productId: val('pidFav'), userId: val('uidFav'), from: val('fromFav'), to: val('toFav')
+            }), 'favoritesTable');
+          });
+          document.getElementById('btnFavCsv').addEventListener('click', ()=>{
+            location.href='@Url.Action("ExportFavoritesCsv", "Engagement", new { area = "OnlineStore" })'+qs({
+              productId: val('pidFav'), userId: val('uidFav'), from: val('fromFav'), to: val('toFav')
+            });
+          });
+
+          document.getElementById('btnRankSearch').addEventListener('click', ()=>{
+            load('@Url.Action("Rankings", "Engagement", new { area = "OnlineStore" })'+qs({
+              periodType: val('ptRank'), metric: val('metricRank'), rankingDate: val('dateRank')
+            }), 'rankingsTable');
+          });
+          document.getElementById('btnRankCsv').addEventListener('click', ()=>{
+            location.href='@Url.Action("ExportRankingsCsv", "Engagement", new { area = "OnlineStore" })'+qs({
+              periodType: val('ptRank'), metric: val('metricRank'), rankingDate: val('dateRank')
+            });
+          });
+
+          document.getElementById('btnRevSearch').addEventListener('click', ()=>{
+            load('@Url.Action("Revenue", "Engagement", new { area = "OnlineStore" })'+qs({
+              periodType: val('ptRev'), from: val('fromRev'), to: val('toRev')
+            }), 'revenueTable');
+          });
+          document.getElementById('btnRevCsv').addEventListener('click', ()=>{
+            location.href='@Url.Action("ExportRevenueCsv", "Engagement", new { area = "OnlineStore" })'+qs({
+              periodType: val('ptRev'), from: val('fromRev'), to: val('toRev')
+            });
+          });
+        })();
+    </script>
+}
+
+

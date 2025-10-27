@@ -1,0 +1,98 @@
+﻿@model GameSpace.Areas.MemberManagement.Models.ManagerRolePermissionVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "GameSpace";
+    // 保留側欄狀態（預設 admin）
+    var sidebar = (string)(ViewBag.Sidebar ?? Context.Request.Query["sidebar"].ToString() ?? "admin");
+}
+
+<h1>職位創建</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- ★ POST 時保留側欄 -->
+            <input type="hidden" name="sidebar" value="@sidebar" />
+
+            <!-- 基本資料 -->
+            <div class="mb-3">
+                <label asp-for="RoleName" class="form-label"></label>
+                <input asp-for="RoleName" class="form-control" />
+                <span asp-validation-for="RoleName" class="text-danger"></span>
+            </div>
+
+            <!-- 權限設定（全部用勾選） -->
+            <div class="card mb-3">
+                <div class="card-header">權限設定</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                <input asp-for="AdministratorPrivilegesManagement" class="form-check-input" />
+                                <label asp-for="AdministratorPrivilegesManagement" class="form-check-label"></label>
+                            </div>
+                            <span asp-validation-for="AdministratorPrivilegesManagement" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                <input asp-for="UserStatusManagement" class="form-check-input" />
+                                <label asp-for="UserStatusManagement" class="form-check-label"></label>
+                            </div>
+                            <span asp-validation-for="UserStatusManagement" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                <input asp-for="ShoppingPermissionManagement" class="form-check-input" />
+                                <label asp-for="ShoppingPermissionManagement" class="form-check-label"></label>
+                            </div>
+                            <span asp-validation-for="ShoppingPermissionManagement" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                <input asp-for="MessagePermissionManagement" class="form-check-input" />
+                                <label asp-for="MessagePermissionManagement" class="form-check-label"></label>
+                            </div>
+                            <span asp-validation-for="MessagePermissionManagement" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                <input asp-for="PetRightsManagement" class="form-check-input" />
+                                <label asp-for="PetRightsManagement" class="form-check-label"></label>
+                            </div>
+                            <span asp-validation-for="PetRightsManagement" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-sm-6 mb-2">
+                            <div class="form-check">
+                                <input asp-for="CustomerService" class="form-check-input" />
+                                <label asp-for="CustomerService" class="form-check-label"></label>
+                            </div>
+                            <span asp-validation-for="CustomerService" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="Index"
+                   asp-route-sidebar="@sidebar"
+                   class="btn btn-outline-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

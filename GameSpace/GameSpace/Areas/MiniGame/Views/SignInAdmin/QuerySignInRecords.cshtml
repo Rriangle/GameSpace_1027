@@ -1,0 +1,179 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.SignInRecordsViewModel
+@{
+    ViewData["Title"] = "查詢簽到紀錄";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="fas fa-calendar-check me-2"></i>查詢簽到紀錄</h3>
+        </div>
+        <div class="card-body">
+            <!-- 查詢條件表單 -->
+            <form method="get" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="userId" class="form-label">會員 ID</label>
+                        <input type="number" class="form-control" id="userId" name="UserId" placeholder="請輸入會員 ID">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="userAccount" class="form-label">會員帳號</label>
+                        <input type="text" class="form-control" id="userAccount" name="UserAccount" placeholder="請輸入會員帳號">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label">開始日期</label>
+                        <input type="date" class="form-control" id="startDate" name="StartDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label">結束日期</label>
+                        <input type="date" class="form-control" id="endDate" name="EndDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="minConsecutiveDays" class="form-label">最小連續天數</label>
+                        <input type="number" class="form-control" id="minConsecutiveDays" name="MinConsecutiveDays" min="1" placeholder="例如: 3">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="maxConsecutiveDays" class="form-label">最大連續天數</label>
+                        <input type="number" class="form-control" id="maxConsecutiveDays" name="MaxConsecutiveDays" min="1" placeholder="例如: 30">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sortBy" class="form-label">排序欄位</label>
+                        <select class="form-select" id="sortBy" name="SortBy">
+                            <option value="SignInDate">簽到日期</option>
+                            <option value="ConsecutiveDays">連續天數</option>
+                            <option value="PointsRewarded">獎勵點數</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sortOrder" class="form-label">排序方向</label>
+                        <select class="form-select" id="sortOrder" name="SortOrder">
+                            <option value="desc">遞減</option>
+                            <option value="asc">遞增</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>查詢
+                        </button>
+                        <a href="@Url.Action("QuerySignInRecords")" class="btn btn-secondary">
+                            <i class="fas fa-redo me-1"></i>重置
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 查詢結果 -->
+            @if (Model.Records.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>紀錄 ID</th>
+                                <th>會員</th>
+                                <th>簽到日期</th>
+                                <th class="text-center">連續天數</th>
+                                <th class="text-center">獎勵點數</th>
+                                <th class="text-center">獎勵經驗值</th>
+                                <th>獎勵優惠券</th>
+                                <th>簽到時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var record in Model.Records.Items)
+                            {
+                                <tr>
+                                    <td><code>#@record.RecordId</code></td>
+                                    <td>
+                                        <div>@record.UserName</div>
+                                        <small class="text-muted">@(record.UserAccount ?? "-") (ID: @record.UserId)</small>
+                                    </td>
+                                    <td>@record.SignInDate.ToString("yyyy-MM-dd")</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6">第 @record.ConsecutiveDays 天</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (record.PointsRewarded > 0)
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-coins me-1"></i>@record.PointsRewarded.ToString("N0")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (record.PetExpRewarded > 0)
+                                        {
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-star me-1"></i>@record.PetExpRewarded.ToString("N0")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(record.CouponTypeName))
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-ticket-alt me-1"></i>@record.CouponTypeName
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">無</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@record.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分頁 -->
+                @if (Model.Records.TotalPages > 1)
+                {
+                    <nav aria-label="分頁導航">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(!Model.Records.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("QuerySignInRecords", new { Page = Model.Records.CurrentPage - 1 })">上一頁</a>
+                            </li>
+
+                            @for (int i = Math.Max(1, Model.Records.CurrentPage - 2); i <= Math.Min(Model.Records.TotalPages, Model.Records.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.Records.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("QuerySignInRecords", new { Page = i })">@i</a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.Records.HasNextPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("QuerySignInRecords", new { Page = Model.Records.CurrentPage + 1 })">下一頁</a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <div class="text-center text-muted">
+                        顯示第 @((Model.Records.CurrentPage - 1) * Model.Records.PageSize + 1) - @Math.Min(Model.Records.CurrentPage * Model.Records.PageSize, Model.Records.TotalCount) 筆，共 @Model.Records.TotalCount 筆紀錄
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info text-center py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <p class="mb-0 fs-5">查無簽到紀錄</p>
+                    <p class="text-muted">請調整查詢條件後再試</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

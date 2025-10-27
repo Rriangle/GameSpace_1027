@@ -1,0 +1,193 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.EntityFrameworkCore
+@using GameSpace.Models
+@inject GameSpacedatabaseContext Db
+
+@{
+    // 先決定要用哪個 Principal
+    var adminAuth = await Context.AuthenticateAsync("AdminCookie");
+    var principal =
+        (User?.Identity?.IsAuthenticated == true && User.HasClaim(c => c.Type == "IsManager" && c.Value == "true"))
+        ? User
+        : (adminAuth?.Principal ?? User);
+
+    bool isAuthed = principal?.Identity?.IsAuthenticated == true;
+
+    // 取 ManagerId
+    int? managerId = null;
+    var idStr =
+        principal?.FindFirst("ManagerId")?.Value ??
+        principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+        principal?.FindFirst("uid")?.Value;
+
+    if (int.TryParse(idStr, out var parsed)) managerId = parsed;
+
+    // 檢查MiniGame權限（寵物權限管理）
+    bool hasMiniGameAccess = principal?.HasClaim("perm:Pet", "true") ?? false;
+
+    // 如果 Claims 沒帶權限，再回 DB 撈一次
+    if (!hasMiniGameAccess && isAuthed && managerId.HasValue)
+    {
+        var mid = managerId.Value;
+        var flags = await Db.ManagerRolePermissions
+            .Where(p => p.Managers.Any(m => m.ManagerId == mid))
+            .Select(p => new { p.PetRightsManagement })
+            .ToListAsync();
+
+        hasMiniGameAccess = flags.Any(x => x.PetRightsManagement == true);
+    }
+}
+
+@if (isAuthed && hasMiniGameAccess)
+{
+<nav class="navbar-nav flex-column w-100">
+    <!-- Dashboard -->
+    <a class="nav-link d-flex align-items-center text-white" asp-area="MiniGame" asp-controller="AdminHome" asp-action="Index">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        <span class="sidebar-text d-none d-sm-inline">小遊戲管理系統首頁</span>
+    </a>
+
+    <!-- 會員錢包 -->
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center text-white" data-bs-toggle="collapse" href="#walletCollapse" role="button" aria-expanded="false" aria-controls="walletCollapse">
+            <i class="fas fa-wallet me-2"></i>
+            <span class="sidebar-text d-none d-sm-inline">會員錢包</span>
+            <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="walletCollapse">
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="PointsQuery">
+                    <i class="fas fa-search me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">查詢會員點數</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="CouponsQuery">
+                    <i class="fas fa-ticket-alt me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">查詢會員擁有商城優惠券</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="EVouchersQuery">
+                    <i class="fas fa-gift me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">查詢會員擁有電子禮券</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="GrantPoints">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">調整會員點數</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="GrantCoupon">
+                    <i class="fas fa-ticket-alt me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">調整會員擁有商城優惠券</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="AdjustEVoucher">
+                    <i class="fas fa-edit me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">調整會員擁有電子禮券</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="WalletHistory">
+                    <i class="fas fa-history me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">查看會員收支明細</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 會員簽到系統 -->
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center text-white" data-bs-toggle="collapse" href="#signInCollapse" role="button" aria-expanded="false" aria-controls="signInCollapse">
+            <i class="fas fa-calendar-check me-2"></i>
+            <span class="sidebar-text d-none d-sm-inline">會員簽到系統</span>
+            <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="signInCollapse">
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="SignInAdmin" asp-action="RuleSettings">
+                    <i class="fas fa-cog me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">簽到規則設定</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="SignInAdmin" asp-action="Records">
+                    <i class="fas fa-history me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">查看會員簽到紀錄</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 寵物系統 -->
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center text-white" data-bs-toggle="collapse" href="#petCollapse" role="button" aria-expanded="false" aria-controls="petCollapse">
+            <i class="fas fa-paw me-2"></i>
+            <span class="sidebar-text d-none d-sm-inline">寵物系統</span>
+            <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="petCollapse">
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="AdminPet" asp-action="SystemRules">
+                    <i class="fas fa-cog me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">整體寵物系統規則設定</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="AdminPet" asp-action="IndividualSettings">
+                    <i class="fas fa-user-edit me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">會員個別寵物設定</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="AdminPet" asp-action="QueryPets">
+                    <i class="fas fa-search me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">會員個別寵物清單含查詢</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="AdminPet" asp-action="ColorChangeHistory">
+                    <i class="fas fa-palette me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">換膚／換背景紀錄查詢</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 小遊戲系統 -->
+    <div class="nav-item">
+        <a class="nav-link d-flex align-items-center text-white" data-bs-toggle="collapse" href="#miniGameCollapse" role="button" aria-expanded="false" aria-controls="miniGameCollapse">
+            <i class="fas fa-gamepad me-2"></i>
+            <span class="sidebar-text d-none d-sm-inline">小遊戲系統</span>
+            <i class="fas fa-chevron-down ms-auto"></i>
+        </a>
+        <div class="collapse" id="miniGameCollapse">
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="AdminMiniGame" asp-action="GameRules">
+                    <i class="fas fa-cog me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">遊戲規則設定</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center text-white-50 ps-4" onclick="event.stopPropagation();" asp-area="MiniGame" asp-controller="AdminMiniGame" asp-action="QueryRecords">
+                    <i class="fas fa-history me-2"></i>
+                    <span class="sidebar-text d-none d-sm-inline">查看會員遊戲紀錄</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+}
+else
+{
+<div class="text-center text-white-50 p-4">
+    <i class="fas fa-lock fa-3x mb-3"></i>
+    <p>您沒有權限訪問此系統</p>
+    <a href="/Login" class="btn btn-outline-light btn-sm">前往登入</a>
+</div>
+}

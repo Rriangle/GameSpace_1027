@@ -1,0 +1,199 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.ProductInfoFormVM
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    var isEdit = Model.ProductId > 0;
+
+    // 準備 SelectList（讓 asp-items 自動處理 selected）
+    var supplierItems = new SelectList((IEnumerable<dynamic>)ViewBag.SupplierList, "SupplierId", "SupplierName", Model.SupplierId);
+    var platformItems = new SelectList((IEnumerable<dynamic>)ViewBag.PlatformList, "PlatformId", "PlatformName", Model.PlatformId);
+    var merchTypeItems = new SelectList((IEnumerable<dynamic>)ViewBag.MerchTypeList, "MerchTypeId", "MerchTypeName", Model.MerchTypeId);
+    var currencyItems = new SelectList((IEnumerable<string>)ViewBag.CurrencyList, Model.CurrencyCode);
+}
+
+<form id="productForm" data-mode="@(isEdit ? "edit" : "create")" enctype="multipart/form-data" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ProductId" />
+    <div id="formMessages"></div>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <label asp-for="ProductName" class="form-label">商品名稱 <span class="text-danger">*</span></label>
+            <input asp-for="ProductName" class="form-control" required />
+            <div class="invalid-feedback">請輸入商品名稱</div>
+        </div>
+
+        <div class="col-6">
+            <label asp-for="ProductType" class="form-label">類型 <span class="text-danger">*</span></label>
+            <select asp-for="ProductType" class="form-select" id="productType" required>
+                <option value="">— 請選擇 —</option>
+                <option value="game">遊戲</option>
+                <option value="notgame">周邊</option>
+            </select>
+            <div class="invalid-feedback">請選擇商品類型</div>
+        </div>
+
+        <div class="col-6">
+            <label class="form-label">供應商 <span class="text-danger">*</span></label>
+            <select asp-for="SupplierId" class="form-select" asp-items="supplierItems" required>
+                <option value="">— 請選擇 —</option>
+            </select>
+            <div class="invalid-feedback">請選擇供應商</div>
+        </div>
+
+        <div class="col-6">
+            <label asp-for="Price" class="form-label">價格</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input asp-for="Price" class="form-control" type="number" step="0.01" min="0" />
+            </div>
+        </div>
+
+        <div class="col-6">
+            <label asp-for="CurrencyCode" class="form-label">幣別</label>
+            <select asp-for="CurrencyCode" class="form-select" asp-items="currencyItems"></select>
+        </div>
+    </div>
+
+    <hr class="my-3" />
+
+    <!-- Game -->
+    <div id="panelGame" class="@(Model.ProductType == "game" ? "" : "d-none")">
+        <div class="row g-3">
+            <div class="col-6">
+                <label asp-for="PlatformId" class="form-label">平台</label>
+                <select asp-for="PlatformId" class="form-select" asp-items="platformItems">
+                    <option value="">— 未指定 —</option>
+                </select>
+            </div>
+
+            <div class="col-6">
+                <label asp-for="DownloadLink" class="form-label">下載連結</label>
+                <input asp-for="DownloadLink" class="form-control" />
+            </div>
+
+            <div class="col-12">
+                <label asp-for="GameProductDescription" class="form-label">商品描述（遊戲）</label>
+                <textarea asp-for="GameProductDescription" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="form-text mt-1 text-muted">
+            ※ 已移除「平台名稱（自訂覆寫）」與「遊戲類型」欄位，因新資料表未提供。
+        </div>
+    </div>
+
+    <!-- Other -->
+    <div id="panelOther" class="@(Model.ProductType == "notgame" ? "" : "d-none")">
+        <div class="row g-3">
+            <div class="col-6">
+                <label asp-for="MerchTypeId" class="form-label">周邊分類</label>
+                <select asp-for="MerchTypeId" class="form-select" asp-items="merchTypeItems">
+                    <option value="">— 請選擇 —</option>
+                </select>
+            </div>
+
+            <div class="col-6">
+                <label asp-for="DigitalCode" class="form-label">序號/兌換碼</label>
+                <input asp-for="DigitalCode" class="form-control" />
+            </div>
+
+            <div class="col-4">
+                <label asp-for="Size" class="form-label">尺寸</label>
+                <input asp-for="Size" class="form-control" />
+            </div>
+
+            <div class="col-4">
+                <label asp-for="Color" class="form-label">顏色</label>
+                <input asp-for="Color" class="form-control" />
+            </div>
+
+            <div class="col-4">
+                <label asp-for="Weight" class="form-label">重量</label>
+                <input asp-for="Weight" class="form-control" />
+            </div>
+
+            <div class="col-6">
+                <label asp-for="Dimensions" class="form-label">尺寸(長寬高)</label>
+                <input asp-for="Dimensions" class="form-control" />
+            </div>
+
+            <div class="col-6">
+                <label asp-for="Material" class="form-label">材質</label>
+                <input asp-for="Material" class="form-control" />
+            </div>
+
+            <div class="col-12">
+                <label asp-for="OtherProductDescription" class="form-label">商品描述（周邊）</label>
+                <textarea asp-for="OtherProductDescription" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="form-text mt-1 text-muted">
+            ※ 已移除「庫存」欄位，因新資料表未提供（之後若加入庫存表再開啟）。
+        </div>
+    </div>
+
+    <hr class="my-3" />
+
+    <div class="mb-2">
+        <label class="form-label">上傳圖片（可多張）</label>
+        <input class="form-control" type="file" name="images" multiple />
+        <div class="form-text">支援 jpg / png / gif / webp</div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">取消</button>
+        <button type="button" id="btnSave" class="btn btn-primary">儲存</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+          const form = document.getElementById('productForm');
+          const typeSelect = document.getElementById('productType');
+          const panelGame = document.getElementById('panelGame');
+          const panelOther = document.getElementById('panelOther');
+
+          function togglePanels() {
+            const t = (typeSelect.value || '').toLowerCase();
+            panelGame.classList.toggle('d-none', t !== 'game');
+            panelOther.classList.toggle('d-none', t !== 'notgame');
+          }
+          typeSelect.addEventListener('change', togglePanels);
+          togglePanels();
+
+          function validate() {
+            form.classList.add('was-validated');
+            return form.checkValidity();
+          }
+
+          document.getElementById('btnSave').addEventListener('click', async function () {
+            if (!validate()) return;
+
+            const fd = new FormData(form);
+            const mode = form.dataset.mode;
+            const url = mode === 'edit'
+              ? '@Url.Action("Edit", "ProductInfoes", new { area = "OnlineStore" })'
+              : '@Url.Action("Create", "ProductInfoes", new { area = "OnlineStore" })';
+
+            try {
+              const resp = await fetch(url, {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+              });
+              const json = await resp.json();
+              const msgBox = document.getElementById('formMessages');
+              if (json.ok) {
+                msgBox.innerHTML = '<div class="alert alert-success">' + (json.message || "已完成") + '</div>';
+              } else {
+                msgBox.innerHTML = '<div class="alert alert-warning">' + (json.message || "處理失敗") + '</div>';
+              }
+            } catch (e) {
+              document.getElementById('formMessages').innerHTML =
+                '<div class="alert alert-danger">發生錯誤，請稍後再試</div>';
+            }
+          });
+        })();
+    </script>
+}

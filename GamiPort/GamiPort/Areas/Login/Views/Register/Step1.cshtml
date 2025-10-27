@@ -1,0 +1,84 @@
+﻿@model GamiPort.Areas.Login.Models.RegisterStep1VM
+@if (TempData["Step1Error"] is string e)
+{
+    <div class="alert alert-danger">@e</div>
+}
+@{
+    ViewData["Title"] = "建立帳號（第 1/2 步）";
+}
+<div class="container py-4" style="max-width:480px;">
+    <h3 class="mb-3 text-center">@ViewData["Title"]</h3>
+
+    <form asp-area="Login" asp-controller="Register" asp-action="Step1" method="post" class="card p-4 shadow-sm">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+        <div class="mb-3">
+            <label asp-for="UserName" class="form-label"></label>
+            <input asp-for="UserName"
+                   class="form-control"
+                   maxlength="10"
+                   autocomplete="nickname" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="UserAccount" class="form-label"></label>
+            <input asp-for="UserAccount"
+                   class="form-control"
+                   minlength="8" maxlength="20"
+                   autocomplete="username" />
+            <span asp-validation-for="UserAccount" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="UserPassword" class="form-label"></label>
+            <input asp-for="UserPassword"
+                   type="password"
+                   class="form-control"
+                   minlength="8" maxlength="20"
+                   autocomplete="new-password" />
+            <span asp-validation-for="UserPassword" class="text-danger"></span>
+        </div>
+
+        <!-- ✅ 新增：確認密碼 -->
+        <div class="mb-3">
+            <label asp-for="ConfirmPassword" class="form-label"></label>
+            <input asp-for="ConfirmPassword"
+                   type="password"
+                   class="form-control"
+                   minlength="8" maxlength="20"
+                   autocomplete="new-password" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+
+        <environment include="Development">
+            <button type="button" id="Member" class="btn btn-outline-secondary mb-2">註冊人員1</button>
+        </environment>
+
+        <button type="submit" class="btn btn-primary w-100">下一步</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const btn = document.getElementById('Member');
+            btn?.addEventListener('click', function () {
+                const name = document.getElementById('UserName');
+                const acc  = document.getElementById('UserAccount');
+                const pwd  = document.getElementById('UserPassword');
+                const cpwd = document.getElementById('ConfirmPassword');
+
+                if (name) name.value = 'Mkshang';
+                if (acc)  acc.value  = 'ji32k75;4cl4';
+                if (pwd)  pwd.value  = 'ji32k7au4a83';
+                if (cpwd) cpwd.value = 'ji32k7au4a83';
+
+                acc?.focus();
+            });
+        })();
+    </script>
+}

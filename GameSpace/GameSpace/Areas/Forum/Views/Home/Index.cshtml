@@ -1,0 +1,122 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@{
+    ViewData["Title"] = "後台主控台";
+}
+
+<!-- 自訂樣式：卡片陰影 + 灰色背景 -->
+<style>
+    /* 灰色卡片 + 陰影效果 */
+    .custom-card {
+        background-color: #dcdcdc; /* 淺灰，比白色多一點灰感 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* 灰色陰影 */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .custom-card:hover {
+            transform: translateY(-5px); /* 滑鼠移上去卡片浮起 */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25); /* 陰影加深 */
+        }
+</style>
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">🎮 GameSpace 後台主控台</h1>
+
+    <div class="row g-4">
+
+        <!-- 1. 遊戲清單 -->
+        <div class="col-md-4">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">📋 遊戲清單管理</h5>
+                    <p class="card-text text-muted">
+                        新增、修改或刪除遊戲，支援編輯遊戲名稱、類型、描述。
+                    </p>
+                    <a asp-area="Forum" asp-controller="Games" asp-action="Index" class="btn btn-primary">
+                        前往管理
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 數據排行 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">📊 數據排行 & 指標管理</h5>
+                    <p class="card-text text-muted">
+                        管理來源 <b>Source</b>、對應 <b>Mapping</b> 與指標 <b>Metric</b>。
+                        可選擇日期與指標，查看遊戲排行榜。
+                    </p>
+                    <a asp-area="Forum" asp-controller="Metrics" asp-action="Index" class="btn btn-success">
+                        前往排行
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 洞察文章 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">📰 洞察文章</h5>
+                    <p class="card-text text-muted">
+                        管理員可發表新聞、遊戲趨勢與洞察文章。
+                        提供查詢與狀態管理（草稿/發佈/下架）。
+                    </p>
+                    <a asp-area="Forum" asp-controller="AdminPosts" asp-action="Index" class="btn btn-warning">
+                        管理文章
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 社群管理 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">👥 社群管理</h5>
+                    <p class="card-text text-muted">
+                        監控論壇文章與回覆，支援狀態修改（正常 / 封鎖 / 置頂）。
+                        觀察每個遊戲社群的互動情況。
+                    </p>
+                    <a asp-area="Forum" asp-controller="Threads" asp-action="Index" class="btn btn-danger">
+                        前往社群
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 歷史數據 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">📂 歷史數據查詢</h5>
+                    <p class="card-text text-muted">
+                        可依區間查詢每日數據，選擇指標後匯出 <b>Excel</b> 報表，方便後續分析。
+                    </p>
+                    <a asp-area="Forum" asp-controller="Reports" asp-action="History" class="btn btn-info text-white">
+                        查詢數據
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 公式解釋 -->
+        <div class="col-12">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">📐 熱度指數公式</h5>
+                    <p class="card-text">
+                        每日計算方式：
+                        <code>每個指標的遊戲值 ÷ 當天最大值 → 取平均 = Popularity Index</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

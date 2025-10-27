@@ -1,0 +1,9 @@
+﻿@model int
+@{
+    ViewData["Title"] = "註冊成功";
+}
+<div class="container py-5 text-center">
+    <h3 class="mb-3">@ViewData["Title"]</h3>
+    <p>你的使用者編號（UserId）：<strong>@Model</strong></p>
+    <a class="btn btn-success" asp-area="Login" asp-controller="Login" asp-action="Login">前往登入</a>
+</div>

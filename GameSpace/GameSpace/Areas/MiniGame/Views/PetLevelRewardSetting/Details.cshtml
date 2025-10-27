@@ -1,0 +1,123 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.PetLevelRewardSettingViewModel
+@{
+    ViewData["Title"] = "寵物升級獎勵設定詳細資料";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物升級獎勵設定詳細資料</h1>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.SettingId" class="btn btn-warning btn-sm">
+                <i class="fas fa-edit fa-sm text-white-50"></i> 編輯
+            </a>
+            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <!-- 詳細資料 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">獎勵設定資訊</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">設定ID:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge badge-primary">@Model.SettingId</span>
+                        </dd>
+
+                        <dt class="col-sm-4">等級範圍起始:</dt>
+                        <dd class="col-sm-8">
+                            <strong>@Model.LevelRangeStart</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">等級範圍結束:</dt>
+                        <dd class="col-sm-8">
+                            <strong>@Model.LevelRangeEnd</strong>
+                        </dd>
+
+                        <dt class="col-sm-4">等級範圍:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge badge-info">Level @Model.LevelRangeStart - @Model.LevelRangeEnd</span>
+                        </dd>
+
+                        <dt class="col-sm-4">獎勵點數:</dt>
+                        <dd class="col-sm-8">
+                            <strong class="text-success">@Model.PointsReward.ToString("N0")</strong> 點
+                        </dd>
+
+                        <dt class="col-sm-4">顯示順序:</dt>
+                        <dd class="col-sm-8">@Model.DisplayOrder</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">啟用狀態:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge badge-success">啟用</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">停用</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">建立時間:</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <dt class="col-sm-4">更新時間:</dt>
+                            <dd class="col-sm-8">@Model.UpdatedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+                        }
+
+                        @if (Model.UpdatedBy.HasValue)
+                        {
+                            <dt class="col-sm-4">更新者ID:</dt>
+                            <dd class="col-sm-8">@Model.UpdatedBy.Value</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <dt>獎勵描述:</dt>
+                        <dd class="alert alert-info">@Model.Description</dd>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- 操作按鈕 -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.SettingId" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> 編輯設定
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.SettingId" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> 刪除設定
+                    </a>
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> 返回列表
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

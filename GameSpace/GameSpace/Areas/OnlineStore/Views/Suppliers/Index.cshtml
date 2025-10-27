@@ -1,0 +1,302 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.SupplierIndexPageVM
+@{
+    ViewData["Title"] = "供應商管理";
+    var q = Model.Query;
+    bool hasActiveColumn = Model.Rows.Any(r => r.IsActive.HasValue);
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+<style>
+.offcanvas-end.wide { width: 520px; }
+.toast-center { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1085; }
+.badge-soft { background-color:#f8f9fa; border:1px solid #e9ecef; color:#6c757d; }
+.card-metric{border:0;border-radius:.75rem;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.card-metric .value{font-size:1.25rem;font-weight:700}
+.card-metric .label{font-size:.85rem;color:#6c757d}
+.table thead th{vertical-align:middle}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="m-0">供應商管理</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="@Url.Action("ExportCsv","Suppliers", new { area="OnlineStore", q = q.Q })" title="匯出 CSV">📤 匯出</a>
+    <a class="btn btn-outline-primary js-open-offcanvas" href="javascript:;" data-url="@Url.Action("ImportPanel","Suppliers",new{area="OnlineStore"})" title="匯入 CSV">📥 匯入</a>
+    <a class="btn btn-primary js-open-offcanvas" href="javascript:;" data-url="@Url.Action("CreatePanel","Suppliers",new{area="OnlineStore"})" title="新增供應商">➕ 新增</a>
+  </div>
+</div>
+
+<!-- 儀表板：置於搜尋上方橫式顯示 -->
+<div class="row g-3 mb-3">
+  <div class="col-md-5">
+    <div class="card card-metric h-100">
+      <div class="card-body">
+        <div class="label mb-2">合作最多商品的供應商（前五）</div>
+        @if (Model.Dashboard.TopSuppliers?.Any() == true)
+        {
+          <ol class="m-0 ps-3">
+            @foreach (var t in Model.Dashboard.TopSuppliers)
+            {
+              <li class="small d-flex justify-content-between">
+                <span class="text-truncate" title="@t.SupplierName">
+                  <a href="javascript:;" class="js-open-offcanvas" data-url="@Url.Action("DetailPanel","Suppliers", new { area="OnlineStore", id=t.SupplierId })">@t.SupplierName</a>
+                </span>
+                <span class="badge badge-soft">@t.TotalProducts</span>
+              </li>
+            }
+          </ol>
+        }
+        else { <div class="text-muted small">暫無資料</div> }
+      </div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="row g-3">
+      <div class="col-md-4 col-6">
+        <div class="card card-metric h-100"><div class="card-body">
+          <div class="label">🎮 遊戲類供應商</div>
+          <div class="value">@Model.Dashboard.GameSupplierCount</div>
+        </div></div>
+      </div>
+      <div class="col-md-4 col-6">
+        <div class="card card-metric h-100"><div class="card-body">
+          <div class="label">🧩 周邊供應商</div>
+          <div class="value">@Model.Dashboard.OtherSupplierCount</div>
+        </div></div>
+      </div>
+      <div class="col-md-4 col-6">
+        <div class="card card-metric h-100"><div class="card-body">
+          <div class="label">⛔ 停用供應商</div>
+          <div class="value">@Model.Dashboard.InactiveSupplierCount</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 搜尋條件 -->
+<form method="get" class="row row-cols-1 row-cols-md-5 g-2 align-items-end mb-3">
+  <div>
+    <label class="form-label">關鍵字</label>
+    <input class="form-control" name="q" value="@q.Q" placeholder="供應商名稱" />
+  </div>
+  <div>
+    <label class="form-label">狀態</label>
+    <select class="form-select" name="status">
+      <option value="all" selected="@(q.Status=="all"?"selected":null)">全部</option>
+      <option value="active" selected="@(q.Status=="active"?"selected":null)">啟用</option>
+      <option value="inactive" selected="@(q.Status=="inactive"?"selected":null)">停用</option>
+    </select>
+  </div>
+  <div>
+    <label class="form-label">建立日期</label>
+    <div class="input-group">
+      <input type="date" class="form-control" name="from" value="@q.From" />
+      <span class="input-group-text">~</span>
+      <input type="date" class="form-control" name="to" value="@q.To" />
+    </div>
+  </div>
+  <div>
+    <label class="form-label">每頁</label>
+    <select class="form-select" name="pageSize">
+      <option>10</option><option selected>@q.PageSize</option><option>50</option><option>100</option>
+    </select>
+  </div>
+  <div class="col-12 col-md">
+    <button class="btn btn-primary"><i class="bi bi-search"></i> 搜尋</button>
+    <a class="btn btn-outline-secondary" href="@Url.Action("Index","Suppliers",new{area="OnlineStore"})"><i class="bi bi-eraser"></i> 清除</a>
+  </div>
+</form>
+
+<!-- 清單 -->
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover align-middle m-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width:96px;">ID</th>
+          <th>供應商名稱</th>
+          @if (hasActiveColumn) { <th style="width:80px;" class="text-center">狀態</th> }
+          <th style="width:160px;" class="text-center">遊戲商品數</th>
+          <th style="width:160px;" class="text-center">周邊商品數</th>
+          <th style="width:160px;" class="text-center">合計</th>
+          <th style="width:260px;" class="text-end">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      @foreach (var s in Model.Rows)
+      {
+        <tr data-id="@s.SupplierId">
+          <td>#@s.SupplierId</td>
+          <td>
+            <a href="javascript:;" class="js-open-offcanvas" data-url="@Url.Action("DetailPanel","Suppliers", new { area="OnlineStore", id=s.SupplierId })"
+               title="檢視供應商 + 所屬商品">@s.SupplierName</a>
+          </td>
+          @if (hasActiveColumn)
+          {
+            <td class="text-center">
+              @if (s.IsActive == true) { <span class="badge bg-success">啟用</span> }
+              else if (s.IsActive == false) { <span class="badge bg-secondary">停用</span> }
+              else { <span class="badge bg-light text-muted">—</span> }
+            </td>
+          }
+          <td class="text-center">@s.GameProductCount</td>
+          <td class="text-center">@s.OtherProductCount</td>
+          <td class="text-center">@s.TotalProducts</td>
+          <td class="text-end">
+            <button class="btn btn-outline-secondary btn-sm js-open-offcanvas"
+                    data-url="@Url.Action("EditPanel","Suppliers", new { area="OnlineStore", id=s.SupplierId })" title="編輯">
+              ✏️ 編輯
+            </button>
+            @if (hasActiveColumn)
+            {
+              <form method="post" class="d-inline js-toggle">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@s.SupplierId" />
+                <button type="submit" formaction="@Url.Action("ToggleActive","Suppliers", new{area="OnlineStore"})"
+                        class="btn btn-outline-warning btn-sm" title="啟用/停用">
+                  🔁 狀態
+                </button>
+              </form>
+            }
+            <form method="post" class="d-inline js-delete">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="id" value="@s.SupplierId" />
+              <button type="submit" formaction="@Url.Action("Delete","Suppliers", new{area="OnlineStore"})"
+                      class="btn btn-outline-danger btn-sm" title="刪除">
+                🗑️ 刪除
+              </button>
+            </form>
+            <button class="btn btn-outline-info btn-sm js-open-offcanvas"
+                    data-url="@Url.Action("DetailPanel","Suppliers", new { area="OnlineStore", id=s.SupplierId })"
+                    title="供應商詳細/所屬商品">📦 商品</button>
+          </td>
+        </tr>
+      }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 分頁 -->
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <div class="text-muted">共 @q.Total 筆，頁 @q.Page / @((int)Math.Ceiling((double)q.Total / q.PageSize))</div>
+    <div class="btn-group">
+      @{
+        int pages = Math.Max(1, (int)Math.Ceiling((double)q.Total / q.PageSize));
+        string baseUrl = Url.Action("Index","Suppliers", new { area="OnlineStore", q = q.Q, status = q.Status, from = q.From, to = q.To, pageSize = q.PageSize })!;
+        Func<int, string> pageUrl = p => baseUrl + "&page=" + p;
+      }
+      <a class="btn btn-outline-secondary @(q.Page<=1?"disabled":"")" href="@(q.Page<=1?"#":pageUrl(1))">«</a>
+      <a class="btn btn-outline-secondary @(q.Page<=1?"disabled":"")" href="@(q.Page<=1?"#":pageUrl(q.Page-1))">‹</a>
+      <span class="btn btn-outline-secondary disabled">第 @q.Page 頁</span>
+      <a class="btn btn-outline-secondary @(q.Page>=pages?"disabled":"")" href="@(q.Page>=pages?"#":pageUrl(q.Page+1))">›</a>
+      <a class="btn btn-outline-secondary @(q.Page>=pages?"disabled":"")" href="@(q.Page>=pages?"#":pageUrl(pages))">»</a>
+    </div>
+  </div>
+</div>
+
+<!-- 置中 Toast -->
+<div class="toast toast-center align-items-center text-white bg-success border-0" role="alert" id="mainToast">
+  <div class="d-flex">
+    <div class="toast-body" id="mainToastBody">完成</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>
+
+<!-- 右側 Offcanvas -->
+<div class="offcanvas offcanvas-end wide" tabindex="-1" id="rightPanel" aria-labelledby="rightPanelLabel">
+  <div class="offcanvas-header">
+    <h5 id="rightPanelLabel">處理中…</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close" title="關閉"></button>
+  </div>
+  <div class="offcanvas-body" id="rightPanelBody">
+    <div class="text-muted">載入中...</div>
+  </div>
+</div>
+
+@section Scripts{
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(() => {
+  // 開右側 Offcanvas 載入部分頁
+  document.addEventListener('click', async (ev)=>{
+    const a = ev.target.closest('.js-open-offcanvas');
+    if (!a) return;
+    ev.preventDefault();
+    const url = a.getAttribute('data-url');
+    const panel = new bootstrap.Offcanvas('#rightPanel');
+    document.getElementById('rightPanelLabel').textContent = '載入中…';
+    document.getElementById('rightPanelBody').innerHTML = '<div class="text-muted">載入中...</div>';
+    panel.show();
+    const html = await (await fetch(url, { credentials:'include' })).text();
+    // 設定標題（由部分頁內的 data-panel-title 控制）
+    const tmp = document.createElement('div'); tmp.innerHTML = html;
+    const title = tmp.querySelector('[data-panel-title]')?.getAttribute('data-panel-title') ?? '詳細';
+    document.getElementById('rightPanelLabel').textContent = title;
+    document.getElementById('rightPanelBody').innerHTML = html;
+    bindAjaxForms();
+  });
+
+  function showToast(msg, ok=true){
+    const el = document.getElementById('mainToast');
+    const body = document.getElementById('mainToastBody');
+    body.textContent = msg || (ok?'✅ 完成':'❌ 失敗');
+    el.classList.toggle('bg-success', ok);
+    el.classList.toggle('bg-danger', !ok);
+    new bootstrap.Toast(el, { delay: 2000 }).show();
+  }
+
+  // 刪除 & 停用/啟用
+  document.querySelectorAll('form.js-delete').forEach(f=>{
+    f.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if (!confirm('確定刪除此供應商？')) return;
+      const res = await fetch(f.action, { method:'POST', body:new FormData(f), credentials:'include' });
+      const data = await res.json();
+      showToast(data.message || (data.ok?'🗑️ 已刪除':'刪除失敗'), data.ok);
+      if (data.ok) setTimeout(()=>location.reload(), 500);
+    });
+  });
+  document.querySelectorAll('form.js-toggle').forEach(f=>{
+    f.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const res = await fetch(f.action, { method:'POST', body:new FormData(f), credentials:'include' });
+      const data = await res.json();
+      showToast(data.message || (data.ok?'已更新':'更新失敗'), data.ok);
+      if (data.ok) setTimeout(()=>location.reload(), 500);
+    });
+  });
+
+  function bindAjaxForms(){
+    document.querySelectorAll('#rightPanelBody form.js-ajax').forEach(form=>{
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        if (form.dataset.submitting==='1') return;
+        form.dataset.submitting='1';
+        try{
+          const fd = new FormData(form);
+          const res = await fetch(form.action, { method:'POST', body: fd, credentials:'include' });
+          const ct = res.headers.get('content-type') || '';
+          if (ct.includes('application/json')){
+            const data = await res.json();
+            showToast(data.message || (data.ok?'✅ 完成':'❌ 失敗'), data.ok);
+            if (data.ok) {
+              bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('rightPanel')).hide();
+              setTimeout(()=>location.reload(), 500);
+            } else {
+              // 顯示原畫面錯誤訊息（已透過 toast 告知）
+            }
+          } else {
+            // 回傳部分頁（驗證失敗時用）
+            const html = await res.text();
+            document.getElementById('rightPanelBody').innerHTML = html;
+            bindAjaxForms();
+          }
+        } finally {
+          form.dataset.submitting='0';
+        }
+      });
+    });
+  }
+})();
+</script>
+}

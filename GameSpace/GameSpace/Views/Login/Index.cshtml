@@ -1,0 +1,83 @@
+﻿@model IEnumerable<GameSpace.Models.ManagerDatum>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerAccount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerPassword)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AdministratorRegistrationDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerEmail)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerEmailConfirmed)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerAccessFailedCount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerLockoutEnabled)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ManagerLockoutEnd)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerAccount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerPassword)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AdministratorRegistrationDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerEmailConfirmed)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerAccessFailedCount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerLockoutEnabled)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ManagerLockoutEnd)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ManagerId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ManagerId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ManagerId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

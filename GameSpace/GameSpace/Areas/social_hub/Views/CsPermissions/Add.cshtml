@@ -1,0 +1,160 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.CsAgentAddVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "加入客服專用權限";
+    var hasOptions = Model?.EligibleManagers != null && Model.EligibleManagers.Any();
+}
+
+<div class="mutes-header">
+    <h2 class="mutes-title">
+        <span>@ViewData["Title"]</span>
+        <span class="badge rounded-pill badge-manage" title="僅主管可使用">管理</span>
+    </h2>
+    <div class="mutes-subtle">
+        <i class="fas fa-user-plus me-1" aria-hidden="true"></i>
+        從「<strong>已有客服入口權限（CustomerService=1）</strong>」但尚未擁有客服專用權限的管理員中選擇一位，並設定加入時的細分權限。
+    </div>
+</div>
+
+<partial name="~/Areas/social_hub/Views/Mutes/_Toast.cshtml" />
+
+<div class="mutes-card">
+    <div class="card-body">
+        <form asp-area="social_hub"
+              asp-controller="CsPermissions"
+              asp-action="Add"
+              method="post"
+              class="js-prevent-double-submit">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+            <!-- 1) 選擇管理員（僅列出可加入者） -->
+            <div class="mb-3">
+                <label asp-for="ManagerId" class="form-label"></label>
+
+                @if (hasOptions)
+                {
+                    <select asp-for="ManagerId" asp-items="Model.EligibleManagers" class="form-select">
+                        <option value="">-- 請選擇管理員 --</option>
+                    </select>
+                }
+                else
+                {
+                    <!-- 沒有可加入者時顯示停用的下拉，並放一個隱藏欄位確保回傳模型狀態完整 -->
+                    <select class="form-select" disabled="disabled">
+                        <option>目前沒有可加入的管理員</option>
+                    </select>
+                    <input type="hidden" asp-for="ManagerId" />
+                }
+
+                <span asp-validation-for="ManagerId" class="text-danger"></span>
+
+                @if (!hasOptions)
+                {
+                    <div class="alert alert-warning mt-2 mb-0">
+                        目前沒有可加入的管理員（可能皆已建立客服專用權限或尚未通過客服入口權限 Gate）。
+                    </div>
+                }
+                else
+                {
+                    <div class="form-text">
+                        僅顯示已通過客服入口權限（CustomerService=1）且尚未擁有客服專用權限者。
+                        <br />若該管理員尚未存在於客服清單，系統會自動建立 <code>CS_Agent</code> 並建立 <code>CS_Agent_Permission</code>。
+                    </div>
+                }
+            </div>
+
+            <!-- 2) 加入時的 Agent 初始設定 -->
+            <div class="border rounded p-3 mb-3">
+                <div class="mb-2 fw-semibold">加入時的客服人員（Agent）初始設定</div>
+
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-md-6">
+                        <div class="form-check form-switch">
+                            <input asp-for="InitIsActive" class="form-check-input" />
+                            <label asp-for="InitIsActive" class="form-check-label">啟用</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label asp-for="InitMaxConcurrent" class="form-label">同時處理上限</label>
+                        <input asp-for="InitMaxConcurrent" type="number" min="1" max="50" class="form-control" />
+                        <span asp-validation-for="InitMaxConcurrent" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3) 加入時的 客服權限 初始設定 -->
+            <div class="border rounded p-3 mb-3">
+                <div class="mb-2 fw-semibold">加入時的客服權限（CS_Agent_Permission）初始設定</div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input asp-for="InitCanAssign" class="form-check-input" />
+                            <label asp-for="InitCanAssign" class="form-check-label">
+                                可派單/幫轉單/結單（最高權限）
+                            </label>
+                            <div class="form-text">
+                                具此權限者可協助他人處理工單（含轉派、結單）；通常只開放給主管/資深人員。
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="InitCanTransfer" class="form-check-input" />
+                            <label asp-for="InitCanTransfer" class="form-check-label">可轉單</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="InitCanAccept" class="form-check-input" />
+                            <label asp-for="InitCanAccept" class="form-check-label">可接單</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="InitCanEditMuteAll" class="form-check-input" />
+                            <label asp-for="InitCanEditMuteAll" class="form-check-label">
+                                穢語可編修全部（否則僅可編修自己建立）
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a class="btn btn-secondary"
+                   asp-area="social_hub" asp-controller="CsPermissions" asp-action="Index">
+                    <i class="fas fa-arrow-left me-1"></i>返回清單
+                </a>
+
+                @if (hasOptions)
+                {
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-1"></i>加入（或補建權限）
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" disabled="disabled">
+                        <i class="fas fa-user-plus me-1"></i>加入（或補建權限）
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/lib/social_hub/css/mutes.css" rel="stylesheet" asp-append-version="true" />
+}
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/lib/social_hub/js/mutes.js" asp-append-version="true"></script>
+}

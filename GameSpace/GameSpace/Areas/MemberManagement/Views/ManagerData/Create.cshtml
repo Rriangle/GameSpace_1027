@@ -1,0 +1,101 @@
+﻿@model GameSpace.Areas.MemberManagement.Models.ManagerDatumVM
+
+@{
+    ViewData["Title"] = "GameSpace";
+    var nextId = ViewBag.NextManagerId as int?; // 由 Controller 提供
+}
+
+<h1>管理者帳號創建</h1>
+<hr />
+
+<div class="alert alert-info">
+    系統將自動指派 <strong>管理者編號</strong>：<strong>@(nextId?.ToString() ?? "-")</strong><br />
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="ManagerName" class="form-label"></label>
+                <input asp-for="ManagerName" class="form-control" />
+                <span asp-validation-for="ManagerName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ManagerAccount" class="form-label"></label>
+                <input asp-for="ManagerAccount" class="form-control" minlength="8" maxlength="20" />
+                <span asp-validation-for="ManagerAccount" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ManagerPassword" class="form-label"></label>
+                <input asp-for="ManagerPassword" class="form-control" minlength="8" maxlength="20" />
+                <span asp-validation-for="ManagerPassword" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ManagerEmail" class="form-label"></label>
+                <input asp-for="ManagerEmail" class="form-control" />
+                <span asp-validation-for="ManagerEmail" class="text-danger"></span>
+            </div>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">建立</button>
+                <a asp-action="Index" class="btn btn-primary">返回列表</a>
+                <!-- 一鍵注入按鈕區 -->
+                <button type="button" id="injectBtn1" class="btn btn-outline-secondary">資料注入1 </button>
+                <button type="button" id="injectBtn2" class="btn btn-outline-secondary">資料注入2 </button>
+            </div>
+
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        (function () {
+            // 目標欄位的 DOM（Razor 會用屬性名稱當作 input 的 id）
+            const nameEl = document.getElementById('ManagerName');
+            const accEl  = document.getElementById('ManagerAccount');
+            const pwdEl  = document.getElementById('ManagerPassword');
+            const mailEl = document.getElementById('ManagerEmail');
+
+            // 兩組預設資料（目前你給的兩組相同；之後要改就調整這裡）
+            const preset1 = {
+                name: '張志明',
+                account: 'zhang_zhiming_01',
+                password: 'ji32k7au4a83',
+                email: 'zhang.zhiming@company.com'
+            };
+
+            const preset2 = {
+                name: '朕玉泉太郎',
+                account: 'ji32k75;4cl4',
+                password: 'ji32k7au4a83',
+                email: 'gk10sdk121afx@gmail.com'
+            };
+
+            function inject(p) {
+                if (nameEl) nameEl.value = p.name;
+                if (accEl)  accEl.value  = p.account;
+                if (pwdEl)  pwdEl.value  = p.password;
+                if (mailEl) mailEl.value = p.email;
+
+                // 觸發 input 事件，讓前端驗證/樣式即時更新
+                [nameEl, accEl, pwdEl, mailEl].forEach(el => el && el.dispatchEvent(new Event('input', { bubbles: true })));
+                nameEl?.focus();
+            }
+
+            document.getElementById('injectBtn1')?.addEventListener('click', () => inject(preset1));
+            document.getElementById('injectBtn2')?.addEventListener('click', () => inject(preset2));
+        })();
+    </script>
+}
+

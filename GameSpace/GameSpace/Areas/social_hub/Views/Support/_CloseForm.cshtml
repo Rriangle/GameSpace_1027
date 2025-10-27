@@ -1,0 +1,131 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.CloseTicketVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<style>
+    /* ==== Close modal 的局部樣式，與 Reassign 一致 ==== */
+    .close-form .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem 1rem;
+        margin-bottom: 1rem;
+    }
+    @@media (max-width:576px) {
+        .close-form .meta-grid { grid-template-columns: 1fr; }
+    }
+    .close-form .meta-card { background:#f8f9fa; border:1px solid #e9ecef; border-radius:.5rem; padding:.5rem .75rem; }
+    .close-form .meta-label { font-size:.8rem; color:#6c757d; margin-bottom:.15rem; }
+    .close-form .meta-value { font-weight:600; }
+    .close-form .divider { margin:.75rem 0 1rem; border-top:1px dashed #e5e7eb; }
+    .close-form .hint { font-size:.85rem; color:#6c757d; }
+    .close-form .actions { display:flex; justify-content:flex-end; gap:.5rem; }
+</style>
+
+<form id="closeForm" class="close-form" method="post"
+      asp-area="social_hub" asp-controller="Support" asp-action="CloseConfirm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.TicketId" />
+    <input type="hidden" name="modal" value="true" />
+
+    <h5 class="mb-2">結單確認</h5>
+
+    <!-- 基本資訊（與轉單一致的資訊卡） -->
+    <div class="meta-grid">
+        <div class="meta-card">
+            <div class="meta-label">工單 ID</div>
+            <div class="meta-value">#@Model.TicketId</div>
+        </div>
+        <div class="meta-card">
+            <div class="meta-label">使用者 ID</div>
+            <div class="meta-value">@Model.UserId</div>
+        </div>
+
+        <div class="meta-card" style="grid-column:1 / -1;">
+            <div class="meta-label">主旨</div>
+            <div class="meta-value text-truncate">@Model.Subject</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">目前指派</div>
+            <div class="meta-value">
+                @if (Model.AssignedManagerId.HasValue)
+                {
+                    <span class="badge bg-light text-dark border">@Model.AssignedManagerId</span>
+                }
+                else
+                {
+                    <span class="text-muted">未指派</span>
+                }
+            </div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">最後訊息時間</div>
+            <div class="meta-value">
+                <!-- ★ 用 App 時區顯示（台灣），DB 仍存 UTC -->
+                @Html.AppTime(Model.LastMessageAt ?? Model.CreatedAt, "yyyy/MM/dd HH:mm")
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 備註 -->
+    <div class="mb-2">
+        <label for="closeNote" class="form-label mb-1">結單備註（可留空，最多 255 字）</label>
+        <textarea name="closeNote" id="closeNote" class="form-control" maxlength="255" rows="3"
+                  placeholder="例如：問題已排除、使用者確認無誤等。"></textarea>
+        <div class="d-flex justify-content-between mt-1">
+            <span class="hint">此備註會記錄在結單歷史中。</span>
+            <span class="hint"><span id="closeNoteCount">0</span>/255</span>
+        </div>
+    </div>
+
+    <div class="actions mt-2">
+        <a href="javascript:void(0)" class="btn btn-outline-secondary" id="btn-cancel-close">取消</a>
+        <button type="submit" class="btn btn-danger" id="btn-submit-close">確認結單</button>
+    </div>
+</form>
+
+<script>
+  // 字數計數
+  (function(){
+    const t=document.getElementById('closeNote'), c=document.getElementById('closeNoteCount');
+    if(!t||!c) return;
+    const upd=()=>{ c.textContent=(t.value||'').length; };
+    t.addEventListener('input',upd); upd();
+  })();
+
+  // 取消：請父頁的 _ActionModalHost 關閉
+  document.getElementById('btn-cancel-close')?.addEventListener('click', ()=>{
+    window.parent?.postMessage({ type:'modal:cancel' }, '*');
+  });
+
+  // AJAX 送出
+  (function(){
+    const f=document.getElementById('closeForm'), btn=document.getElementById('btn-submit-close');
+    if(!f||!btn) return;
+
+    f.addEventListener('submit', async (e)=>{
+      e.preventDefault(); // ⬅️ 防止表單預設導致 iframe 跳轉
+      const token=f.querySelector('input[name="__RequestVerificationToken"]')?.value||'';
+      btn.disabled=true; btn.classList.add('disabled');
+      try{
+        const r = await fetch(f.action, {
+          method:'POST',
+          body: new FormData(f),
+          credentials:'same-origin',
+          headers: { 'X-Requested-With':'XMLHttpRequest', 'RequestVerificationToken': token }
+        });
+        if(!r.ok){
+          const txt=await r.text();
+          alert(txt||'結單失敗'); btn.disabled=false; btn.classList.remove('disabled'); return;
+        }
+        // 通知父頁：結單完成 → 關掉 modal 並刷新父頁
+        window.parent?.postMessage({ type:'modal:done' }, '*');
+      }catch{
+        alert('連線失敗，請稍後再試');
+        btn.disabled=false; btn.classList.remove('disabled');
+      }
+    });
+  })();
+</script>

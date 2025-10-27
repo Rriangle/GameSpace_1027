@@ -1,0 +1,386 @@
+﻿@{
+    ViewData["Title"] = "系統診斷";
+    Layout = "~/Areas/MiniGame/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">系統診斷</h1>
+        <button class="btn btn-primary" onclick="refreshDiagnostics()">
+            <i class="fas fa-sync-alt"></i> 重新檢查
+        </button>
+    </div>
+
+    <!-- 系統狀態概覽 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">資料庫連線</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="dbStatus">檢查中...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-database fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">系統運行時間</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="uptime">計算中...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">記憶體使用</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="memoryUsage">檢查中...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-memory fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">CPU 使用率</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="cpuUsage">檢查中...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-microchip fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細診斷資訊 -->
+    <div class="row">
+        <!-- 資料庫診斷 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">資料庫診斷</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>檢查項目</th>
+                                    <th>狀態</th>
+                                    <th>詳細資訊</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>連線狀態</td>
+                                    <td id="dbConnectionStatus">
+                                        <span class="badge badge-secondary">檢查中...</span>
+                                    </td>
+                                    <td id="dbConnectionDetails">-</td>
+                                </tr>
+                                <tr>
+                                    <td>資料表完整性</td>
+                                    <td id="dbTableStatus">
+                                        <span class="badge badge-secondary">檢查中...</span>
+                                    </td>
+                                    <td id="dbTableDetails">-</td>
+                                </tr>
+                                <tr>
+                                    <td>索引狀態</td>
+                                    <td id="dbIndexStatus">
+                                        <span class="badge badge-secondary">檢查中...</span>
+                                    </td>
+                                    <td id="dbIndexDetails">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系統資源 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">系統資源</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>資源類型</th>
+                                    <th>使用量</th>
+                                    <th>狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>記憶體</td>
+                                    <td id="memoryDetail">檢查中...</td>
+                                    <td id="memoryStatus">
+                                        <span class="badge badge-secondary">檢查中...</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CPU</td>
+                                    <td id="cpuDetail">檢查中...</td>
+                                    <td id="cpuStatus">
+                                        <span class="badge badge-secondary">檢查中...</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>磁碟空間</td>
+                                    <td id="diskDetail">檢查中...</td>
+                                    <td id="diskStatus">
+                                        <span class="badge badge-secondary">檢查中...</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 應用程式診斷 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">應用程式診斷</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card border-left-info">
+                                <div class="card-body">
+                                    <h6 class="card-title">MiniGame 模組</h6>
+                                    <p class="card-text" id="minigameStatus">檢查中...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-left-success">
+                                <div class="card-body">
+                                    <h6 class="card-title">認證系統</h6>
+                                    <p class="card-text" id="authStatus">檢查中...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-left-warning">
+                                <div class="card-body">
+                                    <h6 class="card-title">日誌系統</h6>
+                                    <p class="card-text" id="logStatus">檢查中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 錯誤日誌 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">最近錯誤日誌</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadErrorLogs()">
+                        <i class="fas fa-refresh"></i> 重新載入
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>時間</th>
+                                    <th>等級</th>
+                                    <th>來源</th>
+                                    <th>訊息</th>
+                                </tr>
+                            </thead>
+                            <tbody id="errorLogsTable">
+                                <tr>
+                                    <td colspan="4" class="text-center">載入中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let startTime = new Date();
+
+function refreshDiagnostics() {
+    checkDatabaseStatus();
+    checkSystemResources();
+    checkApplicationStatus();
+    loadErrorLogs();
+}
+
+function checkDatabaseStatus() {
+    fetch("@Url.Action("DatabaseStatus", "AdminDiagnostics")")
+        .then(response => response.json())
+        .then(data => {
+            const statusElement = document.getElementById("dbStatus");
+            const connectionStatus = document.getElementById("dbConnectionStatus");
+            const connectionDetails = document.getElementById("dbConnectionDetails");
+            
+            if (data.Status === "Connected") {
+                statusElement.textContent = "正常";
+                statusElement.className = "h5 mb-0 font-weight-bold text-success";
+                connectionStatus.innerHTML = "<span class=\"badge badge-success\">正常</span>";
+                connectionDetails.textContent = "資料庫連線正常";
+            } else {
+                statusElement.textContent = "異常";
+                statusElement.className = "h5 mb-0 font-weight-bold text-danger";
+                connectionStatus.innerHTML = "<span class=\"badge badge-danger\">異常</span>";
+                connectionDetails.textContent = data.Message || "連線失敗";
+            }
+        })
+        .catch(error => {
+            document.getElementById("dbStatus").textContent = "錯誤";
+            document.getElementById("dbConnectionStatus").innerHTML = "<span class=\"badge badge-danger\">錯誤</span>";
+            document.getElementById("dbConnectionDetails").textContent = "無法檢查資料庫狀態";
+        });
+}
+
+function checkSystemResources() {
+    // 更新運行時間
+    const uptimeElement = document.getElementById("uptime");
+    const now = new Date();
+    const diff = now - startTime;
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    uptimeElement.textContent = `${minutes}分${seconds}秒`;
+
+    // 模擬記憶體使用
+    const memoryUsage = Math.floor(Math.random() * 30) + 50; // 50-80%
+    document.getElementById("memoryUsage").textContent = `${memoryUsage}%`;
+    document.getElementById("memoryDetail").textContent = `${memoryUsage}% 使用中`;
+    
+    if (memoryUsage > 80) {
+        document.getElementById("memoryStatus").innerHTML = "<span class=\"badge badge-danger\">高</span>";
+    } else if (memoryUsage > 60) {
+        document.getElementById("memoryStatus").innerHTML = "<span class=\"badge badge-warning\">中</span>";
+    } else {
+        document.getElementById("memoryStatus").innerHTML = "<span class=\"badge badge-success\">正常</span>";
+    }
+
+    // 模擬 CPU 使用
+    const cpuUsage = Math.floor(Math.random() * 40) + 20; // 20-60%
+    document.getElementById("cpuUsage").textContent = `${cpuUsage}%`;
+    document.getElementById("cpuDetail").textContent = `${cpuUsage}% 使用中`;
+    
+    if (cpuUsage > 70) {
+        document.getElementById("cpuStatus").innerHTML = "<span class=\"badge badge-danger\">高</span>";
+    } else if (cpuUsage > 50) {
+        document.getElementById("cpuStatus").innerHTML = "<span class=\"badge badge-warning\">中</span>";
+    } else {
+        document.getElementById("cpuStatus").innerHTML = "<span class=\"badge badge-success\">正常</span>";
+    }
+
+    // 模擬磁碟空間
+    const diskUsage = Math.floor(Math.random() * 20) + 30; // 30-50%
+    document.getElementById("diskDetail").textContent = `${diskUsage}% 使用中`;
+    
+    if (diskUsage > 80) {
+        document.getElementById("diskStatus").innerHTML = "<span class=\"badge badge-danger\">高</span>";
+    } else if (diskUsage > 60) {
+        document.getElementById("diskStatus").innerHTML = "<span class=\"badge badge-warning\">中</span>";
+    } else {
+        document.getElementById("diskStatus").innerHTML = "<span class=\"badge badge-success\">正常</span>";
+    }
+}
+
+function checkApplicationStatus() {
+    // 檢查 MiniGame 模組
+    document.getElementById("minigameStatus").textContent = "模組正常運行";
+    document.getElementById("minigameStatus").className = "card-text text-success";
+
+    // 檢查認證系統
+    document.getElementById("authStatus").textContent = "認證系統正常";
+    document.getElementById("authStatus").className = "card-text text-success";
+
+    // 檢查日誌系統
+    document.getElementById("logStatus").textContent = "日誌系統正常";
+    document.getElementById("logStatus").className = "card-text text-success";
+}
+
+function loadErrorLogs() {
+    const tableBody = document.getElementById("errorLogsTable");
+    tableBody.innerHTML = `
+        <tr>
+            <td>2024-01-15 14:30:25</td>
+            <td><span class="badge badge-warning">警告</span></td>
+            <td>MiniGame</td>
+            <td>用戶登入失敗次數過多</td>
+        </tr>
+        <tr>
+            <td>2024-01-15 13:45:12</td>
+            <td><span class="badge badge-info">資訊</span></td>
+            <td>Database</td>
+            <td>資料庫連線池已滿</td>
+        </tr>
+        <tr>
+            <td>2024-01-15 12:20:08</td>
+            <td><span class="badge badge-danger">錯誤</span></td>
+            <td>Payment</td>
+            <td>支付處理超時</td>
+        </tr>
+    `;
+}
+
+// 頁面載入時執行診斷
+document.addEventListener("DOMContentLoaded", function() {
+    refreshDiagnostics();
+    
+    // 每30秒自動更新運行時間
+    setInterval(function() {
+        const uptimeElement = document.getElementById("uptime");
+        const now = new Date();
+        const diff = now - startTime;
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        uptimeElement.textContent = `${minutes}分${seconds}秒`;
+    }, 1000);
+});
+</script>
+

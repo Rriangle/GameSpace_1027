@@ -1,0 +1,130 @@
+﻿@model IEnumerable<GameSpace.Areas.social_hub.Models.ViewModels.NotificationViewModel>
+@{
+    ViewData["Title"] = "通知中心";
+    var mode = (string?)ViewBag.Mode ?? "user";
+
+    // 統計（只在使用者模式下有意義）
+    var total = (mode == "user") ? (Model?.Count() ?? 0) : 0;
+    var unread = (mode == "user") ? (Model?.Count(x => !x.IsRead) ?? 0) : 0;
+
+    string Trim10(string? s)
+    {
+        var txt = (s ?? "").Trim();
+        return txt.Length <= 10 ? txt : txt.Substring(0, 10) + "…";
+    }
+}
+
+@section Styles
+{
+    <link href="~/lib/social_hub/css/Notification_Index.css" rel="stylesheet" />
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+@* 置頂顯示 TempData 訊息 *@
+@if (TempData["Msg"] is string topMsg && !string.IsNullOrEmpty(topMsg))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @topMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (mode == "manager")
+{
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="alert alert-warning mb-0">
+                管理員通知中心：<strong>建置中</strong>。待資料表加入 <code>ManagerId</code> 後開通。
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <span class="badge bg-primary me-2">總數 @total</span>
+            <span class="badge bg-warning text-dark">未讀 @unread</span>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="alert alert-info mb-0">目前沒有通知。</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>我的通知</strong>
+                <small class="text-muted">僅顯示摘要，滑鼠懸停可看完整文字</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 notif-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>標題</th>
+                                <th>內容</th>
+                                <th>來源</th>
+                                <th>行為</th>
+                                <th>發送者</th>
+                                <th class="col-slim">建立時間</th>
+                                <th class="col-slim">狀態</th>
+                                <th class="col-slim" style="width:140px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var titleFull = (item.NotificationTitle ?? "未設定").Trim();
+                                var msgFull = (item.NotificationMessage ?? "").Trim();
+                                var srcFull = (item.SourceName ?? "未設定").Trim();
+                                var actFull = (item.ActionName ?? "未設定").Trim();
+                                var sndFull = (item.SenderName ?? "系統").Trim();
+
+                                <tr class="@(item.IsRead ? "" : "unread-row")">
+                                    <td title="@titleFull">@Trim10(titleFull)</td>
+                                    <td title="@msgFull">@Trim10(msgFull)</td>
+                                    <td title="@srcFull">@Trim10(srcFull)</td>
+                                    <td title="@actFull">@Trim10(actFull)</td>
+                                    <td title="@sndFull">@Trim10(sndFull)</td>
+                                    <td class="col-slim">@item.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                    <td class="col-slim">
+                                        @if (item.IsRead)
+                                        {
+                                            <span class="badge badge-status read"><span class="dot"></span>已讀</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-status unread"><span class="dot"></span>未讀</span>
+                                        }
+                                    </td>
+                                    <td class="col-slim">
+                                        <a class="btn btn-compact btn-outline-primary me-1"
+                                           asp-action="Detail" asp-controller="MessageCenter" asp-area="social_hub"
+                                           asp-route-id="@item.RecipientId">檢視</a>
+
+                                        @if (!item.IsRead)
+                                        {
+                                            <form asp-action="MarkRead" asp-controller="MessageCenter" asp-area="social_hub" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.RecipientId" />
+                                                <button class="btn btn-compact btn-outline-success" type="submit">標記已讀</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+}

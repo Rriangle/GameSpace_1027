@@ -1,0 +1,24 @@
+﻿@model GameSpace.Areas.Forum.Models.Game.GameEditVm
+@{
+    ViewData["Title"] = "新增遊戲";
+}
+<h2>新增遊戲</h2>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label class="form-label">名稱 (英文)</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">中文名</label>
+        <input asp-for="NameZh" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">類型</label>
+        <input asp-for="Genre" class="form-control" placeholder="MOBA/FPS/..." />
+    </div>
+    <button class="btn btn-primary">儲存</button>
+    <a asp-action="Index" class="btn btn-secondary">返回</a>
+</form>
+

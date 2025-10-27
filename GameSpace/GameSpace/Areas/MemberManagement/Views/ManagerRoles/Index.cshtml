@@ -1,0 +1,27 @@
+﻿@model IEnumerable<GameSpace.Areas.MemberManagement.Models.ManagerRoleEntry>
+<h2>職位分配表</h2>
+@* <p><a asp-action="Create">建立新資料</a></p> *@
+<table class="table">
+    <thead>
+        <tr>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.First().ManagerId)</th>
+            <th>@Html.DisplayNameFor(model => model.First().ManagerRoleId)</th>
+        
+    </thead>
+    <tbody>
+        @foreach (var x in Model)
+        {
+            <tr>
+                <td>@x.ManagerId</td>
+                <td>@x.ManagerRoleId</td>
+                
+                <td>
+                    <a asp-action="Details" asp-route-managerId="@x.ManagerId" asp-route-managerRoleId="@x.ManagerRoleId">詳細</a> |
+                    <a asp-action="Edit" asp-route-managerId="@x.ManagerId" asp-route-managerRoleId="@x.ManagerRoleId">編輯</a> |
+                    <a asp-action="Delete" asp-route-managerId="@x.ManagerId" asp-route-managerRoleId="@x.ManagerRoleId">刪除</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

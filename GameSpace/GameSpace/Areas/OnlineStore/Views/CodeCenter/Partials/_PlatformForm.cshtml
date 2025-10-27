@@ -1,0 +1,39 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.PlatformVM
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header bg-light">
+            <h5 class="modal-title">@((Model?.PlatformId > 0) ? "編輯平台" : "新增平台")</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" class="js-ajax"
+              action="@Url.Action((Model?.PlatformId>0)?"PlatformEdit":"PlatformCreate","CodeCenter", new{area="OnlineStore"})">
+            @Html.AntiForgeryToken()
+            @if (Model?.PlatformId > 0)
+            {
+                @Html.HiddenFor(m => m.PlatformId)
+            }
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">平台名稱 *</label>
+                    @Html.TextBoxFor(m => m.PlatformName, new { @class = "form-control", maxlength = "50", placeholder = "如 Steam / PS5 / Switch" })
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "plActive" })
+                            <label class="form-check-label" for="plActive">啟用</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">排序</label>
+                        @Html.TextBoxFor(m => m.SortOrder, new { @class = "form-control", type = "number" })
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-primary">儲存</button>
+            </div>
+        </form>
+    </div>
+</div>

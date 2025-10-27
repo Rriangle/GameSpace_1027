@@ -1,0 +1,49 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.SupplierDetailVM
+<div data-panel-title="供應商詳細">
+    <div class="mb-2"><strong>供應商：</strong>@Model.SupplierName (#@Model.SupplierId)</div>
+    <div class="mb-2">
+        <strong>狀態：</strong>
+        @if (Model.IsActive == true)
+        {
+            <span class="badge bg-success">啟用</span>
+        }
+        else if (Model.IsActive == false)
+        {
+
+            <span class="badge bg-secondary">停用</span>
+        }
+        else
+        {
+
+            <span class="badge bg-light text-muted">—</span>
+        }
+    </div>
+    <div class="mb-3">
+        <span class="badge bg-primary me-1">🎮 @Model.GameProductCount</span> 遊戲商品
+        <span class="badge bg-info text-dark ms-3 me-1">🧩 @Model.OtherProductCount</span> 周邊商品
+    </div>
+    <hr />
+    <div id="supplierProductsHost">
+        <div class="text-muted">載入所屬商品中...</div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">關閉</button>
+        <a class="btn btn-outline-primary" target="_blank" href="@Url.Action("ExportCsv", "Suppliers", new { area = "OnlineStore", q = Model.SupplierName })">匯出此供應商相關商品</a>
+    </div>
+</div>
+
+<script>
+    (async ()=>{
+      // 預設載入單一供應商的所屬商品
+      const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+      const token = tokenEl ? tokenEl.value : '';
+      const res = await fetch('@Url.Action("ProductsBySuppliers", "Suppliers", new { area = "OnlineStore" })', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify([@Model.SupplierId]),
+        credentials:'include'
+      });
+      const html = await res.text();
+      document.getElementById('supplierProductsHost').innerHTML = html;
+    })();
+</script>

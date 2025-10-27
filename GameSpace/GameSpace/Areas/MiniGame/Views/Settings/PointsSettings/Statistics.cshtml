@@ -1,0 +1,197 @@
+﻿@model GameSpace.Areas.MiniGame.Models.Settings.PointsSettingsStatisticsViewModel
+
+@{
+    ViewData["Title"] = "點數設定統計";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">點數設定統計</h1>
+        <a asp-action="Index" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回管理
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">寵物換色設定總數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalColorSettings</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-palette fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">寵物換背景設定總數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalBackgroundSettings</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-image fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">啟用設定總數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@(Model.ActiveColorSettings + Model.ActiveBackgroundSettings)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">總點數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalPoints</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">寵物換色設定統計</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td><strong>總設定數</strong></td>
+                                    <td>@Model.TotalColorSettings</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>啟用設定數</strong></td>
+                                    <td>@Model.ActiveColorSettings</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>停用設定數</strong></td>
+                                    <td>@(Model.TotalColorSettings - Model.ActiveColorSettings)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>總點數</strong></td>
+                                    <td>@Model.TotalColorPoints</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>平均點數</strong></td>
+                                    <td>@(Model.ActiveColorSettings > 0 ? (Model.TotalColorPoints / Model.ActiveColorSettings).ToString("F1") : "0")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">寵物換背景設定統計</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td><strong>總設定數</strong></td>
+                                    <td>@Model.TotalBackgroundSettings</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>啟用設定數</strong></td>
+                                    <td>@Model.ActiveBackgroundSettings</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>停用設定數</strong></td>
+                                    <td>@(Model.TotalBackgroundSettings - Model.ActiveBackgroundSettings)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>總點數</strong></td>
+                                    <td>@Model.TotalBackgroundPoints</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>平均點數</strong></td>
+                                    <td>@(Model.ActiveBackgroundSettings > 0 ? (Model.TotalBackgroundPoints / Model.ActiveBackgroundSettings).ToString("F1") : "0")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Chart -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-info">點數分布圖</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary">寵物換色點數分布</h6>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: @(Model.TotalPoints > 0 ? (Model.TotalColorPoints * 100 / Model.TotalPoints) : 0)%">
+                            @Model.TotalColorPoints 點
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-success">寵物換背景點數分布</h6>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.TotalPoints > 0 ? (Model.TotalBackgroundPoints * 100 / Model.TotalPoints) : 0)%">
+                            @Model.TotalBackgroundPoints 點
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

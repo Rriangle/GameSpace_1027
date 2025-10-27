@@ -1,0 +1,337 @@
+@model dynamic
+@{
+    ViewData["Title"] = "優惠券類型管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">優惠券類型管理</h1>
+        <div>
+            <a href="@Url.Action("CreateCouponType", "AdminCoupon")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50"></i> 新增優惠券類型
+            </a>
+            <a href="@Url.Action("Index", "AdminCoupon")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回優惠券管理
+            </a>
+        </div>
+    </div>
+
+    <!-- 訊息顯示 -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["WarningMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- 統計卡片 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                總類型數
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.TotalCount ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                百分比折扣
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @((Model?.CouponTypes as IEnumerable<dynamic>)?.Where(ct => ct.DiscountType == "PERCENT").Count() ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                固定金額折扣
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @((Model?.CouponTypes as IEnumerable<dynamic>)?.Where(ct => ct.DiscountType == "AMOUNT").Count() ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                有效類型
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @((Model?.CouponTypes as IEnumerable<dynamic>)?.Where(ct => ct.ValidFrom <= DateTime.Now && ct.ValidTo >= DateTime.Now).Count() ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜尋和篩選 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">搜尋與篩選</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" action="@Url.Action("CouponTypes", "AdminCoupon")">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="searchTerm">搜尋關鍵字</label>
+                            <input class="form-control" id="searchTerm" name="searchTerm" type="text" value="@(ViewBag.SearchTerm ?? string.Empty)" placeholder="類型名稱或描述" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="discountType">折扣類型</label>
+                            <select class="form-control" id="discountType" name="discountType">
+                                <option value="">全部</option>
+                                <option value="PERCENT" selected="@(ViewBag.DiscountType == "PERCENT" ? "selected" : null)">百分比折扣</option>
+                                <option value="AMOUNT" selected="@(ViewBag.DiscountType == "AMOUNT" ? "selected" : null)">固定金額</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="sortBy">排序方式</label>
+                            <select class="form-control" id="sortBy" name="sortBy">
+                                <option value="name" selected="@(ViewBag.SortBy == "name" ? "selected" : null)">類型名稱</option>
+                                <option value="points" selected="@(ViewBag.SortBy == "points" ? "selected" : null)">兌換點數</option>
+                                <option value="discount" selected="@(ViewBag.SortBy == "discount" ? "selected" : null)">折扣值</option>
+                                <option value="validfrom" selected="@(ViewBag.SortBy == "validfrom" ? "selected" : null)">有效期限</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> 搜尋
+                                </button>
+                                <a href="@Url.Action("CouponTypes", "AdminCoupon")" class="btn btn-secondary">
+                                    <i class="fas fa-undo"></i> 清除
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 優惠券類型列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">優惠券類型列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>類型ID</th>
+                            <th>類型名稱</th>
+                            <th>折扣類型</th>
+                            <th>折扣值</th>
+                            <th>最低消費</th>
+                            <th>兌換點數</th>
+                            <th>有效期限</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model?.CouponTypes != null && (Model.CouponTypes as IEnumerable<dynamic>)?.Any() == true)
+                        {
+                            @foreach (var couponType in Model.CouponTypes)
+                            {
+                                <tr>
+                                    <td>@couponType.CouponTypeId</td>
+                                    <td>@couponType.Name</td>
+                                    <td>
+                                        @if (couponType.DiscountType == "PERCENT")
+                                        {
+                                            <span class="badge badge-info">百分比</span>
+                                        }
+                                        else if (couponType.DiscountType == "AMOUNT")
+                                        {
+                                            <span class="badge badge-success">固定金額</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (couponType.DiscountType == "PERCENT")
+                                        {
+                                            @($"{couponType.DiscountValue}%")
+                                        }
+                                        else
+                                        {
+                                            @($"NT$ {couponType.DiscountValue:N0}")
+                                        }
+                                    </td>
+                                    <td>NT$ @couponType.MinSpend.ToString("N0")</td>
+                                    <td>@couponType.PointsCost</td>
+                                    <td>
+                                        @couponType.ValidFrom.ToString("yyyy-MM-dd") ~ 
+                                        @couponType.ValidTo.ToString("yyyy-MM-dd")
+                                    </td>
+                                    <td>
+                                        @{
+                                            var now = DateTime.Now;
+                                            var isValid = couponType.ValidFrom <= now && couponType.ValidTo >= now;
+                                        }
+                                        @if (isValid)
+                                        {
+                                            <span class="badge badge-success">有效</span>
+                                        }
+                                        else if (couponType.ValidFrom > now)
+                                        {
+                                            <span class="badge badge-warning">未開始</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-danger">已過期</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="@Url.Action("EditCouponType", "AdminCoupon", new { id = couponType.CouponTypeId })" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form asp-action="DeleteCouponType" method="post" style="display: inline;" onsubmit="return confirm('確定要刪除這個優惠券類型嗎？此操作無法復原！')">
+                                                <input type="hidden" name="id" value="@couponType.CouponTypeId" />
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    沒有找到優惠券類型
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分頁 -->
+            @if (Model?.TotalCount > 0)
+            {
+                <nav aria-label="優惠券類型分頁">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("CouponTypes", "AdminCoupon", new { page = Model.PageNumber - 1, searchTerm = ViewBag.SearchTerm, discountType = ViewBag.DiscountType, sortBy = ViewBag.SortBy })">上一頁</a>
+                            </li>
+                        }
+
+                        @{
+                            var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+                            var startPage = Math.Max(1, Model.PageNumber - 2);
+                            var endPage = Math.Min(totalPages, Model.PageNumber + 2);
+                        }
+
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("CouponTypes", "AdminCoupon", new { page = i, searchTerm = ViewBag.SearchTerm, discountType = ViewBag.DiscountType, sortBy = ViewBag.SortBy })">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.PageNumber < totalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("CouponTypes", "AdminCoupon", new { page = Model.PageNumber + 1, searchTerm = ViewBag.SearchTerm, discountType = ViewBag.DiscountType, sortBy = ViewBag.SortBy })">下一頁</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 自動提交表單當篩選條件改變時
+        document.getElementById('discountType').addEventListener('change', function() {
+            this.form.submit();
+        });
+
+        document.getElementById('sortBy').addEventListener('change', function() {
+            this.form.submit();
+        });
+    </script>
+}

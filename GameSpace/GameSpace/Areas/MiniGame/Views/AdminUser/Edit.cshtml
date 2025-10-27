@@ -1,0 +1,184 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminUserEditViewModel
+@{
+    ViewData["Title"] = "編輯使用者";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">編輯使用者</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminUser")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">使用者資料</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input asp-for="User_Id" type="hidden" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="User_name" class="control-label">使用者名稱 *</label>
+                                    <input asp-for="User_name" class="form-control" placeholder="請輸入使用者名稱" />
+                                    <span asp-validation-for="User_name" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="User_account" class="control-label">使用者帳號 *</label>
+                                    <input asp-for="User_account" class="form-control" placeholder="請輸入使用者帳號" />
+                                    <span asp-validation-for="User_account" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="User_email" class="control-label">電子郵件地址 *</label>
+                                    <input asp-for="User_email" type="email" class="form-control" placeholder="請輸入電子郵件" />
+                                    <span asp-validation-for="User_email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="User_phone" class="control-label">聯絡電話</label>
+                                    <input asp-for="User_phone" class="form-control" placeholder="請輸入聯絡電話" />
+                                    <span asp-validation-for="User_phone" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="User_birthday" class="control-label">生日</label>
+                                    <input asp-for="User_birthday" type="date" class="form-control" />
+                                    <span asp-validation-for="User_birthday" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="User_gender" class="control-label">性別</label>
+                                    <select asp-for="User_gender" class="form-control">
+                                        <option value="">請選擇性別</option>
+                                        <option value="男">男</option>
+                                        <option value="女">女</option>
+                                        <option value="其他">其他</option>
+                                    </select>
+                                    <span asp-validation-for="User_gender" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="IsActive" class="control-label">狀態</label>
+                                    <div class="form-check">
+                                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                        <label class="form-check-label" for="IsActive">
+                                            啟用
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="User_address" class="control-label">地址</label>
+                            <textarea asp-for="User_address" class="form-control" rows="3" placeholder="請輸入地址"></textarea>
+                            <span asp-validation-for="User_address" class="text-danger"></span>
+                        </div>
+
+                        <!-- 密碼改變區 -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h6 class="m-0 font-weight-bold text-warning">密碼改變</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    若不需要更改密碼請勿填寫此區塊
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="NewPassword" class="control-label">新密碼</label>
+                                            <input asp-for="NewPassword" type="password" class="form-control" placeholder="請輸入新密碼" />
+                                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="ConfirmNewPassword" class="control-label">確認新密碼</label>
+                                            <input asp-for="ConfirmNewPassword" type="password" class="form-control" placeholder="請再次輸入新密碼" />
+                                            <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 更新使用者
+                            </button>
+                            <a href="@Url.Action("Index", "AdminUser")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">編輯提示</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-edit fa-3x text-primary mb-3"></i>
+                        <h5>使用者編輯前請注意</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            使用者帳號必須唯一
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            電子郵件地址必須唯一
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            密碼改變為選填項目
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            可設定使用者狀態為啟用
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            改變會立即生效
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,179 @@
+﻿@using GameSpace.Areas.Forum.Models.Admin
+@model IEnumerable<AdminPostListItemVm>
+
+@* @model IEnumerable<GameSpace.Areas.Forum.Models.AdminPostListItemVm> *@
+@{
+    ViewData["Title"] = "管理員文章列表";
+}
+
+<h2 class="mb-3">管理員文章列表(洞察文章)</h2>
+
+@if (TempData["ok"] is string ok)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">新增文章</a>
+</p>
+
+<table class="table table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>標題</th>
+            <th>狀態</th>
+            <th>置頂</th>
+            <th>建立時間</th>
+            <th style="width:320px">操作</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        var badge = item.Status switch {
+            "published" => "bg-success",
+            "hidden"    => "bg-secondary",
+            _           => "bg-warning text-dark"
+        };
+        <tr>
+            <td class="fw-medium">@item.Title</td>
+            <td>
+                <span class="badge @badge text-uppercase">@item.Status</span>
+            </td>
+            <td>@(item.Pinned ? "✅" : "❌")</td>
+            <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+            <td class="d-flex flex-wrap gap-2">
+                <button type="button"
+                        class="btn btn-outline-info btn-sm"
+                        data-action="view"
+                        data-id="@item.AdminPostId">
+                    查看內容
+                </button>
+
+                <a asp-action="Edit"
+                   asp-route-id="@item.AdminPostId"
+                   class="btn btn-warning btn-sm">編輯</a>
+
+                <form asp-action="Publish"
+                      asp-route-id="@item.AdminPostId"
+                      method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success btn-sm">發布</button>
+                </form>
+
+                <form asp-action="Hide"
+                      asp-route-id="@item.AdminPostId"
+                      method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-secondary btn-sm">隱藏</button>
+                </form>
+
+                <form asp-action="TogglePin"
+                      asp-route-id="@item.AdminPostId"
+                      method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                        @(item.Pinned ? "取消置頂" : "置頂")
+                    </button>
+                </form>
+
+                <button type="button"
+                        class="btn btn-outline-danger btn-sm"
+                        data-action="delete"
+                        data-id="@item.AdminPostId"
+                        data-title="@item.Title">
+                    刪除
+                </button>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<!-- 內容預覽 Modal -->
+<div class="modal fade" id="postPreviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">文章預覽</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+      </div>
+      <div class="modal-body" id="postPreviewBody">
+        <div class="text-muted">載入中…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 刪除確認 Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="deleteForm" method="post" asp-action="Delete">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" id="deleteId" />
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">確定刪除？</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">你即將刪除：<span id="deleteTitle" class="fw-semibold"></span></p>
+          <small class="text-muted">此動作無法復原。</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-danger">確認刪除</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+// ===== Bootstrap helpers =====
+const ensureBs = () => window.bootstrap ?? {};
+const previewModal = new (ensureBs().Modal || function(){})(
+    document.getElementById('postPreviewModal')
+);
+const deleteModal = new (ensureBs().Modal || function(){})(
+    document.getElementById('confirmDeleteModal')
+);
+
+// ===== 查看內容：拉 Partial 塞進 Modal =====
+document.querySelectorAll('[data-action="view"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const url = '@Url.Action("Details","AdminPosts", new { area = "Forum" })' + `?id=${id}`;
+
+        const body = document.getElementById('postPreviewBody');
+        body.innerHTML = '<div class="text-muted">載入中…</div>';
+
+        try {
+            const res = await fetch(url, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const html = await res.text();
+            body.innerHTML = html;
+            previewModal.show();
+        } catch (err) {
+            body.innerHTML = `<div class="text-danger">載入失敗：${err.message}</div>`;
+            previewModal.show();
+        }
+    });
+});
+
+// ===== 刪除：開確認視窗，帶入 id / 標題 =====
+document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const title = btn.dataset.title;
+        document.getElementById('deleteId').value = id;
+        document.getElementById('deleteTitle').textContent = title ?? `#${id}`;
+        deleteModal.show();
+    });
+});
+</script>
+}

@@ -1,0 +1,27 @@
+﻿/* Topbar1 */
+.topbar1 .navbar-brand img {
+    height: 24px
+}
+
+.topbar1 .nav-link {
+    color: #495057
+}
+
+    .topbar1 .nav-link:hover {
+        color: #0d6efd
+    }
+
+.topbar1 .topbar1-search {
+    min-width: 280px;
+    width: clamp(280px,48vw,880px);
+    max-width: 880px
+}
+
+.topbar1 .input-group-text {
+    background: #fff
+}
+
+.topbar1 .form-control:focus {
+    box-shadow: none;
+    border-color: #86b7fe
+}

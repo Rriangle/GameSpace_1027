@@ -1,0 +1,134 @@
+﻿@model IEnumerable<GameSpace.Areas.MemberManagement.Models.ManagerWithRoleVM>
+@{
+    ViewData["Title"] = "GameSpace";
+    
+    // 保留側欄狀態（預設 admin）
+    var sidebar = (string)(ViewBag.Sidebar ?? Context.Request.Query["sidebar"].ToString() ?? "admin");
+
+    // 目前查詢狀態
+    int? currentId = ViewBag.ManagerId as int?;
+    string currentName = ViewBag.ManagerName as string;
+    string currentRole = ViewBag.RoleName as string;
+
+    string sortBy = (ViewBag.SortBy as string) ?? "id";     // id | role
+    string sortDir = (ViewBag.SortDir as string) ?? "asc";  // asc | desc
+
+    // 箭頭
+    string idArrow = sortBy == "id" ? (sortDir == "asc" ? "▲" : "▼") : "";
+    string roleArrow = sortBy == "role" ? (sortDir == "asc" ? "▲" : "▼") : "";
+
+    // 下次點擊的方向
+    string nextIdDir = (sortBy == "id" && sortDir == "asc") ? "desc" : "asc";
+    string nextRoleDir = (sortBy == "role" && sortDir == "asc") ? "desc" : "asc";
+}
+
+<h1 class="mb-3">職位查詢與調整</h1>
+
+
+<!-- 搜尋（GET） -->
+<form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label for="managerId" class="form-label">管理者編號</label>
+            <input id="managerId" name="managerId" type="number" class="form-control"
+                   value="@(currentId?.ToString() ?? "")" placeholder="例如：30000001" />
+        </div>
+        <div class="col-auto">
+            <label for="managerName" class="form-label">管理者姓名</label>
+            <input id="managerName" name="managerName" type="text" class="form-control"
+                   value="@(currentName ?? "")" placeholder="關鍵字" />
+        </div>
+        <div class="col-auto">
+            <label for="roleName" class="form-label">角色名稱</label>
+            <input id="roleName" name="roleName" type="text" class="form-control"
+                   value="@(currentRole ?? "")" placeholder="關鍵字（如：客服、編輯）" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">搜尋</button>
+            <a asp-action="Index"
+               asp-route-sidebar="@sidebar"
+               class="btn btn-outline-secondary">清除</a>
+        </div>
+    </div>
+
+    <!-- 保留排序與側欄 -->
+    <input type="hidden" name="sortBy" value="@sortBy" />
+    <input type="hidden" name="sortDir" value="@sortDir" />
+    <input type="hidden" name="sidebar" value="@sidebar" />
+</form>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">目前沒有資料。</div>
+}
+else
+{
+    <table id="mgrTable" class="table table-striped table-hover align-middle w-100">
+        <thead>
+            <tr>
+                <th>管理者編號</th>
+                <th>管理者姓名</th>
+                <th>角色編號</th>
+                <th>角色名稱</th>
+                <th style="width:120px;">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var x in Model)
+            {
+                <tr>
+                    <td>@x.ManagerId</td>
+                    <td>@x.ManagerName</td>
+                    <td>@(x.ManagerRoleId == 0 ? "" : x.ManagerRoleId.ToString())</td>
+                    <td>@x.RoleName</td>
+                    <td>
+                        <a asp-action="Details"
+                           asp-route-managerId="@x.ManagerId"
+                           asp-route-sidebar="@sidebar"
+                           class="btn btn-sm btn-outline-secondary">詳細</a>
+                        <a asp-action="Edit"
+                           asp-route-managerId="@x.ManagerId"
+                           asp-route-sidebar="@sidebar"
+                           class="btn btn-sm btn-outline-primary">修改</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" />
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            $('#mgrTable').DataTable({
+                searching: false,
+                 columnDefs: [ { targets: [1,3,4], orderable: false } ],
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    processing:   "處理中...",
+                    lengthMenu:   "顯示 _MENU_ 筆",
+                    zeroRecords:  "沒有符合的結果",
+                    info:         "第 _START_ 至 _END_ 筆，共 _TOTAL_ 筆",
+                    infoEmpty:    "顯示第 0 至 0 筆，共 0 筆",
+                    infoFiltered: "(從 _MAX_ 筆資料中篩選)",
+                    search:       "搜尋：",
+                    paginate: {
+                        first:    "第一頁",
+                        previous: "上一頁",
+                        next:     "下一頁",
+                        last:     "最後一頁"
+                    }
+                }
+            });
+        });
+    </script>
+}

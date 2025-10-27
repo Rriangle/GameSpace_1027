@@ -1,0 +1,39 @@
+﻿@model GameSpace.Areas.OnlineStore.ViewModels.MerchTypeVM
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header bg-light">
+            <h5 class="modal-title">@((Model?.MerchTypeId > 0) ? "編輯周邊類別" : "新增周邊類別")</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="post" class="js-ajax"
+              action="@Url.Action((Model?.MerchTypeId>0)?"MerchTypeEdit":"MerchTypeCreate","CodeCenter", new{area="OnlineStore"})">
+            @Html.AntiForgeryToken()
+            @if (Model?.MerchTypeId > 0)
+            {
+                @Html.HiddenFor(m => m.MerchTypeId)
+            }
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">周邊類別名稱 *</label>
+                    @Html.TextBoxFor(m => m.MerchTypeName, new { @class = "form-control", maxlength = "50", placeholder = "如 T-Shirt / 滑鼠 / 鑰匙圈" })
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", id = "mtActive" })
+                            <label class="form-check-label" for="mtActive">啟用</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">排序</label>
+                        @Html.TextBoxFor(m => m.SortOrder, new { @class = "form-control", type = "number" })
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-primary">儲存</button>
+            </div>
+        </form>
+    </div>
+</div>

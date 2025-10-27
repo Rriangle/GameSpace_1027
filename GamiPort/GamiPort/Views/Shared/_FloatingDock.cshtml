@@ -1,0 +1,557 @@
+﻿@* ===================================================================
+   _FloatingDock.cshtml － 單窗一對一聊天（LINE 風 完整版）
+   特色與本次重點：
+   1) 日期分隔線（今天／昨天／yyyy/MM/dd） → 交由 ChatDivider 插入
+   2) 所有時間顯示一律使用 GPTime.hm(UTC ISO) → 台灣時間 HH:mm
+   3) 送出訊息先顯示 Pending，Hub Echo 回來補上 id/時間/已讀
+   4) 視窗開著且可見時，收到對方訊息會「立即 NotifyRead」→ 雙開時幾乎無未讀
+   5) 開啟視窗載入完成後，先「本地清紅點」（廣播 gp-unread-zero），再 NotifyRead 讓伺服器推 UnreadUpdate 做最終一致
+   6) 清單紅點 DOM 只要有 data-chat-badge="<peerId>" 就會被即時更新/清除（跨頁/多處 DOM 均適用）
+   Endpoints / Hub:
+     • GET  /social_hub/Chat/History?otherId=&take=20&direction=latest
+     • GET  /social_hub/Chat/History?otherId=&take=20&beforeIso=...
+     • HUB  /social_hub/chatHub
+       - ReceiveDirect(payload)   : 雙方都收到新訊息
+       - UnreadUpdate(data)       : 更新清單紅點
+       - ReadReceipt(payload)     : 對方讀到（我方泡泡改「已讀」）
+       - NotifyRead(peerId, iso)  : 我讀到對方訊息的 upToIso
+   =================================================================== *@
+@{
+    var historyApi = Url.Action("History", "Chat", new { area = "social_hub" });
+    var gpTimeJs = Url.Content("~/js/social_hub/gp-time.js");
+}
+
+<link rel="stylesheet" href="~/css/social_hub/chat-line.css" asp-append-version="true" />
+
+<style>
+    /* 容器與基本排版（維持簡潔） */
+    .chat-dock {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        width: 360px;
+        max-height: 68vh;
+        display: none;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 14px;
+        box-shadow: 0 16px 44px rgba(0,0,0,.14);
+        z-index: 1090;
+        overflow: hidden
+    }
+
+        .chat-dock.open {
+            display: block
+        }
+
+    .cd-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        background: #0d6efd;
+        color: #fff
+    }
+
+    .cd-title {
+        font-weight: 700
+    }
+
+    .cd-wrap {
+        display: flex;
+        flex-direction: column;
+        height: 56vh
+    }
+
+    .cd-body {
+        flex: 1;
+        overflow: auto;
+        background: linear-gradient(#f8fafc,#f2f5f9)
+    }
+
+    .cd-row {
+        display: flex;
+        padding: 6px 10px
+    }
+
+        .cd-row.me {
+            justify-content: flex-end
+        }
+
+    .bubble {
+        position: relative;
+        max-width: 72%;
+        padding: 10px 46px 20px 12px;
+        border-radius: 12px;
+        word-break: break-word;
+        white-space: pre-wrap
+    }
+
+    .cd-row.me .bubble {
+        background: #0d6efd;
+        color: #fff;
+        border-bottom-right-radius: 6px
+    }
+
+    .cd-row.peer .bubble {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-bottom-left-radius: 6px
+    }
+
+    .bubble .stamp {
+        position: absolute;
+        right: 8px;
+        bottom: 6px;
+        font-size: 11px;
+        opacity: .78;
+        color: #cfe2ff
+    }
+
+    .cd-row.peer .bubble .stamp {
+        color: #94a3b8
+    }
+
+    .cd-row[data-pending="1"] .bubble {
+        opacity: .85
+    }
+
+    .cd-input {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid #e9ecef;
+        background: #fff
+    }
+
+        .cd-input input {
+            flex: 1;
+            border: 1px solid #dee2e6;
+            border-radius: 999px;
+            padding: 8px 12px
+        }
+
+    .icon-btn {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        background: #fff;
+        padding: 4px 10px;
+        cursor: pointer
+    }
+    @@media (max-width:480px) {
+        .chat-dock
+
+    {
+        right: 6px;
+        left: 6px;
+        width: auto
+    }
+
+    }
+</style>
+
+<div id="ChatDock" class="chat-dock" role="dialog" aria-modal="false" aria-hidden="true">
+    <div class="cd-head" id="cdHead">
+        <div class="cd-title" id="cdTitle">朋友</div>
+        <div class="tools">
+            <button id="cdClose" class="icon-btn" style="color:#0d6efd;background:#fff;border-color:#cfe2ff">關閉</button>
+        </div>
+    </div>
+    <div class="cd-wrap">
+        <div id="cdBody" class="cd-body"><!-- messages (+ ChatDivider 日期條) --></div>
+        <div class="cd-input">
+            <input id="cdInput" type="text" placeholder="輸入訊息..." />
+            <button id="cdSend" class="icon-btn">送出</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ---------------- 共同相依（時間 / SignalR / 對外 gpOpenChat） ----------------
+       - 懶載入 gp-time.js：提供 GPTime.hm / dateKey / prettyKey（台灣時間顯示）
+       - 懶載入 SignalR
+       - 提供 window.gpOpenChat(uid,name)：任何地方呼叫都能開啟聊天窗（若本檔尚未初始化，就先排隊）
+    --------------------------------------------------------------------------- */
+    (function bootShared(){
+      if(!window.__gpEnsureTime){
+        const url='@gpTimeJs';
+        window.__gpEnsureTime=new Promise((resolve)=>{
+          if(window.GPTime) return resolve();
+          const s=document.createElement('script'); s.src=url; s.async=true;
+          s.onload=()=>resolve();
+          s.onerror=()=>{ // 最低限度 fallback（以瀏覽器時區顯示 HH:mm）
+            (function(w){
+              const hasTz=s=>/[zZ]|[+\-]\d{2}:\d{2}$/.test(s||"");
+              const ensureIsoUtc=i=>(i&&hasTz(i))?i:(i?(i+'Z'):new Date().toISOString());
+              const parseUtc=i=>new Date(ensureIsoUtc(i));
+              const hm=i=>new Intl.DateTimeFormat('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false}).format(parseUtc(i));
+              const dk=i=>{const d=parseUtc(i);const y=d.getUTCFullYear(),m=('0'+(d.getUTCMonth()+1)).slice(-2),dd=('0'+d.getUTCDate()).slice(-2);return y+'-'+m+'-'+dd;};
+              const today=dk(new Date().toISOString()), yKey=dk(new Date(Date.now()-86400000).toISOString());
+              const pk=k=> k===today?'今天':(k===yKey?'昨天':k.replace(/-/g,'/'));
+              w.GPTime={ensureIsoUtc:ensureIsoUtc,parseUtc:parseUtc,hm:hm,dateKey:dk,prettyKey:pk};
+            })(window); resolve();
+          };
+          document.head.appendChild(s);
+        });
+      }
+      if(!window.__gpEnsureSignalR){
+        const cdn="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js";
+        window.__gpEnsureSignalR=new Promise((res,rej)=>{
+          if(window.signalR||window.SignalR||window.signalr) return res();
+          const s=document.createElement('script'); s.src=cdn; s.async=true; s.crossOrigin="anonymous";
+          s.onload=()=>res(); s.onerror=()=>rej(new Error('SignalR 載入失敗'));
+          document.head.appendChild(s);
+        });
+      }
+      if(!window.gpOpenChat){
+        window.gpOpenChat=function(uid,name){
+          if(window.ChatDock?.open){ window.ChatDock.open(uid,name); return; }
+          (window.__gpChatQueue ||= []).push([uid,name]);
+        };
+        window.addEventListener('gp-chat-ready',()=>{
+          if(Array.isArray(window.__gpChatQueue) && window.__gpChatQueue.length){
+            const q=[...window.__gpChatQueue]; window.__gpChatQueue.length=0;
+            for(const [u,n] of q) window.ChatDock?.open?.(u,n);
+          }
+        });
+      }
+    })();
+</script>
+
+<!-- 日期分隔線模組（ChatDivider） -->
+<script src="~/js/social_hub/chat-date-divider.js" asp-append-version="true"></script>
+
+<script>
+    ;(async () => {
+      await window.__gpEnsureTime;
+
+      // ---- DOM 參考 ----
+      const dock   = document.getElementById('ChatDock');
+      const head   = document.getElementById('cdHead');
+      const title  = document.getElementById('cdTitle');
+      const bodyEl = document.getElementById('cdBody');
+      const input  = document.getElementById('cdInput');
+      const btnSend= document.getElementById('cdSend');
+      const btnClose=document.getElementById('cdClose');
+
+      // ---- 狀態（全部只宣告一次，避免重覆注入腳本時報錯）----
+      let peerId=null, peerName='';
+      let _conn=null;                  // SignalR 連線
+      let loadingOlder=false;          // 上捲載舊中？
+      let earliestIso=null;            // 目前最舊訊息的時間（UTC ISO）
+      const seenIds=new Set();         // 已見訊息 id（防重）
+      let lastPending=null;            // 我剛送出、尚未 Echo 的暫掛泡泡
+
+      // ---- 顯示/隱藏 ----
+      function showDock(){ dock.classList.add('open'); dock.style.display='block'; dock.setAttribute('aria-hidden','false'); }
+      function hideDock(){ dock.classList.remove('open'); dock.style.display='none'; dock.setAttribute('aria-hidden','true'); }
+      btnClose.addEventListener('click', hideDock);
+
+      // ---- 可拖移（避開 head 右側工具按鈕）----
+      (function drag(el,handle){
+        let sx=0,sy=0,ox=0,oy=0,drag=false;
+        const isBtn=t=>(t.closest?.('.tools')||t.tagName==='BUTTON');
+        handle.addEventListener('pointerdown',e=>{
+          if(isBtn(e.target))return;
+          drag=true; sx=e.clientX; sy=e.clientY; const r=el.getBoundingClientRect(); ox=r.left; oy=r.top;
+          handle.setPointerCapture(e.pointerId);
+        });
+        handle.addEventListener('pointermove',e=>{
+          if(!drag)return;
+          const nx=ox+(e.clientX-sx), ny=oy+(e.clientY-sy);
+          el.style.left=Math.max(6,Math.min(window.innerWidth-el.offsetWidth-6,nx))+'px';
+          el.style.bottom='auto'; el.style.right='auto';
+          el.style.top=Math.max(6,Math.min(window.innerHeight-80,ny))+'px';
+        });
+        handle.addEventListener('pointerup',()=>drag=false);
+      })(dock, head);
+
+      // ---- 工具 ----
+      const wait2Frames   = () => new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      const isNearBottom  = (offset=60) => (bodyEl.scrollHeight - bodyEl.scrollTop - bodyEl.clientHeight) < offset;
+      const scrollToBottom= ()=>{ bodyEl.scrollTop = bodyEl.scrollHeight; };
+
+      function toArraySafe(raw){
+        try{ if(typeof raw==='string' && raw.trim()!=='') raw=JSON.parse(raw); }catch{ return []; }
+        if(Array.isArray(raw)) return raw;
+        if(raw && Array.isArray(raw.items)) return raw.items;
+        if(raw && Array.isArray(raw.rows))  return raw.rows;
+        if(raw && Array.isArray(raw.data))  return raw.data;
+        return [];
+      }
+      // 從任何命名取出 UTC ISO（含 snake_case/camelCase/PascalCase）
+      function getIso(m){
+        const cands=[
+          'SentAtIso','sentAtIso','sent_at_iso',
+          'EditedAt','editedAt','edited_at',
+          'CreatedAt','createdAt','created_at',
+          'ReadAt','readAt','read_at',
+          'Time','time','timestamp','ts'
+        ];
+        for(const k of cands){ if(m && m[k]!=null && String(m[k]).length>0) return GPTime.ensureIsoUtc(String(m[k])); }
+        return GPTime.ensureIsoUtc(); // fallback: now
+      }
+
+      // 建立一列泡泡
+      function createRow(isMine, content, iso, isRead, id, pending=false){
+        const row=document.createElement('div');
+        row.className='cd-row '+(isMine?'me':'peer');
+        if(id!=null) row.dataset.msgid=String(id);
+        if(iso) row.dataset.ts=GPTime.ensureIsoUtc(iso);
+        if(pending) row.dataset.pending='1';
+
+        const b=document.createElement('div'); b.className='bubble';
+        const text=document.createElement('div'); text.textContent=content||'';
+        const stamp=document.createElement('span'); stamp.className='stamp';
+
+        const t=iso?GPTime.hm(iso):'';
+        stamp.textContent=isMine?(isRead?`${t} · 已讀`:t):t;
+
+        b.appendChild(text); b.appendChild(stamp);
+        row.appendChild(b);
+        return row;
+      }
+
+      // renderer：提供給 ChatDivider 生成泡泡
+      function renderMessageFromModel(m){
+        const senderId= String(m.SenderId ?? m.senderId ?? '');
+        const isMine  = senderId ? (senderId !== String(peerId)) : !!(m.IsMine ?? m.isMine);
+        const content = m.Content ?? m.content ?? '';
+        const iso     = getIso(m);
+        const isRead  = !!(m.IsRead ?? m.isRead);
+        const id      = m.MessageId ?? m.messageId ?? null;
+        const pending = !!m._pending;
+        const row = createRow(isMine, content, iso, isRead, id, pending);
+        if(pending) lastPending = row;
+        return row;
+      }
+
+      // 初始化 ChatDivider（處理日期分隔線）
+      ChatDivider.init({ container: bodyEl, renderer: renderMessageFromModel });
+
+      // ---- 歷史：最新 20（舊→新）----
+      async function loadLatest(){
+        bodyEl.innerHTML=''; earliestIso=null; seenIds.clear(); lastPending=null;
+
+        const url=new URL("@historyApi", location.origin);
+        url.searchParams.set('otherId', peerId);
+        url.searchParams.set('take', 20);
+        url.searchParams.set('direction','latest');
+
+        let list=[];
+        try{
+          const r=await fetch(url,{credentials:'same-origin'});
+          const t=await r.text(); if(!r.ok) throw new Error('HTTP '+r.status);
+          list=toArraySafe(t).sort((a,b)=> new Date(getIso(a))-new Date(getIso(b)));
+        }catch(e){ console.warn('[ChatDock] 載入歷史失敗：',e); }
+
+        ChatDivider.appendMessages(list, renderMessageFromModel);
+        earliestIso = list.length ? getIso(list[0]) : null;
+
+        scrollToBottom();
+        await notifyReadLatest(); // 初次載入時若視窗可見也回讀
+      }
+
+      // ---- 歷史：更舊 20（頂部觸發，保持視覺位置）----
+      async function loadOlder(){
+        if(loadingOlder || !earliestIso) return;
+        loadingOlder=true;
+
+        const prevTop    = bodyEl.scrollTop;
+        const prevHeight = bodyEl.scrollHeight;
+
+        const url=new URL("@historyApi", location.origin);
+        url.searchParams.set('otherId', peerId);
+        url.searchParams.set('take', 20);
+        url.searchParams.set('beforeIso', earliestIso);
+
+        try{
+          const r=await fetch(url,{credentials:'same-origin'});
+          const t=await r.text(); if(!r.ok){ loadingOlder=false; return; }
+          let list=toArraySafe(t); if(!list.length){ loadingOlder=false; return; }
+          list.sort((a,b)=> new Date(getIso(a))-new Date(getIso(b)));
+
+          // 去重（邊界）
+          list = list.filter(m=>{
+            const id=m.MessageId ?? m.messageId;
+            if(id!=null){
+              if(seenIds.has(String(id))) return false;
+              seenIds.add(String(id));
+            }
+            return true;
+          });
+
+          ChatDivider.prependMessages(list, renderMessageFromModel);
+
+          await wait2Frames();
+          const newHeight = bodyEl.scrollHeight;
+          bodyEl.scrollTop = prevTop + (newHeight - prevHeight);
+
+          earliestIso = list.length ? getIso(list[0]) : earliestIso;
+        }catch(e){
+          console.warn('[ChatDock] 載入更舊失敗：', e);
+        }finally{
+          loadingOlder=false;
+        }
+      }
+
+      bodyEl.addEventListener('scroll', async ()=>{
+        if(bodyEl.scrollTop<=6) loadOlder();
+        if(isNearBottom()) await notifyReadLatest();
+      }, {passive:true});
+
+      // ---- 發送（先插 Pending，再等 Echo 補齊）----
+      async function sendText(){
+        const txt=(input.value||'').trim(); if(!txt) return;
+
+        const nowIso=new Date().toISOString(); // UTC
+        const ghost = { IsMine: true, Content: txt, SentAtIso: nowIso, IsRead: false, _pending: true };
+        ChatDivider.appendMessage(ghost, renderMessageFromModel);
+        scrollToBottom();
+        input.value='';
+
+        try{
+          await window.__gpEnsureSignalR;
+          const SR=window.signalR||window.SignalR||window.signalr;
+          _conn=_conn||new SR.HubConnectionBuilder().withUrl("/social_hub/chatHub").withAutomaticReconnect().build();
+          if(_conn.state!=='Connected') await _conn.start();
+          await _conn.invoke("SendMessageTo", Number(peerId), txt);
+        }catch(e){ console.warn('Send fail', e); }
+      }
+      btnSend.addEventListener('click', sendText);
+      input.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendText(); }});
+
+      // ---- Hub 連線與事件 ----
+      (async function setupHub(){
+        try{
+          await window.__gpEnsureSignalR;
+          const SR=window.signalR||window.SignalR||window.signalr;
+          _conn=new SR.HubConnectionBuilder().withUrl("/social_hub/chatHub").withAutomaticReconnect().build();
+
+          // 新訊息（我/對方）
+          _conn.on("ReceiveDirect", async p=>{
+            const s=String(p.senderId ?? p.SenderId);
+            const r=String(p.receiverId ?? p.ReceiverId);
+            if(!peerId) return;
+            if(s!==String(peerId) && r!==String(peerId)) return;
+
+            const iso=GPTime.ensureIsoUtc(p.sentAtIso ?? p.SentAtIso ?? p.sent_at ?? p.sentAt);
+            const content=p.content ?? p.Content ?? '';
+            const msgId=p.messageId ?? p.MessageId;
+            const isMine=(s!==String(peerId));
+            const isRead=!!(p.isRead ?? p.IsRead);
+
+            if(msgId!=null) seenIds.add(String(msgId));
+
+            // 只在接近底部時，對方訊息才貼底；我方送出在 sendText 時已貼底
+            const stick = isMine ? true : isNearBottom();
+
+            if(isMine && lastPending){
+              // Echo 回填暫掛
+              lastPending.dataset.pending='0';
+              lastPending.dataset.msgid = msgId!=null?String(msgId):'';
+              lastPending.dataset.ts    = iso;
+              const stamp=lastPending.querySelector('.stamp');
+              if(stamp){ const hm=GPTime.hm(iso); stamp.textContent = isRead ? `${hm} · 已讀` : hm; }
+              lastPending=null;
+            }else{
+              ChatDivider.appendMessage(
+                { SenderId:p.SenderId, Content:content, SentAtIso:iso, IsRead:isRead, MessageId:msgId },
+                renderMessageFromModel
+              );
+            }
+            if(stick) scrollToBottom();
+
+            // ★ 對方訊息且視窗可見/開著 → 立刻回讀（雙開時幾乎無未讀）
+            if(!isMine && document.visibilityState==='visible' && dock.classList.contains('open')){
+              try{ await _conn.invoke("NotifyRead", Number(peerId), iso); }catch{}
+            }
+
+            // 廣播給好友清單：更新預覽/時間，並讓它置頂
+            window.dispatchEvent(new CustomEvent('gp-chat-latest',{ detail:{peerId, content, iso} }));
+          });
+
+          // 對方讀到了（把「我送出」的訊息 stamp 改成「已讀」）
+          _conn.on("ReadReceipt", payload=>{
+            const fromUserId = String(payload.fromUserId ?? payload.FromUserId);
+            const upToIso    = GPTime.ensureIsoUtc(payload.upToIso ?? payload.UpToIso ?? payload.read_at);
+            if(!peerId || fromUserId!==String(peerId)) return;
+            markMyMsgsReadUpTo(upToIso);
+          });
+
+          // 未讀統計（清單紅點）
+          _conn.on("UnreadUpdate", data=>{
+            const pid = String(data.peerId ?? data.PeerId ?? '');
+            const unread = Number(data.unread ?? data.Unread ?? 0);
+            if(!pid) return;
+            const badge = document.querySelector(`[data-chat-badge="${pid}"]`);
+            if(badge){
+              badge.textContent = unread>0 ? unread : '';
+              badge.style.display = unread>0 ? 'inline-block':'none';
+            }
+          });
+
+          await _conn.start().catch(()=>{});
+          window.dispatchEvent(new CustomEvent('gp-chat-ready'));
+        }catch(e){
+          console.warn('[ChatDock] Hub 啟動失敗：', e);
+          window.dispatchEvent(new CustomEvent('gp-chat-ready'));
+        }
+      })();
+
+      // ---- 已讀相關：取最後一筆對方訊息時間、更新我方 stamp、回報伺服器 ----
+      function lastPeerIso(){
+        for(let i=bodyEl.children.length-1;i>=0;i--){
+          const r=bodyEl.children[i];
+          if(!r.classList?.contains?.('peer')) continue;
+          const ts=r.dataset.ts; if(ts) return ts;
+        }
+        return null;
+      }
+      function markMyMsgsReadUpTo(upToIso){
+        if(!upToIso) return;
+        for(const r of bodyEl.children){
+          if(!r.classList?.contains?.('me')) continue;
+          const ts=r.dataset.ts; if(!ts) continue;
+          if(new Date(ts) <= new Date(upToIso)){
+            const s=r.querySelector('.stamp');
+            if(s){ const hm=GPTime.hm(ts); s.textContent = `${hm} · 已讀`; }
+          }
+        }
+      }
+      async function notifyReadLatest(){
+        try{
+          if(!_conn || _conn.state!=='Connected') return;
+          if(!dock.classList.contains('open')) return;
+          if(document.visibilityState!=='visible') return;
+          const iso = lastPeerIso(); if(!iso) return;
+          await _conn.invoke("NotifyRead", Number(peerId), iso);
+        }catch{}
+      }
+
+      // ---- 對外 API：開啟 Dock（本地清紅點 → 正式 NotifyRead）----
+      async function openDock(uid, name){
+        peerId=String(uid||'').trim();
+        peerName=name||('朋友 #'+peerId);
+        title.textContent = `朋友 #${peerId}`;
+
+        showDock();
+        await loadLatest();              // 取最新 20 並貼底
+
+        // ★★ 重點：本地立即清除該 peer 的所有徽章（清單、其他區塊都清） ★★
+        window.dispatchEvent(new CustomEvent('gp-unread-zero',{ detail:{ peerId } }));
+
+        // ★★ 然後正式回讀（Hub 會再推 UnreadUpdate(unread=0) 做最終一致）★★
+        await notifyReadLatest();
+
+        input.focus();
+      }
+      window.ChatDock={ open: openDock };
+
+      // 若外部有排隊（gpOpenChat 在本檔尚未初始化前就被呼叫），這裡補開
+      if(Array.isArray(window.__gpChatQueue) && window.__gpChatQueue.length){
+        for(const [u,n] of window.__gpChatQueue){ try{ await openDock(u,n); }catch{} }
+        window.__gpChatQueue.length=0;
+      }
+    })();
+</script>

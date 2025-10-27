@@ -1,0 +1,61 @@
+﻿@{
+    ViewData["Title"] = "匯入定義（Metrics / Mappings）";
+}
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<!-- 系統訊息 -->
+@if (TempData["msg"] != null)
+{
+    <div class="alert alert-info">@Html.Raw(TempData["msg"])</div>
+}
+@if (TempData["detail"] != null)
+{
+    <div class="alert alert-warning small">@Html.Raw(TempData["detail"])</div>
+}
+
+<div class="row g-4">
+
+    <!-- Excel 上傳 -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Excel 上傳（.xlsx）</h5>
+                <p class="text-muted small mb-3">
+                    需要兩個工作表：<code>Metrics</code>、<code>Mappings</code>。<br />
+                    Metrics 欄位：<code>sourceCode, code, unit, description, isActive</code><br />
+                    Mappings 欄位：<code>gameName, sourceCode, externalKey, externalUrl</code>
+                    <a href="/Forum/Imports/ExcelTemplate" class="ms-2">下載範本</a>
+                </p>
+
+                <form asp-area="Forum" asp-controller="Imports" asp-action="Defs"
+                      method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="file" name="file" accept=".xlsx" class="form-control" />
+                    <button class="btn btn-primary" type="submit">上傳 Excel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON 貼上 -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">直接貼 JSON</h5>
+                <form asp-area="Forum" asp-controller="Imports" asp-action="DefsJsonText" method="post">
+                    @Html.AntiForgeryToken()
+                    <textarea name="json" rows="12" class="form-control mb-2" placeholder='{
+  "metrics": [
+    { "sourceCode": "steam", "code": "ccu", "unit": "users", "description": "concurrent", "isActive": true }
+  ],
+  "mappings": [
+    { "gameName": "Elden Ring", "sourceCode": "steam", "externalKey": "1245620" }
+  ]
+}'></textarea>
+                    <button type="submit" class="btn btn-success">匯入 JSON</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,65 @@
+﻿/* 卡片與表格細節 */
+.notif-table th, .notif-table td {
+    vertical-align: middle;
+}
+
+.col-slim {
+    white-space: nowrap;
+}
+
+/* 未讀列柔和高亮（比 table-warning 更乾淨） */
+.unread-row {
+    background-color: #fff9e8;
+}
+
+/* 狀態徽章（含小圓點） */
+.badge-status {
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+    .badge-status .dot {
+        display: inline-block;
+        width: .5rem;
+        height: .5rem;
+        border-radius: 50%;
+        margin-right: .4rem;
+        vertical-align: middle;
+    }
+
+    .badge-status.read {
+        background: #e8f5e9;
+        color: #1b5e20;
+    }
+
+        .badge-status.read .dot {
+            background: #1b5e20;
+        }
+
+    .badge-status.unread {
+        background: #fff3cd;
+        color: #7a5200;
+    }
+
+        .badge-status.unread .dot {
+            background: #ff9100;
+        }
+
+/* 更緊湊的按鈕 */
+.btn-compact {
+    padding: .2rem .5rem;
+    font-size: .85rem;
+    line-height: 1.2;
+}
+
+/* 表頭微亮 + 邊線 */
+.table thead.table-light th {
+    border-bottom-color: rgba(0,0,0,.06);
+}
+
+/* RWD：窄螢幕時略縮小欄寬 */
+@media (max-width: 992px) {
+    .col-slim {
+        font-size: .9rem;
+    }
+}

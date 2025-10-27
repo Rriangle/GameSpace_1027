@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GamiPort</title>
+
+    <link rel="icon" type="image/x-icon" href="~/icon/ImageToStl.com_Gamiport.ico" asp-append-version="true" />
+    <!-- Bootstrap 5 & FontAwesome -->
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/font-awesome/css/all.min.css" rel="stylesheet" />
+    <link href="~/css/stylecol.css" rel="stylesheet" />
+
+    @RenderSection("Styles", required: false)
+</head>
+<body id="top" class="d-flex flex-column vh-100">
+
+    <!-- 第一層 Topbar -->
+    @Html.Partial("_TopbarLevel1")
+
+    <div class="d-flex flex-grow-1 position-relative">
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="bg-dark text-white d-flex flex-column">
+            <div class="p-3 flex-grow-1 d-flex flex-column" id="leftSidebar">
+                @{
+                    var sidebar = (string?)ViewBag.Sidebar;
+                    if (string.IsNullOrEmpty(sidebar))
+                    {
+                        sidebar = Context.Request.Query["sidebar"];
+                    }
+
+                    if (string.Equals(sidebar, "admin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        @await Html.PartialAsync("_Sidebar.Admin")
+                    }
+                    else
+                    {
+                        @await Html.PartialAsync("_Sidebar.Member")
+                        // 預設
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="flex-grow-1 d-flex flex-column overflow-hidden ms-0">
+            <!-- 第二層 Topbar -->
+            @Html.Partial("_TopbarLevel2")
+
+            <!-- Main Content -->
+            <div class="flex-grow-1 overflow-auto p-3">
+                @RenderBody()
+            </div>
+
+            <!-- Footer -->
+            @Html.Partial("_Footer")
+        </div>
+
+    </div>
+
+    <!-- Toggle Button 左下固定 -->
+    <button id="sidebarToggle" class="btn btn-primary position-fixed bottom-0 start-0 m-3">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Scroll to Top Button 右下固定 -->
+    <a class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-3" href="#top"
+       style="width:45px;height:45px;">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    @* @Html.Partial("_Chat")
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.7/signalr.min.js"></script>
+    <script src="~/lib/social_hub/js/chat.js"></script>
+    <link href="~/lib/social_hub/css/chat.css" rel="stylesheet" /> *@
+
+    <!-- ✅ jQuery（AJAX 換側欄需要） -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-3fpdp4Z6xNn2c2JfUQw7vOxI0w6YJmq9hw3rro3At2c="
+            crossorigin="anonymous"></script>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/font-awesome/js/all.min.js"></script>
+    <script src="~/js/test.js"></script>
+
+    <!-- ✅ 動態切換左側側欄的程式（偵測 .js-load-sidebar 超連結） -->
+    <script>
+        $(document).on('click', '.js-load-sidebar', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            if (!url) return;
+
+            // 直接把 Partial 的 HTML 塞進左側容器
+            $('#leftSidebar').load(url);
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

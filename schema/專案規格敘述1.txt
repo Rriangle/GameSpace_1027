@@ -1,0 +1,695 @@
+﻿GameSpace 遊戲論壇平台專案規格書
+〈術語表／名詞統一〉
+會員錢包系統術語
+•	禮券（E-voucher）：會員可扣會員點數獲得的電子券，用於兌換實體商品或折抵現金
+•	優惠券（Coupon）：官方商城專用的折扣券，僅限商城內使用
+•	會員點數 (Point)：系統內虛擬貨幣，用於兌換禮券、優惠券、購買寵物膚色（或背景色）
+簽到系統術語
+•	每日簽到：用戶每日可進行一次的簽到活動
+•	連續簽到：連續多日的簽到記錄
+•	簽到獎勵：簽到後獲得的會員點數、寵物經驗值、商城優惠券
+
+寵物系統術語
+•	史萊姆寵物：系統中的虛擬寵物，具有五維屬性
+•	五維屬性：飢餓、心情、體力、清潔、健康五個屬性值
+•	寵物經驗值：寵物升級所需的數值
+•	等級：寵物成長階段指標
+小遊戲系統術語
+•	小遊戲：系統內的小冒險遊戲
+•	冒險遊戲：與小遊戲同義
+•	遊戲次數限制：每日最多 3 次遊戲限制
+________________________________________
+技術規格（Technical Specifications）
+開發技術棧
+後端技術：
+•	框架：ASP.NET MVC + C#
+•	資料庫：SQL Server
+•	ORM：Entity Framework Core
+•	架構模式：三層式架構設計（Presentation Layer、Business Logic Layer、Data Access Layer）
+前端技術：
+•	模板引擎：Razor
+•	HTML/CSS/JavaScript：基礎前端技術
+•	UI 框架：Bootstrap
+•	JavaScript 庫：jQuery
+•	現代化支援：Vue.js、Tailwind CSS、shadcn/ui
+認證與授權：
+•	登入機制：Email、自訂帳號 + OAuth（Google、Facebook、Discord）
+•	會話管理：JWT Token 或 Session Cookie
+•	權限控制：基於角色的存取控制（RBAC）
+資料庫設計：
+•	資料庫類型：Microsoft SQL Server
+•	資料類型：使用 SQL Server 原生資料類型（int、nvarchar、datetime2、bit、decimal、varbinary(max) 等）
+•	索引策略：主鍵索引、唯一索引、複合索引
+•	外鍵約束：確保資料完整性
+•	中文註釋：所有資料表與欄位均需詳細中文註釋
+系統架構
+三層式架構：
+1.	表現層（Presentation Layer）：
+o	ASP.NET MVC Controllers
+o	Razor Views
+o	HTML/CSS/JavaScript 前端組件
+o	Vue.js 組件（支援）
+2.	業務邏輯層（Business Logic Layer）：
+o	各功能模組控制器（SignInController、PetController 等）
+o	業務規則驗證
+o	資料轉換與處理
+o	第三方服務整合
+3.	資料存取層（Data Access Layer）：
+o	Entity Framework Core
+o	Repository 模式（PetRepository、UserRepository 等）
+o	資料庫連線管理
+o	交易處理
+開發工具與環境
+開發環境：
+•	IDE：Visual Studio 2022 或 Visual Studio Code
+•	版本控制：Git（支援 GitHub 部署）
+•	資料庫管理：SQL Server Management Studio (SSMS)
+•	API 測試：Postman 或 Swagger UI
+測試框架：
+•	單元測試：xUnit 或 MSTest
+•	整合測試：ASP.NET Core Test Host
+•	端對端測試：Selenium WebDriver
+•	API 測試：REST Assured 或類似工具
+部署與監控：
+•	容器化：Docker（可選）
+•	CI/CD：GitHub Actions 或 Azure DevOps
+•	監控：Application Insights
+•	日誌：Serilog 或 NLog
+效能與擴展性
+效能要求：
+•	響應時間：頁面載入時間 < 3 秒
+•	API 響應：API 響應時間 < 1 秒
+•	並發處理：支援 1000+ 同時在線用戶
+•	資料庫查詢：複雜查詢執行時間 < 5 秒
+擴展性設計：
+•	水平擴展：支援多實例部署
+•	快取策略：Redis 或 Memory Cache
+•	資料庫優化：查詢優化、索引策略
+•	CDN：靜態資源 CDN 加速
+安全性要求
+資料安全：
+•	密碼加密：使用 bcrypt 或 PBKDF2 雜湊
+•	**資料傳輸：**HTTPS/TLS 1.2+
+•	**SQL 注入防護：**參數化查詢
+•	**XSS 防護：**輸入驗證與輸出編碼
+存取控制：
+•	**身份驗證：**多因子認證支援
+•	**授權控制：**基於角色的權限管理
+•	**API 安全：**Rate Limiting、API Key 驗證
+•	**審計日誌：**所有敏感操作記錄
+________________________________________
+前端風格規格（Frontend Style Specifications）
+設計系統
+色彩系統：
+•	主色調：玻璃風設計，支援多種主色切換
+o	預設主色：#7557ff（紫色）
+o	次要色：#34d2ff（藍色）
+o	成功色：#22c55e（綠色）
+•	**背景色：**漸層背景設計
+o	淺色模式：#eef3f8 到 #ffffff 的漸層
+o	深色模式：#0c111b 到 #0a0f18 的漸層
+•	文字色：
+o	主要文字：#1f2937（淺色）/ #e5edff（深色）
+o	次要文字：#64748b（淺色）/ #9fb1c9（深色）
+字體系統：
+•	字體族：system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif
+•	字體大小：16px 基礎，支援響應式縮放
+•	行高：1.65 倍行高
+間距系統：
+•	基礎間距：8px 網格系統
+•	元件間距：12px、16px、24px、32px
+•	頁面邊距：16px（手機）、24px（平板）、32px（桌面）
+元件設計
+按鈕設計：
+•	主要按鈕：漸層背景、圓角 12px、陰影效果
+•	次要按鈕：邊框樣式、透明背景
+•	連結按鈕：虛線邊框、透明背景
+•	狀態變化：hover 時上移 3px、縮放 1.01
+卡片設計：
+•	背景：玻璃風效果（backdrop-filter: blur(14px)）
+•	邊框：1px 實線、圓角 16px
+•	陰影：0 18px 40px rgba(17,24,39,.12)
+•	懸停效果：上移 3px、縮放 1.01
+表單設計：
+•	輸入框：圓角 12px、邊框樣式、聚焦時邊框變色
+•	下拉選單：與輸入框一致樣式
+•	標籤：左對齊、字重 600
+•	驗證訊息：紅色文字、圖示提示
+響應式設計
+斷點設定：
+•	手機：< 740px
+•	平板：740px - 1100px
+•	桌面：> 1100px
+網格系統：
+•	手機：單欄佈局
+•	平板：雙欄佈局
+•	桌面：多欄佈局（最多 6 欄）
+元件適配：
+•	導航欄：手機版摺疊選單
+•	卡片：響應式寬度調整
+•	表格：手機版水平滾動
+•	圖片：響應式縮放
+動畫與互動
+過渡動畫：
+•	持續時間：0.16s ease
+•	緩動函數：ease-in-out
+•	屬性：transform、box-shadow、filter
+載入動畫：
+•	骨架屏：內容載入時的佔位動畫
+•	進度條：操作進度指示
+•	**旋轉動畫：**載入中狀態
+微互動：
+•	按鈕回饋：點擊時縮放效果
+•	懸停效果：元件懸停時的視覺回饋
+•	焦點指示：鍵盤導航的焦點指示
+主題系統
+主題切換：
+•	淺色主題：預設主題
+•	深色主題：可切換的深色模式
+•	緊湊模式：減少間距的緊湊佈局
+主色切換：
+•	紫色主題：#7557ff（預設）
+•	藍色主題：#34d2ff
+•	綠色主題：#22c55e
+特殊效果
+玻璃風效果：
+•	背景模糊：backdrop-filter: blur(14px)
+•	透明度：rgba(255,255,255,.75)（淺色）/ rgba(22,30,48,.65)（深色）
+•	邊框：半透明邊框效果
+漸層背景：
+•	主背景：多層徑向漸層
+•	元件背景：線性漸層
+•	動態效果：支援動態漸層變化
+陰影系統：
+•	基礎陰影：0 18px 40px rgba(17,24,39,.12)
+•	深色模式：0 18px 42px rgba(0,0,0,.35)
+•	懸停陰影：增強陰影效果
+可近用性（Accessibility）
+鍵盤導航：
+•	焦點指示：清晰的焦點樣式
+•	Tab 順序：邏輯的 Tab 鍵順序
+•	快捷鍵：常用功能的快捷鍵支援
+螢幕閱讀器：
+•	語義化標籤：正確的 HTML 語義標籤
+•	ARIA 標籤：適當的 ARIA 屬性
+•	替代文字：圖片的替代文字
+色彩對比：
+•	文字對比：符合 WCAG AA 標準
+•	狀態指示：不依賴顏色的狀態指示
+•	高對比模式：支援高對比模式
+效能優化
+載入優化：
+•	圖片懶載入：僅當圖片進入視窗時才載入
+•	程式碼分割：按路由分割 JavaScript
+•	快取策略：靜態資源快取
+渲染優化：
+•	CSS 優化：避免頻繁重排與重繪
+•	JavaScript 優化：使用事件委派、實施防抖與節流
+•	動畫優化：使用 transform 和 opacity 屬性進行動畫
+資源優化：
+•	圖片壓縮：支援 WebP 等高壓縮格式
+•	字體優化：字體子集化以減少體積
+•	程式碼壓縮：生產環境下壓縮與混淆程式碼
+________________________________________
+0) 模組總覽（Overview）
+使命宣言
+建立一個整合遊戲討論、寵物養成、簽到獎勵、商城交易、論壇交流、即時聊天、群組功能的綜合性遊戲社群平台，為玩家提供完整的遊戲生態體驗。
+範圍界定
+包含範圍：
+•	用戶註冊登入與權限管理系統（含 OAuth 第三方登入）
+•	寵物養成與互動系統（史萊姆寵物）
+•	每日簽到與獎勵機制（可能獲得獎勵：商城優惠券、會員點數、寵物經驗值）
+•	小遊戲冒險系統（可能獲得獎勵：商城優惠券、會員點數、寵物經驗值）
+•	官方商城
+•	遊戲討論論壇與社群功能
+•	即時聊天與群組系統
+•	通知系統
+•	管理員後台管理系統
+•	遊戲熱度追蹤與排行榜
+•	會員折扣系統（包含：禮券、商城優惠券、會員點數）
+•	約玩配對系統
+排除範圍：
+•	第三方遊戲整合（僅追蹤遊戲熱度數據）
+•	實體商品配送（僅限數位商品）
+•	多語言支援（初期僅提供繁體中文）
+•	行動應用程式（僅開發 Web 版本）
+關鍵績效指標（KPIs）
+•	用戶活躍度：日活躍用戶數 ≥ 1000，月活躍用戶數 ≥ 5000
+•	社群參與度：平均每用戶每日發文數 ≥ 0.5，平均每用戶每日回覆數 ≥ 2
+•	商業轉換率：商城月交易額 ≥ 50 萬，用戶付費率 ≥ 5%
+•	寵物互動率：每日寵物互動次數 ≥ 2000
+•	簽到參與率：日簽到率 ≥ 60%
+主要使用者角色
+•	一般用戶：註冊、發文、購物、養寵物、簽到、玩小遊戲
+•	管理員：用戶管理、內容審核、系統維護
+•	客服人員：處理用戶問題、糾紛調解
+作者必填項目
+•	 確認使命宣言清楚明確
+•	 列出所有包含與排除的功能範圍
+•	 定義可量化的 KPI 指標
+•	 識別所有相關使用者角色
+•	 確認範圍界定與其他模組無重疊
+________________________________________
+1) 資料模型對應（DB mapping）
+使用之資料表
+•	Users：用戶基本資料表
+o	User_ID：用戶唯一識別碼（主鍵，自動遞增）
+o	User_name：用戶姓名（非空，唯一）
+o	User_Account：登入帳號（非空，唯一）
+o	User_Password：密碼（非空，加密儲存）
+•	User_Introduce：用戶詳細資料表
+o	User_ID：關聯到 Users 表（主鍵，外鍵）
+o	User_NickName：用戶暱稱（非空，唯一）
+o	Gender：性別（非空）
+o	IdNumber：身分證字號（非空，唯一）
+o	Cellphone：手機號碼（非空，唯一）
+o	Email：電子郵件（非空，唯一）
+o	Address：地址（非空）
+o	DateOfBirth：出生日期（非空）
+o	Create_Account：帳號建立時間（非空）
+o	User_Picture：頭像圖片（可空，varbinary(max)）
+o	User_Introduce：用戶自介（可空，nvarchar(200)）
+•	User_Rights：用戶權限表
+o	User_Id：關聯到 Users 表（主鍵，外鍵）
+o	User_Status：用戶狀態（bit，啟用/停權）
+o	ShoppingPermission：購物權限（bit）
+o	MessagePermission：留言權限（bit）
+o	SalesAuthority：銷售權限（bit）
+•	User_wallet：用戶錢包表
+o	User_Id：關聯到 Users 表（主鍵，外鍵）
+o	User_Point：會員點數（int）
+o	Coupon_Number：優惠券編號（varchar）
+o	EVoucher_Number：禮券編號（varchar）
+•	UserSignInStats：簽到統計表
+o	LogID：簽到記錄 ID（主鍵，自動遞增）
+o	SignTime：簽到時間（datetime2，非空，預設 UTC 當下時間）
+o	UserID：會員 ID（非空，外鍵參考 Users.UserID）
+o	PointsChanged：此次簽到會員點數增減數量（非空，預設 0）
+o	ExpGained：此次簽到寵物獲得的經驗值（非空，資料庫無預設值，常態流程填入 0）
+o	CouponGained：此次簽到獲得的優惠券代碼（非空，資料庫無預設值；未發券時由程式寫入 "0"）
+o	PointsGainedTime：會員點數發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
+o	ExpGainedTime：寵物經驗值發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
+o	CouponGainedTime：優惠券發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
+•	Pet：寵物狀態表
+o	PetID：寵物 ID（主鍵，自動遞增）
+o	UserID：寵物主人會員 ID（非空，外鍵參考 Users.UserID）
+o	PetName：寵物名稱（nvarchar(50)，非空，預設 "小可愛"）
+o	Level：寵物當前等級（非空，預設 0）
+o	LevelUpTime：寵物最後一次升級時間（datetime2，非空，預設 UTC 當下時間）
+o	Experience：寵物累計總寵物經驗值（非空，預設 0）
+o	Hunger：飢餓值（0–100，非空，預設 0）
+o	Mood：心情值（0–100，非空，預設 0）
+o	Stamina：體力值（0–100，非空，預設 0）
+o	Cleanliness：清潔值（0–100，非空，預設 0）
+o	Health：健康度（0–100，非空，預設 0）
+o	SkinColor：膚色十六進位碼（nvarchar(50)，非空，預設 "#ADD8E6"）
+o	ColorChangedTime：最後一次膚色更換時間（datetime2，非空，預設 UTC 當下時間）
+o	BackgroundColor：背景色（nvarchar(50)，非空，預設 "粉藍"）
+o	BackgroundColorChangedTime：最後一次背景色更換時間（datetime2，非空，預設 UTC 當下時間）
+o	PointsChanged_color：最近一次幫寵物換色所花費的會員點數（非空，預設 0）
+o	PointsChangedTime_color：換色點數變動時間（datetime2，非空，預設 UTC 當下時間）
+o	PointsGained_levelUp：最近一次寵物升級獲得的會員點數獎勵（非空，預設 0）
+o	PointsGainedTime_levelUp：寵物最後一次升級獲得會員點數的時間（datetime2，非空，預設 UTC 當下時間）
+•	MiniGame：小冒險遊戲紀錄表
+o	PlayID：遊戲執行記錄 ID（主鍵，自動遞增）
+o	UserID：玩家會員 ID（非空，外鍵參考 Users.UserID）
+o	PetID：出戰寵物 ID（非空，外鍵參考 Pet.PetID）
+o	Level：遊戲關卡等級（非空，資料庫無預設值；建立紀錄時請明確給定，業務流程通常以 0 起算）
+o	MonsterCount：需面對的怪物數量（非空，資料庫無預設值；預期由程式填入整數）
+o	SpeedMultiplier：怪物移動速度倍率（decimal(5,2)，非空，資料庫無預設值，常用 1.00）
+o	Result：遊戲結果（nvarchar(10)，非空，資料庫無預設值，可選值：Win/Lose/Abort）
+o	ExpGained：寵物本次獲得的寵物經驗值（非空，資料庫無預設值，流程端給定）
+o	ExpGainedTime：寵物經驗值入帳時間（datetime2，非空，預設 SYSUTCDATETIME()）
+o	PointsGained：本次會員點數獲得（非空，資料庫無預設值，流程端計算後寫入）
+o	PointsGainedTime：本次會員點數發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
+o	CouponGained：本次獲得的優惠券代碼（非空，資料庫無預設值；未發券時寫入 "0"）
+o	CouponGainedTime：本次優惠券發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
+o	HungerDelta：寵物飢餓值變化量（非空，資料庫無預設值，流程端通常寫入 0）
+o	MoodDelta：寵物心情值變化量（非空，資料庫無預設值，流程端通常寫入 0）
+o	StaminaDelta：寵物體力值變化量（非空，資料庫無預設值，流程端通常寫入 0）
+o	CleanlinessDelta：寵物清潔值變化量（非空，資料庫無預設值，流程端通常寫入 0）
+o	StartTime：遊戲開始時間（datetime2，非空，預設 SYSUTCDATETIME()）
+o	EndTime：遊戲結束時間（datetime2，非空，預設 SYSUTCDATETIME()，若實際流程確認為中途退出需覆寫為 NULL）
+o	Aborted：是否中途放棄（bit，非空，預設 0）
+外鍵關係與索引
+•	Users.User_ID → User_Introduce.User_ID
+•	Users.User_ID → User_Rights.User_Id
+•	Users.User_ID → User_wallet.User_Id
+•	UserSignInStats.UserID → Users.User_ID
+•	Pet.UserID → Users.User_ID
+•	MiniGame.UserID → Users.User_ID
+•	MiniGame.PetID → Pet.PetID
+注意：不得修改資料庫 Schema，所有欄位名稱必須與現有資料庫保持一致
+作者必填項目
+•	 列出所有相關資料表與關鍵欄位
+•	 確認外鍵關係正確性
+•	 標註重要索引與查詢優化考量
+•	 驗證欄位名稱與資料庫一致
+•	 確認無資料庫結構修改需求
+________________________________________
+2) 典型使用流程（User Journeys）
+流程 A：用戶註冊與初始設定
+目的： 新用戶完成註冊並設定基本資料
+步驟：
+1.	用戶填寫註冊表單（姓名、帳號、密碼、Email）
+2.	系統驗證資料唯一性並建立用戶帳號
+3.	用戶填寫詳細資料（暱稱、性別、生日等）
+4.	系統建立寵物並設定初始狀態
+5.	用戶完成首次註冊獲得獎勵
+成功條件： 用戶成功註冊並完成基本設定，獲得首次註冊之會員點數（+1000 點）和專屬寵物（預設名稱「小可愛」，預設膚色「#ADD8E6」）
+常見失敗情境： 帳號重複、Email 已存在
+關鍵狀態/邊界條件： 用戶狀態從「未驗證」轉為「正常」，權限預設為基本用戶
+流程 B：寵物養成與互動
+目的： 用戶透過各種活動培養寵物成長
+步驟：
+1.	用戶查看寵物當前狀態（飢餓、心情、體力、清潔、健康等）
+2.	選擇餵食、玩耍、哄睡、清潔等互動選項（分別對應提升飢餓值、心情值、體力值、清潔值）
+3.	另外可免費換背景色，或扣會員點數（-2000 點）換寵物膚色
+4.	系統計算互動效果並更新寵物狀態
+5.	寵物獲得寵物經驗值並可能升級
+6.	寵物若升級則用戶可獲得會員點數獎勵
+成功條件： 寵物狀態改善，用戶獲得會員點數獎勵
+常見失敗情境： 會員點數不足、寵物狀態已滿
+關鍵狀態/邊界條件： 寵物各項數值在 0–100 範圍內，升級時重置部分數值
+流程 C：小遊戲冒險
+目的： 用戶透過小遊戲獲得會員點數和寵物經驗
+步驟：
+1.	用戶選擇開始冒險遊戲
+2.	系統檢查寵物狀態和每日次數限制
+3.	用戶進行遊戲並獲得結果
+4.	系統計算獎勵並更新寵物狀態
+5.	記錄遊戲結果和獎勵
+成功條件： 遊戲完成，獲得會員點數、寵物經驗值或商城優惠券
+常見失敗情境： 寵物狀態不佳、超過每日遊戲次數限制
+關鍵狀態/邊界條件： 每日最多 3 次，寵物健康度需達標
+流程 D：每日簽到
+目的： 用戶每日簽到獲得獎勵
+步驟：
+1.	用戶進入簽到頁面（以月曆形式顯示）
+2.	系統檢查今日是否已簽到
+3.	計算連續簽到天數和獎勵
+4.	更新簽到記錄和用戶會員點數
+5.	顯示簽到成功和獎勵內容
+成功條件： 簽到成功，獲得相應獎勵
+常見失敗情境： 今日已簽到、系統錯誤
+關鍵狀態/邊界條件： 每日限簽到一次，連續簽到有額外獎勵
+作者必填項目
+•	 定義 2–4 個主要使用流程
+•	 每個流程包含完整的步驟說明
+•	 明確成功與失敗條件
+•	 標註關鍵狀態轉換點
+•	 確認流程邏輯合理性
+________________________________________
+3) 前台功能（User-Facing UI）
+頁面與路由
+桌面版頁面：
+•	/：首頁（遊戲熱度排行、最新文章）
+•	/auth/login：登入頁面
+•	/auth/register：註冊頁面
+•	/profile：個人資料頁面
+•	/pet：寵物養成頁面
+•	/signin：每日簽到頁面
+•	/minigame：小遊戲頁面
+•	/forum：論壇首頁
+•	/forum/category/{id}：論壇分類頁面
+•	/forum/thread/{id}：論壇主題頁面
+•	/shop：官方商城頁面
+•	/wallet：錢包頁面
+•	/chat：即時聊天頁面
+•	/groups：群組頁面
+手機版頁面：
+•	/mobile/：手機版首頁
+•	/mobile/pet：手機版寵物頁面
+•	/mobile/signin：手機版簽到頁面
+•	/mobile/minigame：手機版小遊戲頁面
+必要元件與互動
+•	寵物互動按鈕：餵食、玩耍、哄睡、清潔，另外可免費換背景色、扣會員點數（-2000 點）換寵物膚色
+•	簽到日曆：顯示本月簽到狀態和連續天數
+•	小遊戲畫布：冒險遊戲的主要遊戲區域
+•	會員點數顯示器：顯示當前會員點數餘額
+•	通知中心：顯示系統通知和消息
+•	搜尋功能：搜尋文章、用戶、商品
+頁面狀態處理
+•	Empty 狀態： 顯示「暫無資料」並提供引導操作
+•	Loading 狀態： 顯示載入動畫和進度條
+•	Error 狀態： 顯示錯誤訊息和重試按鈕
+•	Success 狀態： 顯示成功訊息和後續操作
+權限可見性
+•	一般用戶：基本功能、寵物養成、簽到、小遊戲
+•	一般用戶：基本功能、寵物養成、簽到、小遊戲
+•	管理員：所有功能 + 後台管理
+•	客服人員：一般用戶功能 + 客服工具
+Microcopy 範本
+成功訊息：
+•	「簽到成功！獲得 20 會員點數」
+•	「寵物升級了！等級提升到 5」
+•	「遊戲勝利！獲得 50 會員點數、100 寵物經驗值以及一張商城 85 折優惠券」
+錯誤訊息：
+•	「今日已簽到，明天再來吧」
+•	「會員點數不足，無法兌換此禮券」
+•	「會員點數不足，無法兌換此商城優惠券」
+•	「寵物太累了，需要哄睡」
+提示訊息：
+•	「連續簽到 7 天可獲得額外獎勵」
+•	「寵物狀態值過低會影響健康」
+•	「每日最多可進行 3 次冒險」
+作者必填項目
+•	 列出所有桌面與手機版頁面
+•	 定義必要 UI 元件與互動方式
+•	 設計四種頁面狀態的處理方式
+•	 確認權限可見性矩陣
+•	 提供 Microcopy 範本
+•	 驗證響應式設計考量
+________________________________________
+4) 後台功能（Admin/Moderator）
+核心頁面與篩選
+•	用戶管理頁面：依註冊時間、狀態、權限篩選
+•	寵物管理頁面：依等級、健康度、主人篩選
+•	簽到統計頁面：依日期、用戶、連續天數篩選
+•	遊戲記錄頁面：依遊戲類型、結果、時間篩選
+•	會員點數管理頁面：依會員點數範圍、變動類型篩選
+•	商城管理頁面：查看商城交易、管理商品、發放優惠券
+•	系統設定頁面：調整系統設定、查看日誌
+操作功能
+•	用戶審核：啟用/停權用戶、調整權限
+•	內容審核：審核用戶發表的文章、評論、群組內容等
+•	會員點數調整：手動調整用戶會員點數，須記錄原因
+•	寵物管理：查看寵物狀態、調整寵物屬性
+•	數據分析：查看用戶行為、商城交易、遊戲數據等統計
+•	系統維護：管理通知、日誌、備份等日常維護
+稽核軌跡
+•	操作記錄表：記錄管理員操作的時間和對象
+•	變更追蹤：追蹤用戶資料、會員點數、權限變更
+權限矩陣
+角色	用戶管理	會員點數調整	寵物管理	簽到管理	遊戲記錄	系統設定
+超級管理員	✓	✓	✓	✓	✓	✓
+一般管理員	✓	✓	✓	✓	✓	✗
+客服人員	✗	✗	✗	✗	✓	✗
+一般用戶	✗	✗	✗	✗	✗	✗
+作者必填項目
+•	 定義管理頁面與篩選功能
+•	 列出所有管理操作類型
+•	 確認稽核軌跡記錄方式
+•	 建立權限矩陣表格
+•	 驗證權限設計合理性
+________________________________________
+5) 商業規則（Business Rules）
+驗證與限制
+•	用戶註冊：帳號、Email、手機號碼必須唯一
+•	寵物屬性：所有屬性值(飢餓、心情、體力、清潔、健康)範圍 0–100，超出範圍自動鉗位
+•	簽到限制：每日限簽到一次，以 Asia/Taipei 時區為準
+•	遊戲次數：每日最多進行 3 次冒險遊戲，以 Asia/Taipei 時區每日 00:00 重置
+•	會員點數限制：會員點數不能為負數，調整需記錄原因
+會員點數／經驗／費率／門檻公式
+•	簽到獎勵公式：
+o	平日：+20 點數，+0 經驗
+o	假日：+30 點數，+200 經驗
+o	連續 7 天：額外 +40 點數，+300 經驗
+o	當月全勤：額外 +200 點數，+2000 經驗，+1 張商城優惠券
+•	寵物升級公式：
+o	Level 1–10：EXP = 40 × level + 60
+o	Level 11–100：EXP = 0.8 × level² + 380
+o	Level ≥ 101：EXP = 285.69 × (1.06^level)
+•	寵物換色費用：每次換色需消耗 2000 會員點數
+•	寵物升級點數獎勵：寵物等級 1–10 每升級 +10 點會員點數、11–20 每升級 +20 點，以此類推；寵物等級 241–250 每升級 +250 點會員點數（上限）
+•	每日狀態全滿獎勵：寵物若於每日首次同時達到飢餓、心情、體力、清潔值皆 100，則額外獲得 100 點寵物經驗值
+寵物狀態與互動規則
+•	餵食：飢餓值 +10
+•	洗澡：清潔值 +10
+•	哄睡：心情值 +10
+•	休息：體力值 +10
+•	全滿回復：當飢餓、心情、體力、清潔四項值均達到 100 時，寵物健康值恢復至 100
+•	每日衰減：每日凌晨 00:00，飢餓值 -20、心情值 -30、體力值 -10、清潔值 -20
+•	狀態 ：飢餓、心情、體力、清潔、健康值 < 20，分別代表寵物處於飢餓、難過、很累、身體很臭、生病的狀態，否則為飽食、開心、充分休息、身體乾淨、很健康的狀態
+遊戲規則與獎勵
+•	關卡設計：
+o	第 1 關：怪物數量 6、移動速度 1 倍；獎勵 +100 寵物經驗值，+10 會員點數
+o	第 2 關：怪物數量 8、移動速度 1.5 倍；獎勵 +200 寵物經驗值，+20 會員點數
+o	第 3 關：怪物數量 10、移動速度 2 倍；獎勵 +300 寵物經驗值，+30 會員點數，+1 張商城優惠券
+•	難度進程：冒險首次從第 1 關開始。若當前關卡勝利，則下次冒險提升至下一關；若失敗則留在同一關卡（最高第 3 關）
+•	結果影響：冒險勝利時，寵物飢餓值 -20、心情值 +30、體力值 -20、清潔值 -20；冒險失敗時，寵物飢餓值 -20、心情值 -30、體力值 -20、清潔值 -20
+•	健康狀態：冒險開始前檢查寵物狀態，若飢餓、心情、體力、清潔、健康任一屬性值為 0，則無法開始冒險（需先透過互動恢復寵物狀態）
+狀態機
+•	用戶狀態：正常 → 停權 → 正常（管理員操作）
+•	遊戲狀態：準備 → 進行中 → 完成/中斷
+•	簽到狀態：未簽到 → 已簽到（每日重置）
+•	寵物升級重置：寵物升級時所有屬性值回復為100
+非功能性行為
+•	冪等性：重複簽到、遊戲提交等操作只處理一次
+•	原子性：會員點數變動、寵物狀態更新使用資料庫交易保護
+•	回滾規則：操作失敗時自動回滾相關變更
+作者必填項目
+•	 定義所有驗證與限制規則
+•	 以文字描述所有計算公式
+•	 建立完整狀態機定義
+•	 確認非功能性需求
+•	 驗證規則邏輯一致性
+•	 確認無自創規則
+________________________________________
+6) API 一覽（REST）
+API 端點清單
+Method	Path	Purpose	Role/Permission	Request Params	Response Keys	Errors
+POST	/api/auth/register	用戶註冊	公開	username, email, password, phone	user_id, status	AUTH001, AUTH002
+POST	/api/auth/login	用戶登入	公開	username, password	token, user_info	AUTH003, AUTH004
+GET	/api/user/profile	取得用戶資料	已登入用戶	user_id	user_data, pet_info	USER001
+PUT	/api/user/profile	更新用戶資料	已登入用戶	user_id, profile_data	status	USER002
+POST	/api/checkin/daily	每日簽到	已登入用戶	user_id	points_gained, exp_gained	CHECKIN001
+GET	/api/checkin/history	簽到歷史	已登入用戶	user_id	signin_records	CHECKIN002
+GET	/api/pet/status	取得寵物狀態	已登入用戶	user_id	pet_data	PET001
+PUT	/api/pet/customize	寵物換色	已登入用戶	user_id, skin_color	status, points_spent	PET002
+POST	/api/game/start	開始小遊戲	已登入用戶	user_id, pet_id	game_session_id	GAME001, GAME002
+POST	/api/game/end	結束小遊戲	已登入用戶	game_session_id, result	exp_gained, points_changed	GAME003
+GET	/api/game/history	遊戲歷史	已登入用戶	user_id	game_records	GAME004
+GET	/api/wallet/balance	查詢錢包餘額	已登入用戶	user_id	points, coupons	WALLET001
+POST	/api/wallet/exchange	兌換優惠券	已登入用戶	user_id, coupon_type	coupon_number	WALLET002
+Admin-only 端點：
+•	GET /api/admin/users：管理員查詢用戶列表
+•	PUT /api/admin/user/status：管理員修改用戶狀態
+•	GET /api/admin/analytics：管理員查看系統統計
+作者必填項目
+•	 列出至少 8 個 API 端點（或說明為何少於 8 個）
+•	 確認每個端點的 Method、Path、Purpose
+•	 定義角色權限與參數
+•	 標註 Admin-only 端點
+•	 確認 API 命名一致性
+•	 驗證端點功能完整性
+________________________________________
+7) 通知與即時性（Notifications & Realtime）
+會觸發的事件清單
+•	用戶註冊成功：觸發歡迎通知
+•	每日簽到完成：觸發簽到獎勵通知
+•	連續簽到達成：觸發連續簽到獎勵通知
+•	寵物升級：觸發寵物升級通知
+•	遊戲勝利：觸發遊戲獎勵通知
+•	會員點數變動：觸發會員點數增減通知
+•	寵物經驗值獲得：觸發寵物經驗值獲得通知
+•	優惠券獲得：觸發優惠券獲得通知
+•	禮券獲得：觸發禮券獲得通知
+•	系統維護：觸發系統維護通知
+通知形式與節流策略
+•	站內通知： 即時顯示，保留 30 天
+•	Email 通知： 重要事件（註冊、升級、大額會員點數變動）
+事件追蹤名稱
+•	user_registered：追蹤用戶註冊完成率
+•	daily_checkin_completed：追蹤簽到參與率
+•	pet_leveled_up：追蹤寵物升級完成率
+•	game_completed：追蹤遊戲完成率
+•	points_earned：追蹤會員點數獲得情況
+•	coupon_received：追蹤優惠券發放情況
+•	evoucher_received：追蹤禮券發放情況
+________________________________________
+8) 會員錢包系統詳細功能（Member Wallet System Detailed Features）
+前台功能（Client-Side）
+技術實現： 使用 ASP.NET MVC 架構，Controller 處理業務邏輯，View 使用 Razor 模板引擎，Model 對應資料庫實體
+功能清單：
+•	查看會員點數：顯示當前會員點數（point）餘額，實時更新
+•	查看我的優惠券：列出所有已獲得的商城優惠券（coupon），包含使用狀態和有效期，優惠券以大寫英文及數字組合而成，由每日簽到，連續簽到7天、14天、一個月，會得到不同的優惠券，玩小遊戲於獲勝後也有機率獲得不同的優惠券，或者也可扣會員點數直接兌換優惠券，優惠券也會存入會員錢包。優惠券只能用在官方商城折抵（例如85折、滿1000折100等等）
+•	查看我的禮券：顯示所有禮券（E-voucher），包含使用狀態和有效期，禮券以大寫英文及數字組合而成，並顯示為barcode或QRCode形式發放予用戶，發放形式可能是超商或百貨公司的電子條碼（barcode 或 qrcode），可以給店員刷即可兌換實體商品或者折抵現金
+•	以會員點數兌換優惠券/禮券：提供兌換介面，支援多種種類及面額選擇
+•	查看收支明細：詳細記錄所有點數、優惠券、禮券變動歷史，包含時間、原因、數量
+技術架構：
+•	Controller： WalletController 處理所有錢包相關請求
+•	View： 使用 Razor 語法，支援響應式設計
+•	Model： User_wallet 實體類別，對應資料庫表結構
+•	Repository： WalletRepository 處理資料存取邏輯
+後台功能（Server-Side）
+技術實現： 管理員專用 API 端點，使用 JWT 認證，基於角色的權限控制
+功能清單：
+•	查看/調整會員點數：管理員可查看任意用戶的點數餘額，手動調整點數
+•	查看/調整優惠券：管理所有用戶的優惠券發放與使用狀態
+•	查看/調整禮券：管理禮券發放、兌換記錄及庫存狀態
+技術架構：
+•	Controller： AdminWalletController 處理管理員錢包管理請求
+•	Service： WalletManagementService 處理複雜業務邏輯
+•	Authorization： 使用 [Authorize(Roles = "Admin")] 屬性控制存取權限
+•	Audit Log： 記錄所有管理員操作，確保可追溯性
+________________________________________
+9) 會員簽到系統詳細功能（Daily Check-in System Detailed Features）
+前台功能（Client-Side）
+技術實現： 使用 ASP.NET MVC 架構，整合 SignalR 實現即時通知
+功能清單：
+•	查看簽到簿及簽到記錄（含獲得獎勵）：以月曆形式顯示簽到狀態，一鍵簽到
+技術架構：
+•	Controller： CheckInController 處理簽到相關請求
+•	View： 使用 JavaScript 繪製互動式月曆，支援響應式設計
+•	SignalR Hub： CheckInHub 負責即時通知
+•	Service： CheckInService 處理簽到業務邏輯
+後台功能（Server-Side）
+技術實現： 管理員專用管理介面，支援批量操作和統計分析
+功能清單：
+•	簽到規則設定：配置每日簽到獎勵、連續簽到獎勵、特殊日期獎勵
+•	查看/調整會員簽到紀錄：查看所有用戶簽到歷史，支援手動補簽或調整簽到次數
+技術架構：
+•	Controller： AdminCheckInController 處理管理員簽到管理請求
+•	Service： CheckInRuleService 處理簽到規則配置
+•	Repository： CheckInRepository 處理簽到資料存取
+•	Background Service： 定時任務，每日 00:00 重置簽到狀態
+________________________________________
+10) 寵物系統詳細功能（Pet System Detailed Features）
+前台功能（Client-Side）
+技術實現： 使用 ASP.NET MVC 架構，整合 WebSocket 實現即時互動
+功能清單：
+•	寵物基本資料修改：提供介面讓用戶編輯寵物名稱、個性等基本資訊
+•	寵物互動：餵食、洗澡、玩耍、哄睡等互動功能，即時更新寵物狀態
+•	寵物換膚色：扣除 2000 會員點數將寵物更換不同膚色，支援預覽效果
+•	寵物換背景：預設免費更換寵物背景主題，多種背景顏色可選（若有推出特殊背景可能須扣會員點數獲得）
+技術架構：
+•	Controller： PetController 處理寵物相關請求
+•	View： 使用 Vue.js 組件實現互動式寵物介面
+•	WebSocket： 實現寵物狀態即時更新
+•	Service： PetInteractionService 處理寵物互動邏輯
+後台功能（Server-Side）
+技術實現： 管理員專用寵物管理介面，支援批量操作和規則配置
+功能清單：
+•	整體寵物系統規則設定：設定寵物升級經驗公式、互動後狀態值增益規則、寵物外型與顏色選項、換膚色所需點數、換背景色所需點數（預設為免費，但可能有部分特殊背景修改為扣會員點數獲得）等
+•	會員個別寵物設定：管理個別用戶的寵物資料，包括基本資料、寵物屬性狀態、互動紀錄、等級、背景顏色、皮膚顏色
+•	寵物變更歷史查詢：查詢寵物基本資料編輯、換膚色、換背景等歷史紀錄
+技術架構：
+•	Controller： AdminPetController 處理管理員寵物管理請求
+•	Service： PetRuleService 處理寵物規則配置邏輯
+•	Repository： PetRepository 處理寵物資料存取
+•	Configuration： 使用 appsettings.json 管理寵物系統配置
+________________________________________
+11) 小遊戲系統詳細功能（Mini-Game System Detailed Features）
+前台功能（Client-Side）
+技術實現： 使用 ASP.NET MVC 架構，整合 HTML5 Canvas 實現遊戲引擎
+功能清單：
+•	出發冒險：開始小遊戲冒險，提供開始按鈕並在開始前檢查寵物狀態值是否允許開始遊戲
+•	查看遊戲紀錄：顯示歷史遊戲的時間、勝負結果、獲得獎勵等詳細資訊 (中途退出則不會顯示於客戶端紀錄，仍會顯示於後台紀錄)
+技術架構：
+•	Controller： GameController 處理遊戲相關請求
+•	View： 使用 HTML5 Canvas 實現遊戲畫面，並以 JavaScript 控制遊戲邏輯
+•	Service： GameEngineService 處理遊戲核心邏輯
+•	SignalR： 實現遊戲狀態的即時同步
+後台功能（Server-Side）
+技術實現： 管理員專用遊戲管理介面，支援規則配置和數據分析
+功能清單：
+•	遊戲規則設定：設定每關怪物數量與行進速度、通關獎勵，以及每日遊戲次數上限
+•	查看會員遊戲紀錄：查詢用戶的遊戲歷史，包括時間、勝負（輸/贏）、中途退出及獲得獎勵統計
+技術架構：
+•	Controller： AdminGameController 處理管理員遊戲管理請求
+•	Service： GameRuleService 處理遊戲規則配置
+•	Repository： GameRepository 處理遊戲資料存取
+•	Analytics： 整合 Power BI 或自建工具進行數據分析
+
+

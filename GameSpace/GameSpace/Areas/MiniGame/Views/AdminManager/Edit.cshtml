@@ -1,0 +1,290 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminManagerEditViewModel
+@using GameSpace.Models
+@using System.Collections.Generic
+@using System.Linq
+@{
+    ViewData["Title"] = "編輯管理者";
+    Layout = "~/Areas/MiniGame/Views/Shared/_AdminLayout.cshtml";
+
+    var roleOptions = ViewBag.Roles as IEnumerable<ManagerRolePermission> ?? Enumerable.Empty<ManagerRolePermission>();
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">編輯管理者</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminManager")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">管理者資訊</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input asp-for="Manager_Id" type="hidden" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Manager_Name" class="control-label">管理者名稱 *</label>
+                                    <input asp-for="Manager_Name" class="form-control" placeholder="請輸入管理者名稱" />
+                                    <span asp-validation-for="Manager_Name" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Manager_Account" class="control-label">管理者帳號 *</label>
+                                    <input asp-for="Manager_Account" class="form-control" placeholder="請輸入管理者帳號" />
+                                    <span asp-validation-for="Manager_Account" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Manager_Email" class="control-label">電子郵件 *</label>
+                            <input asp-for="Manager_Email" type="email" class="form-control" placeholder="請輸入電子郵件" />
+                            <span asp-validation-for="Manager_Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label">角色分配 *</label>
+                            <div class="row">
+                                @foreach (var role in roleOptions)
+                                {
+                                    var permissions = new List<string>();
+                                    if (role.AdministratorPrivilegesManagement == true) { permissions.Add("系統管理"); }
+                                    if (role.UserStatusManagement == true) { permissions.Add("會員狀態"); }
+                                    if (role.ShoppingPermissionManagement == true) { permissions.Add("商城管理"); }
+                                    if (role.MessagePermissionManagement == true) { permissions.Add("訊息管理"); }
+                                    if (role.PetRightsManagement == true) { permissions.Add("寵物權限"); }
+                                    if (role.CustomerService == true) { permissions.Add("客服"); }
+                                    var permissionSummary = permissions.Count > 0 ? string.Join(" / ", permissions) : "未設定權限說明";
+
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="RoleIds" value="@role.ManagerRoleId" id="role_@role.ManagerRoleId"
+                                                   @(Model.RoleIds.Contains(role.ManagerRoleId) ? "checked" : string.Empty) />
+                                            <label class="form-check-label" for="role_@role.ManagerRoleId">
+                                                @role.RoleName
+                                            </label>
+                                            <small class="form-text text-muted">@permissionSummary</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- 密碼變更區域 -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h6 class="m-0 font-weight-bold text-warning">密碼變更</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    如果不需要變更密碼，請留空以下欄位
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="NewPassword" class="control-label">新密碼</label>
+                                            <input asp-for="NewPassword" type="password" class="form-control" placeholder="請輸入新密碼" />
+                                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label asp-for="ConfirmNewPassword" class="control-label">確認新密碼</label>
+                                            <input asp-for="ConfirmNewPassword" type="password" class="form-control" placeholder="請再次輸入新密碼" />
+                                            <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 更新管理者
+                            </button>
+                            <a href="@Url.Action("Index", "AdminManager")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">編輯須知</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-edit fa-3x text-primary mb-3"></i>
+                        <h5>管理者編輯注意事項</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            管理者帳號必須唯一
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            電子郵件必須唯一
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            密碼變更為可選項目
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            可以重新分配角色
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            變更會立即生效
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">快速操作</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" onclick="selectAllRoles()">
+                            <i class="fas fa-check-square"></i> 全選角色
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearAllRoles()">
+                            <i class="fas fa-square"></i> 清除選擇
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="selectCommonRoles()">
+                            <i class="fas fa-star"></i> 選擇常用角色
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">角色說明</h6>
+                </div>
+                <div class="card-body">
+                    @if (roleOptions.Any())
+                    {
+                        foreach (var role in roleOptions)
+                        {
+                            var permissions = new List<string>();
+                            if (role.AdministratorPrivilegesManagement == true) { permissions.Add("系統管理"); }
+                            if (role.UserStatusManagement == true) { permissions.Add("會員狀態"); }
+                            if (role.ShoppingPermissionManagement == true) { permissions.Add("商城管理"); }
+                            if (role.MessagePermissionManagement == true) { permissions.Add("訊息管理"); }
+                            if (role.PetRightsManagement == true) { permissions.Add("寵物權限"); }
+                            if (role.CustomerService == true) { permissions.Add("客服"); }
+                            var permissionSummary = permissions.Count > 0 ? string.Join(" / ", permissions) : "未設定權限說明";
+
+                            <div class="mb-3">
+                                <span class="badge badge-info">@role.RoleName</span>
+                                <small class="text-muted">@permissionSummary</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">暫無角色</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        function selectAllRoles() {
+            const checkboxes = document.querySelectorAll('input[name="RoleIds"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+
+        function clearAllRoles() {
+            const checkboxes = document.querySelectorAll('input[name="RoleIds"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+
+        function selectCommonRoles() {
+            // 選擇常用的角色
+            const commonRoles = ['admin', 'manager', 'user'];
+            const checkboxes = document.querySelectorAll('input[name="RoleIds"]');
+            checkboxes.forEach(checkbox => {
+                if (commonRoles.some(role => checkbox.value.includes(role))) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+
+        // 密碼強度檢查
+        document.getElementById('NewPassword').addEventListener('input', function() {
+            const password = this.value;
+            if (password.length > 0) {
+                const strength = checkPasswordStrength(password);
+                updatePasswordStrength(strength);
+            }
+        });
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            return strength;
+        }
+
+        function updatePasswordStrength(strength) {
+            const strengthText = document.getElementById('passwordStrength') || createPasswordStrengthElement();
+            const strengthLevels = ['很弱', '弱', '一般', '強', '很強', '極強'];
+            const strengthColors = ['danger', 'warning', 'info', 'success', 'success', 'success'];
+            
+            strengthText.textContent = `密碼強度: ${strengthLevels[strength] || '很弱'}`;
+            strengthText.className = `text-${strengthColors[strength] || 'danger'}`;
+        }
+
+        function createPasswordStrengthElement() {
+            const element = document.createElement('small');
+            element.id = 'passwordStrength';
+            element.className = 'form-text text-muted';
+            document.getElementById('NewPassword').parentNode.appendChild(element);
+            return element;
+        }
+
+        // 角色選擇驗證
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const roleCheckboxes = document.querySelectorAll('input[name="RoleIds"]:checked');
+            if (roleCheckboxes.length === 0) {
+                e.preventDefault();
+                alert('請至少選擇一個角色');
+            }
+        });
+    </script>
+}

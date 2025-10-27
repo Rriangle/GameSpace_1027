@@ -1,0 +1,178 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.EVoucherEditModel
+@{
+    ViewData["Title"] = "編輯電子禮券";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">編輯電子禮券</h1>
+        <a href="@Url.Action("Index", "AdminEVoucher")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <!-- 編輯表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">電子禮券資訊</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post" id="editForm">
+                <input asp-for="Id" type="hidden" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="EVoucherCode" class="control-label">禮券編號</label>
+                            <input asp-for="EVoucherCode" class="form-control" readonly />
+                            <span asp-validation-for="EVoucherCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="UserId" class="control-label">會員ID</label>
+                            <input asp-for="UserId" class="form-control" placeholder="請輸入會員ID" />
+                            <span asp-validation-for="UserId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Value" class="control-label">禮券面額</label>
+                            <input asp-for="Value" class="form-control" type="number" step="0.01" min="0" placeholder="請輸入金額" />
+                            <span asp-validation-for="Value" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ExpiryDate" class="control-label">到期日期</label>
+                            <input asp-for="ExpiryDate" class="form-control" type="date" />
+                            <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="IsUsed" class="control-label">使用狀態</label>
+                            <select asp-for="IsUsed" class="form-control">
+                                <option value="false">未使用</option>
+                                <option value="true">已使用</option>
+                            </select>
+                            <span asp-validation-for="IsUsed" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="UsedDate" class="control-label">使用日期</label>
+                            <input asp-for="UsedDate" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="UsedDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Description" class="control-label">描述說明</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="請輸入禮券說明"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 儲存禮券
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> 重設
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="deleteEVoucher()">
+                        <i class="fas fa-trash"></i> 刪除
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 操作歷程 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">操作歷程</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>時間</th>
+                            <th>操作類型</th>
+                            <th>操作人</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@(Model.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A")</td>
+                            <td><span class="badge badge-success">建立</span></td>
+                            <td>系統</td>
+                            <td>電子禮券建立</td>
+                        </tr>
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <tr>
+                                <td>@(Model.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A")</td>
+                                <td><span class="badge badge-info">修改</span></td>
+                                <td>管理員</td>
+                                <td>禮券資訊修改</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetForm() {
+    if (confirm("確定要重設表單嗎？這將清除所有未儲存的變更。")) {
+        location.reload();
+    }
+}
+
+function deleteEVoucher() {
+    if (confirm("確定要刪除此電子禮券嗎？此操作無法復原。")) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "@Url.Action("Delete", "AdminEVoucher")";
+
+        const idInput = document.createElement("input");
+        idInput.type = "hidden";
+        idInput.name = "id";
+        idInput.value = "@Model.Id";
+
+        form.appendChild(idInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// 當使用狀態變更為已使用時，自動填入目前時間
+document.getElementById("IsUsed").addEventListener("change", function() {
+    const usedDateInput = document.getElementById("UsedDate");
+    if (this.value === "true" && !usedDateInput.value) {
+        const now = new Date();
+        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        usedDateInput.value = localDateTime;
+    } else if (this.value === "false") {
+        usedDateInput.value = "";
+    }
+});
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

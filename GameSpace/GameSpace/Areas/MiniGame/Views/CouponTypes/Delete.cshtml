@@ -1,0 +1,35 @@
+﻿@model GameSpace.Models.CouponType
+@{
+    ViewData["Title"] = "刪除優惠類型";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    你確定要刪除這筆資料嗎？此動作無法復原。
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Id</dt>
+            <dd class="col-sm-9">@Model.CouponTypeId</dd>
+
+            <dt class="col-sm-3">名稱</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">折扣</dt>
+            <dd class="col-sm-9">@Model.DiscountType @Model.DiscountValue</dd>
+
+            <dt class="col-sm-3">有效期間</dt>
+            <dd class="col-sm-9">@Model.ValidFrom.ToString("yyyy/MM/dd HH:mm") → @Model.ValidTo.ToString("yyyy/MM/dd HH:mm")</dd>
+        </dl>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post" class="d-inline">
+    <input type="hidden" asp-for="CouponTypeId" />
+    <button type="submit" class="btn btn-danger">確認刪除</button>
+</form>
+<a asp-action="Index" class="btn btn-outline-secondary ms-2">返回清單</a>

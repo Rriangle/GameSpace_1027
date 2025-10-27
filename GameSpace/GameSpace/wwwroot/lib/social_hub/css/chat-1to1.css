@@ -1,0 +1,172 @@
+﻿/* [LINE-like chat styles for GameSpace 1-to-1]
+   結構：#chatBox > .message(.mine|.other) > .content + .meta
+*/
+:root {
+    --line-bg: #f5f7f9;
+    --line-border: #e6e8ec;
+    --line-other-bg: #fff;
+    --line-other-fg: #1f2937;
+    --line-mine-bg: #c7f5d9;
+    --line-mine-fg: #0b4124;
+    --line-time: #9aa0a6;
+    --line-shadow: 0 1px 0 rgba(0,0,0,.03);
+}
+
+.chat-surface {
+    background: var(--line-bg);
+}
+
+#chatBox {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: auto;
+    padding: 2px 4px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+}
+
+.message {
+    max-width: 78%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+    .message.other {
+        align-self: flex-start;
+    }
+
+        .message.other .content {
+            position: relative;
+            background: var(--line-other-bg);
+            color: var(--line-other-fg);
+            padding: 10px 12px;
+            border: 1px solid var(--line-border);
+            border-radius: 18px;
+            border-top-left-radius: 8px;
+            box-shadow: var(--line-shadow);
+            word-break: break-word;
+        }
+
+            .message.other .content::after {
+                content: "";
+                position: absolute;
+                left: -6px;
+                bottom: .5rem;
+                width: 0;
+                height: 0;
+                border-right: 6px solid var(--line-other-bg);
+                border-top: 6px solid transparent;
+                border-bottom: 6px solid transparent;
+            }
+
+            .message.other .content::before {
+                content: "";
+                position: absolute;
+                left: -7px;
+                bottom: .5rem;
+                width: 0;
+                height: 0;
+                border-right: 7px solid var(--line-border);
+                border-top: 7px solid transparent;
+                border-bottom: 7px solid transparent;
+            }
+
+    .message.mine {
+        align-self: flex-end;
+        text-align: right;
+    }
+
+        .message.mine .content {
+            position: relative;
+            background: var(--line-mine-bg);
+            color: var(--line-mine-fg);
+            padding: 10px 12px;
+            border: 1px solid rgba(0,0,0,.03);
+            border-radius: 18px;
+            border-top-right-radius: 8px;
+            box-shadow: var(--line-shadow);
+            word-break: break-word;
+        }
+
+            .message.mine .content::after {
+                content: "";
+                position: absolute;
+                right: -6px;
+                bottom: .5rem;
+                width: 0;
+                height: 0;
+                border-left: 6px solid var(--line-mine-bg);
+                border-top: 6px solid transparent;
+                border-bottom: 6px solid transparent;
+            }
+
+            .message.mine .content::before {
+                content: "";
+                position: absolute;
+                right: -7px;
+                bottom: .5rem;
+                width: 0;
+                height: 0;
+                border-left: 7px solid rgba(0,0,0,.03);
+                border-top: 7px solid transparent;
+                border-bottom: 7px solid transparent;
+            }
+
+    .message .meta {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--line-time);
+        opacity: .95;
+    }
+
+    .message.mine .meta {
+        align-self: flex-end;
+    }
+
+.readmark {
+    margin-left: 6px;
+    opacity: .6;
+}
+
+    .readmark.on {
+        opacity: 1;
+        color: #31a24c;
+    }
+
+@media (max-width:480px) {
+    .message {
+        max-width: 84%;
+    }
+
+        .message .meta {
+            font-size: 11px;
+        }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --line-bg: #0f1113;
+        --line-border: #2b2f36;
+        --line-other-bg: #14171a;
+        --line-other-fg: #e5e7eb;
+        --line-mine-bg: #114d2d;
+        --line-mine-fg: #d6ffe7;
+        --line-time: #9aa0a6;
+        --line-shadow: none;
+    }
+
+    .chat-surface {
+        background: var(--line-bg);
+    }
+
+    .message.mine .content::before {
+        border-left-color: #0a0c0d;
+    }
+
+    .message.other .content::before {
+        border-right-color: #0a0c0d;
+    }
+}

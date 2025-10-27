@@ -1,0 +1,65 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@inject IHttpContextAccessor Http
+
+@{
+    // 嘗試用後台 Cookie 方案做一次驗證（不影響目前頁面授權流程）
+    var authResult = await Http.HttpContext.AuthenticateAsync("AdminCookie");
+    var adminUser = authResult.Succeeded ? authResult.Principal : null;
+
+    string? id = adminUser?.FindFirstValue(ClaimTypes.NameIdentifier);
+    string? name = adminUser?.Identity?.Name;
+    var roles = adminUser?.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList() ?? new();
+}
+
+<ul class="navbar-nav">
+    @if (adminUser != null)
+    {
+        <li class="nav-item me-2">
+            <span class="nav-link">
+                <i class="fa-solid fa-id-badge"></i>
+                <strong class="ms-1">ID：</strong>@id
+            </span>
+        </li>
+        <li class="nav-item me-2">
+            <span class="nav-link">
+                <i class="fa-solid fa-user"></i>
+                <strong class="ms-1">管理者：</strong>@name
+            </span>
+        </li>
+        <li class="nav-item me-2 d-none d-md-block">
+            <span class="nav-link">
+                <i class="fa-solid fa-shield-halved"></i>
+                <strong class="ms-1">角色：</strong>
+                @if (roles.Count > 0)
+                {
+                    foreach (var r in roles)
+                    {
+                        <span class="badge text-bg-secondary ms-1">@r</span>
+                    }
+                }
+                else
+                {
+
+                    <span class="text-muted">（無）</span>
+                }
+            </span>
+        </li>
+        <li class="nav-item">
+            <form asp-controller="Login" asp-action="Logout" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="nav-link btn btn-link text-dark">
+                    <i class="fa-solid fa-right-from-bracket"></i> 後台登出
+                </button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="Login" asp-action="Index">
+                <i class="fa-solid fa-right-to-bracket"></i> 後台登入
+            </a>
+        </li>
+    }
+</ul>

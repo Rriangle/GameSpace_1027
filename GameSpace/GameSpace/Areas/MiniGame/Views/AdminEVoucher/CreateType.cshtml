@@ -1,0 +1,206 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminEVoucherTypeCreateViewModel
+@{
+    ViewData["Title"] = "新增禮券類型";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">新增禮券類型</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminEVoucher")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">禮券類型資料</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateType" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">禮券類型名稱 *</label>
+                            <input asp-for="Name" class="form-control" placeholder="請輸入類型名稱" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">禮券說明 *</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="請輸入詳細描述"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="ValueAmount" class="control-label">面額 *</label>
+                                    <input asp-for="ValueAmount" type="number" class="form-control" placeholder="請輸入金額" step="0.01" min="0.01" />
+                                    <span asp-validation-for="ValueAmount" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="ValidDays" class="control-label">有效天數 *</label>
+                                    <input asp-for="ValidDays" type="number" class="form-control" placeholder="請輸入有效天數" min="1" max="365" />
+                                    <span asp-validation-for="ValidDays" class="text-danger"></span>
+                                    <small class="form-text text-muted">單位：天</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="ImageUrl" class="control-label">禮券圖片網址</label>
+                            <input asp-for="ImageUrl" type="url" class="form-control" placeholder="請輸入圖片網址" />
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                            <small class="form-text text-muted">若未輸入則使用預設圖片</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label class="form-check-label" for="IsActive">
+                                    啟用
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 儲存禮券類型
+                            </button>
+                            <a href="@Url.Action("Index", "AdminEVoucher")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">儲存提示</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-tag fa-3x text-primary mb-3"></i>
+                        <h5>禮券類型儲存前請注意</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            禮券類型名稱請勿重複
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            說明欄位請填寫詳細
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            面額請設定合理金額
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            有效天數請審慎設定
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            可選擇上傳圖片
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">快速設定範例</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" onclick="setQuickSettings('滿額贈券', '滿額消費贈送禮券給使用者', 100, 30)">
+                            <i class="fas fa-money-bill"></i> 滿額贈券(100元)
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="setQuickSettings('折扣券', '商品購買折扣優惠券', 50, 14)">
+                            <i class="fas fa-percentage"></i> 折扣券(50元)
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="setQuickSettings('特殊禮券', '限時特殊活動禮券', 200, 7)">
+                            <i class="fas fa-star"></i> 特殊禮券(200元)
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" onclick="setQuickSettings('生日禮券', '會員生日專屬禮券', 150, 7)">
+                            <i class="fas fa-birthday-cake"></i> 生日禮券(150元)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">面額儲值建議</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge badge-secondary">普通券</span>
+                        <small class="text-muted">10-50元適用於普通消費</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-primary">中級券</span>
+                        <small class="text-muted">50-200元適用於中型消費</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-info">高級券</span>
+                        <small class="text-muted">200-500元適用於高級消費</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-warning">特殊券</span>
+                        <small class="text-muted">500元以上適用於特殊活動</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function setQuickSettings(name, description, amount, days) {
+            document.getElementById('Name').value = name;
+            document.getElementById('Description').value = description;
+            document.getElementById('ValueAmount').value = amount;
+            document.getElementById('ValidDays').value = days;
+        }
+
+        // 面額驗證
+        document.getElementById('ValueAmount').addEventListener('input', function() {
+            const amount = parseFloat(this.value);
+            if (amount < 0.01) {
+                this.setCustomValidity('面額必須大於0.01元');
+            } else if (amount > 10000) {
+                this.setCustomValidity('面額不得超過10000元');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // 有效天數驗證
+        document.getElementById('ValidDays').addEventListener('input', function() {
+            const days = parseInt(this.value);
+            if (days < 1) {
+                this.setCustomValidity('有效天數必須大於0天');
+            } else if (days > 365) {
+                this.setCustomValidity('有效天數不得超過365天');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+}

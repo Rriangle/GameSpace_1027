@@ -1,0 +1,123 @@
+﻿@model GameSpace.Areas.MiniGame.Models.AdminMiniGameIndexViewModel
+@{
+    ViewData["Title"] = "小遊戲管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">小遊戲管理</h1>
+        <a href="@Url.Action("Create")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> 新增遊戲記錄
+        </a>
+    </div>
+
+    <!-- TempData Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">遊戲記錄列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>遊戲ID</th>
+                            <th>玩家</th>
+                            <th>寵物</th>
+                            <th>關卡</th>
+                            <th>怪物數量</th>
+                            <th>速度倍率</th>
+                            <th>結果</th>
+                            <th>經驗獲得</th>
+                            <th>點數獲得</th>
+                            <th>開始時間</th>
+                            <th>結束時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var game in Model.MiniGames.Items)
+                        {
+                            <tr>
+                                <td>@game.PlayId</td>
+                                <td>@game.User?.UserName</td>
+                                <td>@game.PetId</td>
+                                <td>@game.Level</td>
+                                <td>@game.MonsterCount</td>
+                                <td>@game.SpeedMultiplier</td>
+                                <td>
+                                    @if (game.Result == "Win")
+                                    {
+                                        <span class="badge badge-success">勝利</span>
+                                    }
+                                    else if (game.Result == "Lose")
+                                    {
+                                        <span class="badge badge-danger">失敗</span>
+                                    }
+                                    else if (game.Result == "Abort")
+                                    {
+                                        <span class="badge badge-warning">放棄</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">@game.Result</span>
+                                    }
+                                </td>
+                                <td>@game.ExpGained</td>
+                                <td>@game.PointsGained</td>
+                                <td>@game.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@(game.EndTime?.ToString("yyyy-MM-dd HH:mm") ?? "未完成")</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", new { id = game.PlayId })" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Delete", new { id = game.PlayId })" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DataTables JavaScript -->
+<script src="~/lib/datatables/js/jquery.dataTables.min.js"></script>
+<script src="~/lib/datatables/js/dataTables.bootstrap4.min.js"></script>
+
+<script>
+.ready(function() {
+    #dataTable.DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+        },
+        "pageLength": 25,
+        "order": [[ 0, "desc" ]]
+    });
+});
+</script>
+

@@ -1,0 +1,111 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.IssueCouponInputModel
+@{
+    ViewData["Title"] = "發放商城優惠券";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fas fa-ticket-alt me-2"></i>發放商城優惠券</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="IssueUserCoupons" method="post">
+                @Html.AntiForgeryToken()
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>說明：</strong>此功能用於手動發放優惠券給會員。優惠券發放後將自動生效，可在商城使用。
+                </div>
+
+                <!-- 會員資訊區 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="UserId" class="form-label">會員 ID <span class="text-danger">*</span></label>
+                        <input asp-for="UserId" class="form-control" placeholder="請輸入會員 ID" />
+                        <span asp-validation-for="UserId" class="text-danger"></span>
+                        @if (!string.IsNullOrEmpty(Model?.UserName))
+                        {
+                            <small class="text-muted">目前會員：@Model.UserName</small>
+                        }
+                    </div>
+                </div>
+
+                <!-- 優惠券類型選擇 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="CouponTypeId" class="form-label">優惠券類型 <span class="text-danger">*</span></label>
+                        @if (Model?.AvailableCouponTypes != null && Model.AvailableCouponTypes.Any())
+                        {
+                            <select asp-for="CouponTypeId" class="form-select">
+                                <option value="">請選擇優惠券類型</option>
+                                @foreach (var couponType in Model.AvailableCouponTypes)
+                                {
+                                    <option value="@couponType.CouponTypeId"
+                                            data-discount="@couponType.DiscountValue"
+                                            data-type="@couponType.DiscountType">
+                                        @couponType.Name
+                                        (@couponType.DiscountType == "Percentage" ? $"{couponType.DiscountValue}%" : $"NT$ {couponType.DiscountValue}")
+                                        @if (couponType.MinOrderAmount.HasValue)
+                                        {
+                                            <text> - 最低消費 NT$ @couponType.MinOrderAmount</text>
+                                        }
+                                    </option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <input asp-for="CouponTypeId" class="form-control" placeholder="請輸入優惠券類型 ID" />
+                        }
+                        <span asp-validation-for="CouponTypeId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Quantity" class="form-label">發放數量 <span class="text-danger">*</span></label>
+                        <input asp-for="Quantity" type="number" min="1" max="100" class="form-control" placeholder="請輸入發放數量" />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                        <small class="text-muted">範圍：1 到 100</small>
+                    </div>
+                </div>
+
+                <!-- 有效期設定 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="ValidityDays" class="form-label">有效期（天數）</label>
+                        <input asp-for="ValidityDays" type="number" min="1" max="365" class="form-control" placeholder="請輸入有效天數" />
+                        <span asp-validation-for="ValidityDays" class="text-danger"></span>
+                        <small class="text-muted">從發放日起算，預設 30 天</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CustomExpiryDate" class="form-label">自訂到期日（選填）</label>
+                        <input asp-for="CustomExpiryDate" type="date" class="form-control" placeholder="請選擇到期日" />
+                        <span asp-validation-for="CustomExpiryDate" class="text-danger"></span>
+                        <small class="text-muted">若填寫此欄位，將優先使用自訂日期</small>
+                    </div>
+                </div>
+
+                <!-- 備註 -->
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label">備註</label>
+                    <textarea asp-for="Notes" class="form-control" rows="3" placeholder="補充說明（選填）"></textarea>
+                    <span asp-validation-for="Notes" class="text-danger"></span>
+                    <small class="text-muted">最多 500 字元</small>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="mt-4 border-top pt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>確認發放
+                    </button>
+                    <a asp-action="QueryUserCoupons" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

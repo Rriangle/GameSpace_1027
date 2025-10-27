@@ -1,0 +1,31 @@
+﻿@model IEnumerable<GameSpace.Areas.OnlineStore.ViewModels.RevenueRowVM>
+@if (!(Model?.Any() ?? false))
+{
+    <div class="text-muted">無資料</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Period</th>
+                    <th>Date</th>
+                    <th>Revenue Amount</th>
+                    <th>Revenue Volume</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model)
+                {
+                    <tr>
+                        <td>@x.PeriodType</td>
+                        <td>@x.RankingDate.ToString("yyyy/MM/dd")</td>
+                        <td>@x.RevenueAmount</td>
+                        <td>@x.RevenueVolume</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
