@@ -12,6 +12,18 @@
     <link href="~/font-awesome/css/all.min.css" rel="stylesheet" />
     <link href="~/css/stylecol.css" rel="stylesheet" />
 
+    <!-- MiniGame Area Sidebar Fix: Force wide sidebar -->
+    <style>
+        #sidebar {
+            min-width: 220px !important;
+            max-width: 220px !important;
+            width: 220px !important;
+        }
+        #sidebar .sidebar-text {
+            display: inline !important;
+        }
+    </style>
+
     @RenderSection("Styles", required: false)
 </head>
 <body id="top" class="d-flex flex-column vh-100">
