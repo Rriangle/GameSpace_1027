@@ -10,19 +10,19 @@ This is a dual ASP.NET Core 8.0 solution containing two interconnected projects:
 
 Both projects share the same SQL Server database (`GameSpacedatabase`) and implement an **Areas-based MVC architecture** with a three-layer pattern (Presentation → Business Logic → Data Access).
 
+**Current Development Focus:** Admin backend only for MiniGame Area. Public-facing frontend is scaffolded but not actively developed.
+
 ## Build & Run Commands
 
 ### Building the Projects
 
 ```bash
-# Restore dependencies
+# From repository root
 dotnet restore GameSpace/GameSpace/GameSpace.csproj
-dotnet restore GamiPort/GamiPort/GamiPort.csproj
-
-# Build GameSpace
 dotnet build GameSpace/GameSpace/GameSpace.csproj
 
-# Build GamiPort
+# For GamiPort
+dotnet restore GamiPort/GamiPort/GamiPort.csproj
 dotnet build GamiPort/GamiPort/GamiPort.csproj
 ```
 
@@ -36,88 +36,103 @@ dotnet run --project GameSpace/GameSpace/GameSpace.csproj
 dotnet run --project GamiPort/GamiPort/GamiPort.csproj
 ```
 
-### Database Requirements
+### Database Setup
 
 Both projects require SQL Server with these databases:
-- **GameSpacedatabase** - Business logic (connection string in appsettings.json uses `(local)\SQLEXPRESS`)
-- **aspnet-GameSpace-[GUID]** - ASP.NET Identity (uses `(localdb)\mssqllocaldb`)
+- **GameSpacedatabase** - Business logic database
+  - Connection: `Data Source=(local)\SQLEXPRESS;Initial Catalog=GameSpacedatabase`
+- **aspnet-GameSpace-[GUID]** - ASP.NET Identity database
+  - Connection: `Server=(localdb)\mssqllocaldb`
 
-Verify SQL Server is running before starting the application.
+**Important:** Verify SQL Server is running before starting the application.
 
-## Architecture Overview
+## Critical Architecture Decisions
 
-### Areas Structure
+### 1. No EF Migrations - Manual Schema Management
 
-The codebase uses ASP.NET Core Areas for feature modularity:
+**This project does NOT use Entity Framework migrations:**
+- Schema is managed directly in SQL Server using SSMS
+- All schema definitions are in the `schema/` folder for AI reference only
+- **NEVER run `Add-Migration` or `Update-Database`**
+- **NEVER modify schema programmatically**
+- Use `db.Database.CanConnect()` for connection testing only
 
-**GameSpace Areas:**
-1. **MiniGame** - Primary focus, most developed area
-   - Gaming economy system with wallet, coupons, e-vouchers
-   - Pet management system with leveling/attributes
+### 2. Strict Area Boundaries
+
+**You can ONLY modify files within your assigned Area:**
+- For MiniGame Area: `Areas/MiniGame/**` only
+- **Exception:** `Program.cs` - May add necessary service registrations for your Area (do not modify other Areas' registrations)
+- **DO NOT** modify other Areas, shared layouts (except Area-specific sidebars), or global files
+
+### 3. Admin-Only Development (Current Phase)
+
+- Current work focuses exclusively on **Admin backend**
+- Public-facing frontend exists but is not actively developed
+- All new features should be Admin controllers, services, and views
+- Use SB Admin 2 template for admin UI (do not modify vendor files)
+
+### 4. Dual Authentication Schemes
+
+Two authentication schemes coexist:
+1. **Default Identity Cookie** - For regular users
+2. **AdminCookie** - For admin panel
+   - 4-hour timeout with sliding expiration
+   - Login path: `/Login/Index`
+   - Claims: `ManagerId`, `IsManager`, permission claims
+   - Use: `[Authorize(AuthenticationSchemes = "AdminCookie", Policy = "AdminOnly")]`
+
+## Areas Structure
+
+### GameSpace Areas
+
+1. **MiniGame** - Most developed area (primary focus)
+   - Gaming economy: wallet, coupons, e-vouchers
+   - Pet management: leveling, attributes, customization
    - Sign-in rewards system
    - Mini-game records and gameplay
-   - Complete admin backend (no public frontend yet)
+   - **Admin backend complete, no public frontend**
 
-2. **Identity** - ASP.NET Core Identity customization for user authentication
+2. **Identity** - ASP.NET Core Identity customization
 
-3. **MemberManagement** - User profiles and member-related features
+3. **MemberManagement** - User profiles and member features
 
-4. **social_hub** - Social features with SignalR-based real-time chat (`/social_hub/chatHub`)
+4. **social_hub** - Social features with SignalR real-time chat (`/social_hub/chatHub`)
 
 5. **Forum** - Discussion board functionality
 
-6. **OnlineStore** - E-commerce for in-game items/merchandise
+6. **OnlineStore** - E-commerce for in-game items
 
-### Multi-DbContext Strategy
+## Service Layer Architecture - Query/Mutation Pattern (CQRS-lite)
 
-Two separate DbContexts with distinct purposes:
-- **ApplicationDbContext** - Identity/User/Role data (ASP.NET Identity infrastructure)
-- **GameSpacedatabaseContext** - All business logic (70+ tables for MiniGame, Forums, Shopping, etc.)
+**Critical Pattern:** Services are split into read and write operations:
 
-**Important:** Never mix identity concerns with business domain in the same DbContext.
+### Query Services (Read-Only)
+- Interface naming: `IWalletQueryService`, `IPetQueryService`, `ISignInQueryService`
+- Purpose: Admin viewing/querying data
+- Return: ViewModels and paged results
+- **No state mutations allowed**
 
-### Dual Authentication Schemes
-
-The application uses two authentication schemes that coexist:
-
-1. **Default Identity Cookie** - For regular users
-2. **AdminCookie** - For admin panel (4-hour timeout, sliding expiration)
-   - Login path: `/Login`
-   - Claims: `ManagerId`, `IsManager`, permission claims (`perm:Shopping`, etc.)
-   - Policy: `[Authorize(AuthenticationSchemes = "AdminCookie", Policy = "AdminOnly")]`
-
-**AJAX Authentication Handling:** Controllers return 401/403 status codes for AJAX requests instead of redirecting, allowing frontend to handle authentication gracefully.
-
-## Service Layer Architecture
-
-### Query/Mutation Separation Pattern (CQRS-lite)
-
-Services are split into read and write operations:
-
-**Query Services** - Read-only operations (Admin viewing data)
-- Example: `IWalletQueryService`, `IPetQueryService`, `ISignInQueryService`
-- Return ViewModels and paged results
-- No state mutations
-
-**Mutation Services** - Write operations (Admin modifications)
-- Example: `IWalletMutationService`, `IPetMutationService`, `ISignInMutationService`
-- Return strongly-typed result objects with detailed state tracking
+### Mutation Services (Write Operations)
+- Interface naming: `IWalletMutationService`, `IPetMutationService`, `ISignInMutationService`
+- Purpose: Admin modifications (create, update, delete, issue points/coupons)
+- Return: Strongly-typed result objects with state tracking
 - Include before/after snapshots
 
-**Business Logic Services** - Combined read/write for user-facing features
-- Example: `IPetService`, `IWalletService`, `IMiniGameService`
-- Used by public controllers (when implemented)
+### Business Logic Services (User-Facing)
+- Interface naming: `IPetService`, `IWalletService`, `IMiniGameService`
+- Purpose: Combined read/write for user-facing features (when public frontend is developed)
 
 ### Service Registration
 
-All services for an Area are registered in centralized configuration:
+All services for MiniGame Area registered in:
 - Location: `Areas/MiniGame/config/ServiceExtensions.cs`
 - 60+ services registered in 7 logical phases
 - Use `AddScoped` for entity-bound services
+- **Do not register MiniGame services directly in Program.cs**
 
 ### Result Objects Pattern
 
-Operations return standardized result objects instead of throwing exceptions:
+**Always return result objects instead of throwing exceptions for business logic failures:**
 
 ```csharp
 public class WalletMutationResult
@@ -126,9 +141,10 @@ public class WalletMutationResult
     public string Message { get; set; }
     public int? BalanceBefore { get; set; }
     public int? BalanceAfter { get; set; }
-    // ... includes state tracking
+    // ... state tracking fields
 }
 
+// For batch operations
 public class BatchWalletMutationResult
 {
     public int TotalCount { get; set; }
@@ -138,58 +154,55 @@ public class BatchWalletMutationResult
 }
 ```
 
-Always return these result objects from mutation services for consistent error handling and operation tracking.
-
-### In-Memory Caching for Configuration Rules
-
-Rule-based configuration is cached in memory to reduce database queries:
-- `IInMemorySignInRuleService` - Sign-in rules
-- `InMemoryPetSkinColorCostSettingService` - Pet customization costs
-- TTL varies by service (e.g., 30 seconds for mute filter settings)
-
 ## Database Patterns
 
-### Soft Delete Pattern
+### Soft Delete Pattern (Universal)
 
-All tables implement logical deletes with these fields:
+**All tables implement logical deletes with these four fields:**
 - `IsDeleted` (bit) - Deletion flag
 - `DeletedAt` (datetime2) - Deletion timestamp
-- `DeletedBy` (int) - FK to ManagerData.Manager_Id
+- `DeletedBy` (int) - FK to `ManagerData.Manager_Id`
 - `DeleteReason` (nvarchar(500)) - Reason text
 
 **Always filter by `WHERE IsDeleted = 0`** in queries unless specifically querying deleted records.
 
-### No EF Migrations
+### Multi-DbContext Strategy
 
-This project does NOT use Entity Framework migrations:
-- Schema is managed directly in SQL Server
-- Manual DDL changes
-- Use `db.Database.CanConnect()` for connection testing only
-- Do not generate or run migrations
+Two separate DbContexts with distinct responsibilities:
+- **ApplicationDbContext** - Identity/User/Role data (ASP.NET Identity infrastructure only)
+- **GameSpacedatabaseContext** - All business logic (70+ tables for MiniGame, Forums, Shopping, etc.)
 
-### Foreign Key Relationships
+**Never mix identity concerns with business domain in the same DbContext.**
 
-Key FK patterns in MiniGame Area:
+### Foreign Key Patterns in MiniGame Area
+
 - Most tables → `Users.User_ID`
 - Admin operations → `ManagerData.Manager_Id`
 - Type tables referenced by instance tables (e.g., `CouponType` ← `Coupon`)
+
+### In-Memory Caching for Configuration Rules
+
+Rule-based configuration cached in memory to reduce database queries:
+- `IInMemorySignInRuleService` - Sign-in rules
+- `InMemoryPetSkinColorCostSettingService` - Pet customization costs
+- TTL varies by service (e.g., 30 seconds for mute filter settings)
 
 ## Controller Architecture
 
 ### Base Controller Pattern
 
-`MiniGameBaseController` provides common functionality:
+`MiniGameBaseController` provides common functionality for all MiniGame admin controllers:
 - `GetCurrentManagerId()` - Extract admin ID from claims
 - `GetCurrentManagerAsync()` - Load current admin entity
 - `HasPermissionAsync(string permissionName)` - Check granular permissions
 
-All admin controllers in MiniGame Area should inherit from this base.
+**All admin controllers in MiniGame Area must inherit from this base.**
 
 ### Controller Naming Conventions
 
 - Admin Controllers: `AdminXxxController` (e.g., `AdminHomeController`, `AdminPetController`)
 - Settings Controllers: Nested under `Settings/` folder
-- Use `[Area("MiniGame")]` attribute for area routing
+- Always use `[Area("MiniGame")]` attribute
 
 ### Authorization Pattern
 
@@ -198,12 +211,29 @@ All admin controllers in MiniGame Area should inherit from this base.
 [Authorize(AuthenticationSchemes = "AdminCookie", Policy = "AdminOnly")]
 public class AdminPetController : MiniGameBaseController
 {
-    // Permission check example:
-    if (!await HasPermissionAsync("PetManagement"))
+    public async Task<IActionResult> Index()
     {
-        return Forbid();
+        // Check granular permission
+        if (!await HasPermissionAsync("PetManagement"))
+        {
+            return Forbid();
+        }
+        // ... implementation
     }
 }
+```
+
+### Login Redirection
+
+**Do not implement login within MiniGame Area.** Redirect to shared login:
+
+```csharp
+[AllowAnonymous]
+public IActionResult Login(string? returnUrl = null)
+    => RedirectToAction("Index", "Login", new {
+        area = "", // Main login is at root level
+        returnUrl = Url.Action("Index", "Home", new { area = "MiniGame" })
+    });
 ```
 
 ## File Organization
@@ -218,13 +248,13 @@ Naming conventions:
 - Service DTOs: `ServiceViewModels.cs`
 - Settings Models: `Settings/*.cs`
 
-Use partial classes pattern for model extensions.
+Use partial classes for model extensions.
 
 ### Constants
 
 Location: `Areas/MiniGame/Constants/`
 
-Constants are organized by feature:
+Feature-based organization:
 - `WalletConstants.cs`
 - `PetConstants.cs`
 - `SignInConstants.cs`
@@ -242,179 +272,304 @@ Areas/MiniGame/Views/
 ├── AdminMiniGame/      → Game records
 ├── AdminUser/          → User queries
 ├── AdminManager/       → Admin management
-└── Shared/             → Layouts (_Layout.cshtml)
+└── Shared/
+    └── _Sidebar.cshtml → MiniGame-specific two-level navigation
 ```
 
-## SignalR Integration
+## MiniGame Admin Navigation Structure
 
-Real-time chat is implemented via SignalR:
-- Hub path: `/social_hub/chatHub`
-- Hub class: `ChatHub` in social_hub Area
-- Transports: WebSockets → Server-Sent Events → Long Polling
-- Keep-alive interval: 15 seconds
-- Client timeout: 60 seconds
+**The `_Sidebar.cshtml` in MiniGame Area must have exactly these second-level buttons (from `schema/README_合併版.md`):**
 
-Configure CORS for SignalR in `Program.cs` if needed.
+### 會員錢包 (Member Wallet)
+1. 查詢會員點數
+2. 查詢會員擁有商城優惠券
+3. 查詢會員擁有電子禮券
+4. 發放會員點數
+5. 發放會員擁有商城優惠券
+6. 調整會員擁有電子禮券
+7. 查看會員收支明細
 
-## Important Schema Documentation
+### 會員簽到系統 (Sign-In System)
+1. 簽到規則設定
+2. 查看會員簽到紀錄
 
-Comprehensive database and business rules documentation is in `schema/` folder:
+### 寵物系統 (Pet System)
+1. 整體寵物系統規則設定
+2. 會員個別寵物設定
+3. 會員個別寵物清單含查詢
 
-**Critical documents:**
-1. `README_合併版.md` - Master specification (Area registration, admin navigation, feature matrix)
-2. `MiniGame_Area_資料庫完整結構文件_2025-10-21.md` - Complete DB structure (18 tables, 241 fields, ERD)
-3. `專案規格敘述1.txt` & `專案規格敘述2.txt` - Business requirements and technical specs
-4. `管理者權限相關描述.txt` - Admin roles/permissions matrix (8 roles defined)
+### 小遊戲系統 (Mini-Game System)
+1. 遊戲規則設定
+2. 查看會員遊戲紀錄
 
-**Audit reports:**
-- `Services修復完成報告_2025-10-21.md` - Service layer audit results
-- `SERVICES_AUDIT_FINAL_2025-10-21.md` - Final service audit
-- `商業規則差異報告與修正建議.md` - Business rule discrepancy analysis
+**Do not add, remove, or rename these navigation items without updating the specification.**
+
+## Key Tables in MiniGame Area (100% Coverage Required)
+
+**Total: 20 tables** (16 main MiniGame tables + 4 user/permission related tables)
+**Reference:** `schema/MiniGameArea相關sql_server_DB相關表格.md`
+
+### MiniGame Area Main Tables (16 tables)
+
+#### Wallet System (2 tables)
+- `User_Wallet` (PK: User_Id) - User point balances (User_Point, soft delete fields only)
+- `WalletHistory` (PK: LogID) - Transaction history (ChangeType, PointsChanged, ItemCode, Description, ChangeTime)
+
+#### Coupon System (2 tables)
+- `CouponType` - Coupon definitions (Name, DiscountType, DiscountValue, MinSpend, ValidFrom, ValidTo, PointsCost)
+- `Coupon` - Coupon instances (CouponCode, IsUsed, AcquiredTime, UsedTime, UsedInOrderID, FK: UserId, CouponTypeId)
+
+#### E-Voucher System (4 tables)
+- `EVoucherType` - E-voucher definitions (Name, ValueAmount, ValidFrom, ValidTo, PointsCost, TotalAvailable)
+- `EVoucher` - E-voucher instances (EVoucherCode, IsUsed, AcquiredTime, UsedTime, FK: UserId, EVoucherTypeId)
+- `EVoucherToken` - Redemption tokens (Token, ExpiresAt, IsRevoked, FK: EVoucherId)
+- `EVoucherRedeemLog` - Redemption history (Status: REVOKED/REJECTED/EXPIRED/ALREADYUSED/APPROVED)
+
+#### Sign-In System (2 tables)
+- `SignInRule` - Configuration/rules (SignInDay, Points, Experience, HasCoupon, CouponTypeCode, IsActive)
+- `UserSignInStats` - User sign-in records (SignTime, PointsGained, ExpGained, CouponGained with timestamps)
+
+#### Pet System (4 tables)
+- `Pet` (PK: PetID) - Pet main table
+  - 5 attributes (0-100 range): Hunger, Mood, Stamina, Cleanliness, Health
+  - Level, Experience, CurrentExperience, ExperienceToNextLevel
+  - SkinColor (varchar(7) #RRGGBB format), BackgroundColor (nvarchar(20))
+  - Change tracking: SkinColorChangedTime, BackgroundColorChangedTime
+  - Point tracking: PointsChanged_SkinColor, PointsChanged_BackgroundColor
+  - Level rewards: PointsGained_LevelUp, PointsGainedTime_LevelUp, TotalPointsGained_LevelUp
+- `PetSkinColorCostSettings` - Skin color pricing (ColorCode, ColorName, PointsCost, Rarity, IsFree, IsLimitedEdition) ✨ **(Added 2025-10-20)**
+- `PetBackgroundCostSettings` - Background pricing (BackgroundCode, BackgroundName, PointsCost) ✨ **(Added 2025-10-20)**
+- `PetLevelRewardSettings` - Level-up rewards (LevelRangeStart, LevelRangeEnd, PointsReward) ✨ **(Added 2025-10-20)**
+
+#### Mini-Game System (1 table)
+- `MiniGame` - Game session records (PK: auto-increment)
+  - Game state: Level, MonsterCount, SpeedMultiplier, Result, Aborted
+  - Rewards: ExpGained, PointsGained, CouponGained (with timestamps)
+  - Pet attribute deltas: HungerDelta, MoodDelta, StaminaDelta, CleanlinessDelta
+  - Timing: StartTime, EndTime
+  - FK: UserID, PetID
+
+#### System Configuration (1 table)
+- `SystemSettings` - Global configuration (SettingKey, SettingValue, Category, SettingType: String/Boolean/Number/JSON, IsReadOnly, IsActive)
+
+### User/Permission Related Tables (4 tables)
+
+These tables have FK relationships with MiniGame Area tables:
+
+- `ManagerData` (PK: Manager_Id) - Admin accounts (Manager_Email, Manager_EmailConfirmed, Manager_AccessFailedCount, Manager_LockoutEnabled, Manager_LockoutEnd)
+- `ManagerRole` - Role assignments (FK: Manager_Id, ManagerRole_Id)
+- `ManagerRolePermission` - Role definitions with permissions:
+  - AdministratorPrivilegesManagement
+  - UserStatusManagement (UserManagement)
+  - ShoppingPermissionManagement (ShoppingManagement)
+  - MessagePermissionManagement (ForumManagement)
+  - Pet_Rights_Management (PetManagement)
+  - customer_service (CustomerService)
+  - (See `schema/管理者權限相關描述.txt` for complete matrix)
+- `Users` (PK: User_ID) - User basic information (referenced by most MiniGame tables)
+
+## Schema Documentation (Critical Reference)
+
+**All MiniGame Area work must reference `schema/` folder documentation:**
+
+### Master Specifications
+1. **`schema/README_合併版.md`** - Single source of truth
+   - Area registration architecture
+   - Admin navigation structure (exact button names required)
+   - Database coverage requirements (100% for MiniGame tables)
+   - Login/cookie integration patterns
+   - Verification checklist
+
+2. **`schema/MiniGameArea相關sql_server_DB相關表格.md`**
+   - **Total: 20 tables** (16 main MiniGame tables + 4 user/permission related tables)
+   - Last verified: 2025-10-27
+   - Database server: DESKTOP-8HQIS1S\SQLEXPRESS
+
+3. **`schema/MiniGame_Area_資料庫完整結構文件_2025-10-21.md`**
+   - Complete database structure with field definitions
+   - Entity Relationship Diagram (ERD)
+   - Field constraints and relationships
+
+4. **`schema/專案規格敘述1.txt` & `schema/專案規格敘述2.txt`**
+   - Business requirements (90% of specifications)
+   - Technical specifications
+   - Performance and security requirements
+
+5. **`schema/管理者權限相關描述.txt`**
+   - 10 test admin accounts with credentials
+   - 8 role definitions with full permissions matrix
+   - Constraint details
+
+### Audit Reports
+- `schema/Services修復完成報告_2025-10-21.md` - Service layer fixes
+- `schema/SERVICES_AUDIT_FINAL_2025-10-21.md` - Final service audit
+- `schema/商業規則差異報告與修正建議.md` - Business rule discrepancies
 
 **Always consult these documents when:**
-- Adding new features to understand business rules
-- Modifying database schema to verify constraints
-- Implementing admin permissions to check role definitions
-
-## Key Tables in MiniGame Area
-
-**Wallet System:**
-- `User_Wallet` (PK: User_Id) - User point balances
-- `WalletHistory` (PK: LogID) - Transaction history
-
-**Coupon System:**
-- `CouponType` - Coupon definitions
-- `Coupon` - Coupon instances (FK: UserId, CouponTypeId)
-
-**E-Voucher System:**
-- `EVoucherType` - E-voucher definitions
-- `EVoucher` - E-voucher instances
-- `EVoucherToken` - Redemption tokens
-- `EVoucherRedeemLog` - Redemption history
-
-**Pet System:**
-- `Pet` (PK: PetID) - Pet main table with 5 attributes (Hunger, Mood, Energy, Cleanliness, Health)
-- `PetSkinColorCostSettings` - Skin color pricing
-- `PetBackgroundCostSettings` - Background pricing
-- `PetLevelRewardSettings` - Level-up rewards
-
-**Sign-In System:**
-- `SignInRule` - Configuration/rules
-- `UserSignInStats` - User sign-in records
-
-**Mini-Game System:**
-- `MiniGame` - Game session records (FK: UserID, PetID)
-
-**Admin System:**
-- `ManagerData` (PK: Manager_Id) - Admin accounts
-- `ManagerRole` - Role assignments
-- `ManagerRolePermission` - 8 permission types (AdministratorPrivilegesManagement, UserManagement, ShoppingManagement, etc.)
+- Adding new features (understand business rules first)
+- Modifying database operations (verify constraints)
+- Implementing admin permissions (check role definitions)
+- Debugging issues (reference audit reports for known fixes)
 
 ## Configuration Files
 
-**appsettings.json** contains:
-- Connection strings for both databases
-- SMTP email configuration (Gmail)
-- Logging levels
-- CORS settings
+### appsettings.json
 
-**appsettings.Development.json** - Development-specific overrides
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=aspnet-GameSpace-[GUID]",
+    "GameSpace": "Data Source=(local)\\SQLEXPRESS;Initial Catalog=GameSpacedatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True"
+  }
+}
+```
 
-**Never commit sensitive data like SMTP passwords.** Use user secrets for development.
+**Never commit sensitive data.** Use user secrets for development.
+
+### appsettings.Development.json
+
+Development-specific overrides (logging levels, debug settings).
 
 ## UI Framework
 
-**Admin Panel:**
-- SB Admin 2 template (Bootstrap-based)
+### Admin Panel
+- **SB Admin 2** template (Bootstrap-based)
 - jQuery for legacy functionality
 - Vue.js for modern interactive components
 - Font Awesome icons
 - ClosedXML for Excel exports
 
-**Important:** The SB Admin 2 template files in `wwwroot/lib/sb-admin/` should not be modified. Customize via `wwwroot/css/site.css` instead.
+**Important:** Template files in `wwwroot/lib/sb-admin/` should NOT be modified. Customize via `wwwroot/css/site.css` only.
+
+### Public Frontend (Future)
+- Bootstrap-based (see `schema/index.txt` for specifications)
+- Not currently being developed
 
 ## Middleware Pipeline Order
 
-From `Program.cs`, the middleware order is:
+From `Program.cs`, the critical order is:
 1. `UseSession()` - Before authentication
 2. `UseAuthentication()` - Before authorization
 3. `UseAuthorization()` - Before routes
-4. Area routes (with `{area:exists}` constraint)
-5. SignalR hub mapping (`MapHub<ChatHub>`)
+4. Area routes: `{area:exists}/{controller=Home}/{action=Index}/{id?}`
+5. SignalR hub mapping: `MapHub<ChatHub>("/social_hub/chatHub")`
 
-**Do not reorder these** as it will break authentication/authorization.
+**Do not reorder** as it will break authentication/authorization.
 
-## Development Notes
+## Adding New Features to MiniGame Area
 
-### Current Development Focus
+### Step-by-Step Process
 
-The MiniGame Area is **admin backend only**. Public-facing frontend is scaffolded but not actively developed. Focus all new feature work on:
-- Admin controllers (`Admin*Controller`)
-- Query/Mutation services
-- Admin ViewModels
-- Admin views
-
-### Adding New Features to MiniGame Area
-
-1. **Database First:**
-   - Manually create tables in SQL Server
+1. **Database First (Manual in SSMS)**
+   - Create tables manually in SQL Server
+   - Update schema documentation in `schema/` folder
    - Add DbSet properties to `GameSpacedatabaseContext.cs`
-   - Create domain models with soft delete fields
+   - Create domain models with soft delete fields (IsDeleted, DeletedAt, DeletedBy, DeleteReason)
 
-2. **Service Layer:**
+2. **Service Layer**
    - Create interfaces: `IXxxQueryService`, `IXxxMutationService`
    - Implement services with result object pattern
-   - Register in `ServiceExtensions.cs`
+   - Register in `Areas/MiniGame/config/ServiceExtensions.cs`
+   - Use `AddScoped` for entity-bound services
 
-3. **Controllers:**
+3. **Controllers**
    - Inherit from `MiniGameBaseController`
-   - Use `[Authorize(AuthenticationSchemes = "AdminCookie", Policy = "AdminOnly")]`
-   - Check permissions with `HasPermissionAsync()`
+   - Add `[Area("MiniGame")]` attribute
+   - Add `[Authorize(AuthenticationSchemes = "AdminCookie", Policy = "AdminOnly")]`
+   - Check granular permissions with `HasPermissionAsync()`
 
-4. **ViewModels:**
-   - Add to appropriate file in `Models/` or `Models/ViewModels/`
+4. **ViewModels**
+   - Add to `Areas/MiniGame/Models/` or `Models/ViewModels/`
    - Use naming convention: `Admin*ViewModel` for admin screens
+   - Separate read models from write models
 
-5. **Views:**
+5. **Views**
    - Create folder under `Areas/MiniGame/Views/`
    - Use Razor syntax with Bootstrap 5 classes
-   - Reference SB Admin 2 components where appropriate
+   - Reference SB Admin 2 components
+   - Update `_Sidebar.cshtml` if adding navigation items (must match specification)
 
-### Testing Database Connections
+## Development Best Practices
 
-Use diagnostic controllers like `MiniGameDiagnosticsController` with:
-- `IDiagnosticsService.TestDatabaseConnectionAsync()` - Tests connection
-- Returns success/failure without modifying data
+### Query Optimization
+- Use `AsNoTracking()` for read-only queries
+- Return Read Models/DTOs, not entities
+- Implement paging for large result sets (batch limit ≤ 1000)
 
-### Permission System
+### Transaction Management
+- Use transactions for all state-changing operations (points, coupons, sign-ins, game results)
+- Prevent negative balances and concurrency issues
+- Implement idempotent operations where possible
 
-8 permission types in `ManagerRolePermission`:
-1. AdministratorPrivilegesManagement
-2. UserManagement
-3. ShoppingManagement
-4. ForumManagement
-5. PetManagement
-6. CustomerService
-7. (2 more - see `管理者權限相關描述.txt`)
+### Error Handling
+- Use result objects for business logic failures (not exceptions)
+- Use `ProblemDetails` or unified Result types for API responses
+- Log errors with correlation IDs (Serilog recommended)
 
-Check permissions in controllers before allowing operations.
+### Code Commits
+- Keep commits small: ≤ 3 files / ≤ 400 lines per commit
+- Write clear commit messages explaining WHY and HOW
+- Follow drift repair process when deviating from spec
 
-## Common Pitfalls
+### File Encoding
+- All files must be **UTF-8 with BOM** (especially for Chinese content)
+
+## Testing & Diagnostics
+
+### Database Connection Testing
+- Use `IDiagnosticsService.TestDatabaseConnectionAsync()`
+- Healthcheck endpoint: `/healthz/db` should return `{"status":"ok"}`
+- Do not modify data during connection tests
+
+### Permission Testing
+- 8 permission types defined in `ManagerRolePermission`
+- Test with different admin roles
+- Verify claims are set correctly on login
+
+## Common Pitfalls (Critical)
 
 1. **Don't use EF migrations** - Schema is managed manually in SQL Server
-2. **Always filter soft-deleted records** - Add `WHERE IsDeleted = 0` to queries
+2. **Always filter soft-deleted records** - Add `WHERE IsDeleted = 0` to all queries
 3. **Use result objects, not exceptions** - Return `*MutationResult` from mutation services
-4. **Respect authentication schemes** - Admin controllers must use `AuthenticationSchemes = "AdminCookie"`
-5. **Don't modify SB Admin template files** - Customize via site.css instead
-6. **Register services in ServiceExtensions.cs** - Don't register directly in Program.cs for MiniGame services
-7. **Consult schema documentation** - Business rules are documented in `schema/` folder
+4. **Respect authentication schemes** - Admin controllers MUST use `AuthenticationSchemes = "AdminCookie"`
+5. **Don't modify SB Admin template files** - Customize via `site.css` only
+6. **Register services in ServiceExtensions.cs** - Not directly in `Program.cs` for MiniGame
+7. **Consult schema documentation** - Business rules are in `schema/` folder, not in code comments
+8. **Stay within Area boundaries** - Only modify `Areas/MiniGame/**` (except minimal `Program.cs` additions)
+9. **Match navigation exactly** - Sidebar buttons must match specification exactly
+10. **100% table coverage** - All MiniGame tables must be fully utilized in admin backend
 
 ## NuGet Packages
 
-Key dependencies:
-- `Microsoft.EntityFrameworkCore.SqlServer` 8.0.19/8.0.20
-- `Microsoft.AspNetCore.Identity.EntityFrameworkCore` 8.0.19/8.0.20
-- `Microsoft.AspNetCore.SignalR.Client` 8.0.19
-- `ClosedXML` 0.105.0 - Excel export functionality
+### GameSpace (8.0.19)
+- Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
+- Microsoft.AspNetCore.Identity.EntityFrameworkCore
+- Microsoft.AspNetCore.Identity.UI
+- Microsoft.AspNetCore.SignalR.Client
+- Microsoft.EntityFrameworkCore.SqlServer
+- Microsoft.EntityFrameworkCore.Tools
+- Microsoft.VisualStudio.Web.CodeGeneration.Design (8.0.7)
+- ClosedXML (0.105.0)
 
-Use consistent package versions across both projects.
+### GamiPort (8.0.20)
+- Same packages as GameSpace but version 8.0.20
+
+**Maintain consistent package versions within each project.**
+
+## Verification Checklist
+
+Before considering MiniGame Area complete:
+
+- [ ] Can login with `AdminCookie` and access `/MiniGame/Home/Index`
+- [ ] Shared `_Sidebar.cshtml` contains MiniGame link
+- [ ] MiniGame `_Sidebar.cshtml` has exact second-level buttons from specification
+- [ ] All wallet admin functions work (query/issue points, coupons, e-vouchers, view history)
+- [ ] Sign-in admin functions work (configure rules, view records)
+- [ ] Pet admin functions work (configure rules, modify individual pets, query with change history)
+- [ ] Mini-game admin functions work (configure rules including daily limit, view game records)
+- [ ] `/healthz/db` returns `{"status":"ok"}`
+- [ ] All files saved as UTF-8 with BOM
+- [ ] All 20 MiniGame-related tables (16 main + 4 user/permission) have proper coverage in admin backend
+- [ ] All admin operations check permissions via `HasPermissionAsync()`
+- [ ] Soft delete pattern implemented correctly (queries filter IsDeleted=0)
+- [ ] Result objects used instead of exceptions for business logic
