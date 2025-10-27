@@ -1,4 +1,7 @@
 ﻿// ---- 服務命名空間（一般 using）----
+// ---- MiniGame Area ----
+using GameSpace.Areas.MiniGame.config;
+
 // ---- 社群 Hub / 過濾器 / 共用登入 ----
 using GameSpace.Areas.social_hub.Auth;          // ★ IUserContextReader, AuthConstants
 using GameSpace.Areas.social_hub.Hubs;
@@ -64,7 +67,10 @@ namespace GameSpace
 			// ========== 5) SignalR ==========
 			builder.Services.AddSignalR();
 
-			// ========== 6) social_hub 相關服務 ==========
+			// ========== 6) MiniGame Area 服務 ==========
+			builder.Services.AddMiniGameServices(builder.Configuration);
+
+			// ========== 7) social_hub 相關服務 ==========
 			builder.Services.AddMemoryCache();
 
 			builder.Services.Configure<GameSpace.Areas.social_hub.Services.MuteFilterOptions>(o =>
@@ -93,7 +99,7 @@ namespace GameSpace
 			// 權限服務（Gate + 細權限）
 			builder.Services.AddScoped<IManagerPermissionService, ManagerPermissionServiceAlias>();
 
-			// ========== 7) CORS（可選） ==========
+			// ========== 8) CORS（可選） ==========
 			var corsOrigins = builder.Configuration.GetSection("Cors:Chat:Origins").Get<string[]>();
 			if (corsOrigins is { Length: > 0 })
 			{
@@ -107,7 +113,7 @@ namespace GameSpace
 				});
 			}
 
-			// ========== 8) Session ==========
+			// ========== 9) Session ==========
 			builder.Services.AddSession(opt =>
 			{
 				opt.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -116,10 +122,10 @@ namespace GameSpace
 				opt.Cookie.SameSite = SameSiteMode.Lax;
 			});
 
-			// ========== 9) 共用登入介面 ==========
+			// ========== 10) 共用登入介面 ==========
 			builder.Services.AddScoped<ILoginIdentity, CookieAndAdminCookieLoginIdentity>();
 
-			// ========== 10) 後台 Cookie 方案（AdminCookie） ==========
+			// ========== 11) 後台 Cookie 方案（AdminCookie） ==========
 			builder.Services.AddAuthentication(options => { /* 保留 Identity 預設 */ })
 			.AddCookie(AuthConstants.AdminCookieScheme, opt =>
 			{
@@ -167,7 +173,7 @@ namespace GameSpace
 
 		
 
-			// ========== 11) 授權政策（需要就用） ==========
+			// ========== 12) 授權政策（需要就用） ==========
 			builder.Services.AddAuthorization(options =>
 			{
 				options.AddPolicy("CanManageShopping", p => p.RequireClaim("perm:Shopping", "true"));
@@ -178,12 +184,12 @@ namespace GameSpace
 				options.AddPolicy("CanCS", p => p.RequireClaim("perm:CS", "true"));
 			});
 
-			// ========== 12) Anti-Forgery 設定 ==========
+			// ========== 13) Anti-Forgery 設定 ==========
 			builder.Services.AddAntiforgery(o => o.HeaderName = "RequestVerificationToken");
 
 			var app = builder.Build();
 
-			// ========== 13) Middleware 管線 ==========
+			// ========== 14) Middleware 管線 ==========
 			if (app.Environment.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
@@ -215,7 +221,7 @@ namespace GameSpace
 			app.UseAuthentication();
 			app.UseAuthorization();
 
-			// ========== 14) 路由 ==========
+			// ========== 15) 路由 ==========
 			app.MapControllers();
 
 			app.MapControllerRoute(
@@ -228,7 +234,7 @@ namespace GameSpace
 
 			app.MapRazorPages();
 
-			// ========== 15) SignalR ==========
+			// ========== 16) SignalR ==========
 			app.MapHub<ChatHub>("/social_hub/chatHub", opts =>
 			{
 				opts.Transports =
@@ -237,7 +243,7 @@ namespace GameSpace
 					HttpTransportType.LongPolling;
 			});
 
-			// ========== 16) 啟動 ==========
+			// ========== 17) 啟動 ==========
 			await app.RunAsync();
 		}
 	}

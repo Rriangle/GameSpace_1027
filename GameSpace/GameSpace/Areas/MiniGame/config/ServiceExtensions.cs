@@ -56,7 +56,8 @@ namespace GameSpace.Areas.MiniGame.config
             services.AddScoped<IDailyGameLimitValidationService, DailyGameLimitValidationService>();
 
             // 註冊寵物成本設定服務
-            // ⚠️ 修復：使用 InMemory 版本替代資料庫版本，因為 PetSkinColorCostSettings 表不存在
+            // ⚠️ 2025-10-27: PetSkinColorCostSettings 表已存在，但 PetSkinColorCostSettingService 類別尚未實作，暫用 InMemory 版本
+            // PetBackgroundCostSettings 表已存在，且 PetBackgroundCostSettingService 已實作
             services.AddScoped<IPetSkinColorCostSettingService, InMemoryPetSkinColorCostSettingService>();
             services.AddScoped<IPetBackgroundCostSettingService, PetBackgroundCostSettingService>();
 

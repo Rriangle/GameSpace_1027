@@ -418,25 +418,41 @@ These tables have FK relationships with MiniGame Area tables:
    - Last verified: 2025-10-27
    - Database server: DESKTOP-8HQIS1S\SQLEXPRESS
 
-3. **`schema/MiniGame_Area_資料庫完整結構文件_2025-10-21.md`**
-   - Complete database structure with field definitions
+3. **`schema/MiniGame_Area_資料庫完整結構文件_2025-10-27.md`** ✨ **(Updated 2025-10-27)**
+   - Complete database structure with field definitions (285+ fields)
+   - All PK/FK/CHECK Constraints/Indexes/Defaults verified
    - Entity Relationship Diagram (ERD)
    - Field constraints and relationships
+   - **Major updates**: Pet table fields, SystemSettings table, new setting tables
 
-4. **`schema/專案規格敘述1.txt` & `schema/專案規格敘述2.txt`**
+4. **`schema/專案規格敘述1.txt` & `schema/專案規格敘述2.txt`** ✨ **(Updated 2025-10-27)**
    - Business requirements (90% of specifications)
    - Technical specifications
    - Performance and security requirements
+   - Database field definitions updated to match actual DB
 
-5. **`schema/管理者權限相關描述.txt`**
+5. **`schema/管理者權限相關描述.txt`** ✨ **(Updated 2025-10-27)**
    - 10 test admin accounts with credentials
    - 8 role definitions with full permissions matrix
+   - Complete ManagerData/ManagerRole/ManagerRolePermission table structures
    - Constraint details
 
+6. **`schema/db_schema_summary.md`** ✨ **(New 2025-10-27)**
+   - **Authoritative reference** - Queried directly from SQL Server
+   - All 20 tables with complete technical details
+   - PK/FK/CHECK Constraints/Indexes/Defaults
+   - Design patterns (soft delete, audit trail, timestamps)
+
+7. **`schema/資料庫更新總結_2025-10-27.md`** ✨ **(New 2025-10-27)**
+   - Complete update report of schema documentation
+   - Key findings: All "missing" tables actually exist
+   - Database structure 100% complete and verified
+
 ### Audit Reports
-- `schema/Services修復完成報告_2025-10-21.md` - Service layer fixes
-- `schema/SERVICES_AUDIT_FINAL_2025-10-21.md` - Final service audit
-- `schema/商業規則差異報告與修正建議.md` - Business rule discrepancies
+- `schema/Services修復完成報告_2025-10-21.md` - Service layer fixes (Verified 2025-10-27)
+- `schema/SERVICES_AUDIT_FINAL_2025-10-21.md` - Final service audit (Verified 2025-10-27)
+- `schema/商業規則差異報告與修正建議.md` - Business rule discrepancies (Verified 2025-10-27)
+- `schema/報告驗證更新記錄_2025-10-27.md` - Verification update record ✨ **(New 2025-10-27)**
 
 **Always consult these documents when:**
 - Adding new features (understand business rules first)
