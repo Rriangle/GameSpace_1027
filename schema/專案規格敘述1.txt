@@ -1,4 +1,6 @@
 ﻿GameSpace 遊戲論壇平台專案規格書
+【最後更新日期：2025-10-27】
+
 〈術語表／名詞統一〉
 會員錢包系統術語
 •	禮券（E-voucher）：會員可扣會員點數獲得的電子券，用於兌換實體商品或折抵現金
@@ -253,11 +255,18 @@ ________________________________________
 1) 資料模型對應（DB mapping）
 使用之資料表
 •	Users：用戶基本資料表
-o	User_ID：用戶唯一識別碼（主鍵，自動遞增）
-o	User_name：用戶姓名（非空，唯一）
-o	User_Account：登入帳號（非空，唯一）
-o	User_Password：密碼（非空，加密儲存）
-•	User_Introduce：用戶詳細資料表
+o	User_ID：用戶唯一識別碼（主鍵，int IDENTITY，自動遞增）
+o	User_name：用戶姓名（nvarchar(30)，非空）
+o	User_Account：登入帳號（nvarchar(30)，非空）
+o	User_Password：密碼（nvarchar(255)，非空，加密儲存）
+o	User_EmailConfirmed：Email 驗證狀態（bit，非空，預設 0）
+o	User_PhoneNumberConfirmed：電話驗證狀態（bit，非空，預設 0）
+o	User_TwoFactorEnabled：雙因素驗證啟用（bit，非空，預設 0）
+o	User_AccessFailedCount：登入失敗次數（int，非空，預設 0）
+o	User_LockoutEnabled：鎖定功能啟用（bit，非空，預設 0）
+o	User_LockoutEnd：鎖定結束時間（datetime2(7)，可空）
+o	Create_Account：帳號建立時間（datetime2(6)，非空）
+•	User_Introduce：用戶詳細資料表（若專案中使用）
 o	User_ID：關聯到 Users 表（主鍵，外鍵）
 o	User_NickName：用戶暱稱（非空，唯一）
 o	Gender：性別（非空）
@@ -269,77 +278,268 @@ o	DateOfBirth：出生日期（非空）
 o	Create_Account：帳號建立時間（非空）
 o	User_Picture：頭像圖片（可空，varbinary(max)）
 o	User_Introduce：用戶自介（可空，nvarchar(200)）
-•	User_Rights：用戶權限表
+•	User_Rights：用戶權限表（若專案中使用）
 o	User_Id：關聯到 Users 表（主鍵，外鍵）
 o	User_Status：用戶狀態（bit，啟用/停權）
 o	ShoppingPermission：購物權限（bit）
 o	MessagePermission：留言權限（bit）
 o	SalesAuthority：銷售權限（bit）
-•	User_wallet：用戶錢包表
-o	User_Id：關聯到 Users 表（主鍵，外鍵）
-o	User_Point：會員點數（int）
-o	Coupon_Number：優惠券編號（varchar）
-o	EVoucher_Number：禮券編號（varchar）
+•	User_Wallet：會員錢包表
+o	User_Id：關聯到 Users 表（主鍵，int，外鍵參考 Users.User_ID）
+o	User_Point：會員點數（int，非空，預設 0）
+o	IsDeleted：軟刪除標記（bit，非空，預設 0）
+o	DeletedAt：刪除時間（datetime2(7)，可空）
+o	DeletedBy：刪除者 ID（int，可空）
+o	DeleteReason：刪除原因（nvarchar(500)，可空）
+o	【注意】Coupon_Number、EVoucher_Number 欄位已移除，優惠券/禮券改由專用表管理
 •	UserSignInStats：簽到統計表
-o	LogID：簽到記錄 ID（主鍵，自動遞增）
-o	SignTime：簽到時間（datetime2，非空，預設 UTC 當下時間）
-o	UserID：會員 ID（非空，外鍵參考 Users.UserID）
-o	PointsChanged：此次簽到會員點數增減數量（非空，預設 0）
-o	ExpGained：此次簽到寵物獲得的經驗值（非空，資料庫無預設值，常態流程填入 0）
-o	CouponGained：此次簽到獲得的優惠券代碼（非空，資料庫無預設值；未發券時由程式寫入 "0"）
-o	PointsGainedTime：會員點數發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
-o	ExpGainedTime：寵物經驗值發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
-o	CouponGainedTime：優惠券發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
+o	LogID：簽到記錄 ID（主鍵，int IDENTITY，自動遞增）
+o	SignTime：簽到時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	UserID：會員 ID（int，非空，外鍵參考 Users.User_ID）
+o	PointsGained：此次簽到會員點數獲得數量（int，非空）
+o	PointsGainedTime：會員點數發放時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	ExpGained：此次簽到寵物獲得的經驗值（int，非空）
+o	ExpGainedTime：寵物經驗值發放時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	CouponGained：此次簽到獲得的優惠券代碼（nvarchar(50)，非空；未發券時填入空字串或 "0"）
+o	CouponGainedTime：優惠券發放時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	IsDeleted：軟刪除標記（bit，非空，預設 0）
+o	DeletedAt：刪除時間（datetime2(7)，可空）
+o	DeletedBy：刪除者 ID（int，可空）
+o	DeleteReason：刪除原因（nvarchar(500)，可空）
+•	SignInRule：簽到規則設定表
+o	Id：規則 ID（主鍵，int IDENTITY，自動遞增）
+o	SignInDay：簽到天數（int，非空，範圍 1-365，UNIQUE）
+o	Points：獎勵點數（int，非空，>= 0）
+o	Experience：獎勵經驗值（int，非空，>= 0）
+o	HasCoupon：是否發放優惠券（bit，非空，預設 0）
+o	CouponTypeCode：優惠券類型代碼（nvarchar(50)，可空）
+o	IsActive：規則是否啟用（bit，非空，預設 1）
+o	CreatedAt：建立時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	UpdatedAt：更新時間（datetime2(7)，可空）
+o	Description：規則描述（nvarchar(255)，可空）
+o	IsDeleted：軟刪除標記（bit，非空，預設 0）
+o	DeletedAt：刪除時間（datetime2(7)，可空）
+o	DeletedBy：刪除者 ID（int，可空）
+o	DeleteReason：刪除原因（nvarchar(500)，可空）
+o	CHECK Constraint：HasCoupon=1 時 CouponTypeCode 不可為 NULL；HasCoupon=0 時 CouponTypeCode 必須為 NULL
 •	Pet：寵物狀態表
-o	PetID：寵物 ID（主鍵，自動遞增）
-o	UserID：寵物主人會員 ID（非空，外鍵參考 Users.UserID）
-o	PetName：寵物名稱（nvarchar(50)，非空，預設 "小可愛"）
-o	Level：寵物當前等級（非空，預設 0）
-o	LevelUpTime：寵物最後一次升級時間（datetime2，非空，預設 UTC 當下時間）
-o	Experience：寵物累計總寵物經驗值（非空，預設 0）
-o	Hunger：飢餓值（0–100，非空，預設 0）
-o	Mood：心情值（0–100，非空，預設 0）
-o	Stamina：體力值（0–100，非空，預設 0）
-o	Cleanliness：清潔值（0–100，非空，預設 0）
-o	Health：健康度（0–100，非空，預設 0）
-o	SkinColor：膚色十六進位碼（nvarchar(50)，非空，預設 "#ADD8E6"）
-o	ColorChangedTime：最後一次膚色更換時間（datetime2，非空，預設 UTC 當下時間）
-o	BackgroundColor：背景色（nvarchar(50)，非空，預設 "粉藍"）
-o	BackgroundColorChangedTime：最後一次背景色更換時間（datetime2，非空，預設 UTC 當下時間）
-o	PointsChanged_color：最近一次幫寵物換色所花費的會員點數（非空，預設 0）
-o	PointsChangedTime_color：換色點數變動時間（datetime2，非空，預設 UTC 當下時間）
-o	PointsGained_levelUp：最近一次寵物升級獲得的會員點數獎勵（非空，預設 0）
-o	PointsGainedTime_levelUp：寵物最後一次升級獲得會員點數的時間（datetime2，非空，預設 UTC 當下時間）
+o	PetID：寵物 ID（主鍵，int IDENTITY，自動遞增）
+o	UserID：寵物主人會員 ID（int，非空，外鍵參考 Users.User_ID）
+o	PetName：寵物名稱（nvarchar(50)，非空）
+o	Level：寵物當前等級（int，非空）
+o	LevelUpTime：寵物最後一次升級時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	Experience：寵物累計總經驗值（int，非空）
+o	CurrentExperience：當前等級經驗值（int，非空，預設 0）
+o	ExperienceToNextLevel：升級所需經驗值（int，可空）
+o	Hunger：飢餓值（int，非空，範圍 0-100，CHECK 約束）
+o	Mood：心情值（int，非空，範圍 0-100，CHECK 約束）
+o	Stamina：體力值（int，非空，範圍 0-100，CHECK 約束）
+o	Cleanliness：清潔值（int，非空，範圍 0-100，CHECK 約束）
+o	Health：健康度（int，非空，範圍 0-100，CHECK 約束）
+o	SkinColor：膚色十六進位碼（varchar(7)，非空，格式 #RRGGBB）
+o	SkinColorChangedTime：最後一次膚色更換時間（datetime2(7)，非空）
+o	BackgroundColor：背景色名稱（nvarchar(20)，非空）
+o	BackgroundColorChangedTime：最後一次背景色更換時間（datetime2(7)，非空）
+o	PointsChanged_SkinColor：最近一次換膚色所花費的會員點數（int，非空）
+o	PointsChanged_BackgroundColor：最近一次換背景所花費的會員點數（int，非空）
+o	PointsGained_LevelUp：最近一次寵物升級獲得的會員點數獎勵（int，非空）
+o	PointsGainedTime_LevelUp：寵物最後一次升級獲得會員點數的時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	TotalPointsGained_LevelUp：寵物升級累計獲得的總會員點數（int，可空，預設 0）
+o	IsDeleted：軟刪除標記（bit，非空，預設 0）
+o	DeletedAt：刪除時間（datetime2(7)，可空）
+o	DeletedBy：刪除者 ID（int，可空）
+o	DeleteReason：刪除原因（nvarchar(500)，可空）
+•	PetSkinColorCostSettings：寵物膚色價格設定表
+o	SettingId：設定 ID（主鍵，int IDENTITY）
+o	ColorCode：色碼（varchar(7)，非空，格式 #RRGGBB，CHECK 約束）
+o	ColorName：顏色名稱（nvarchar(50)，非空）
+o	PointsCost：所需點數（int，非空，預設 2000，>= 0）
+o	Rarity：稀有度（nvarchar(20)，非空，預設 '普通'，可選：普通/稀有/史詩/傳說/限定）
+o	Description：描述（nvarchar(500)，可空）
+o	PreviewImagePath：預覽圖路徑（nvarchar(500)，可空）
+o	ColorHex：色碼備用欄位（varchar(7)，可空）
+o	IsActive：是否啟用（bit，非空，預設 1）
+o	DisplayOrder：顯示順序（int，非空，預設 0）
+o	IsFree：是否免費（bit，非空，預設 0）
+o	IsLimitedEdition：是否限定版（bit，非空，預設 0）
+o	AvailableFrom：可用開始時間（datetime2(7)，可空）
+o	AvailableUntil：可用結束時間（datetime2(7)，可空）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+o	CreatedAt：建立時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	UpdatedAt：更新時間（datetime2(7)，可空）
+o	UpdatedBy：更新者 ID（int，可空）
+•	PetBackgroundCostSettings：寵物背景價格設定表
+o	SettingId：設定 ID（主鍵，int IDENTITY）
+o	BackgroundCode：背景代碼（nvarchar(50)，非空）
+o	BackgroundName：背景名稱（nvarchar(100)，非空）
+o	PointsCost：所需點數（int，非空，>= 0）
+o	Description：描述（nvarchar(500)，可空）
+o	PreviewImagePath：預覽圖路徑（nvarchar(200)，可空）
+o	IsActive：是否啟用（bit，非空，預設 1）
+o	DisplayOrder：顯示順序（int，可空，預設 0）
+o	Rarity：稀有度（nvarchar(20)，可空）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+o	CreatedAt、UpdatedAt、UpdatedBy：審計欄位
+•	PetLevelRewardSettings：寵物升級獎勵規則表
+o	SettingId：設定 ID（主鍵，int IDENTITY）
+o	LevelRangeStart：等級範圍起始（int，非空，> 0）
+o	LevelRangeEnd：等級範圍結束（int，非空，>= LevelRangeStart）
+o	PointsReward：獎勵點數（int，非空，範圍 0-999999）
+o	Description：描述（nvarchar(500)，可空）
+o	IsActive：是否啟用（bit，非空，預設 1）
+o	DisplayOrder：顯示順序（int，非空，預設 0）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+o	CreatedAt、UpdatedAt、UpdatedBy：審計欄位
 •	MiniGame：小冒險遊戲紀錄表
-o	PlayID：遊戲執行記錄 ID（主鍵，自動遞增）
-o	UserID：玩家會員 ID（非空，外鍵參考 Users.UserID）
-o	PetID：出戰寵物 ID（非空，外鍵參考 Pet.PetID）
-o	Level：遊戲關卡等級（非空，資料庫無預設值；建立紀錄時請明確給定，業務流程通常以 0 起算）
-o	MonsterCount：需面對的怪物數量（非空，資料庫無預設值；預期由程式填入整數）
-o	SpeedMultiplier：怪物移動速度倍率（decimal(5,2)，非空，資料庫無預設值，常用 1.00）
-o	Result：遊戲結果（nvarchar(10)，非空，資料庫無預設值，可選值：Win/Lose/Abort）
-o	ExpGained：寵物本次獲得的寵物經驗值（非空，資料庫無預設值，流程端給定）
-o	ExpGainedTime：寵物經驗值入帳時間（datetime2，非空，預設 SYSUTCDATETIME()）
-o	PointsGained：本次會員點數獲得（非空，資料庫無預設值，流程端計算後寫入）
-o	PointsGainedTime：本次會員點數發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
-o	CouponGained：本次獲得的優惠券代碼（非空，資料庫無預設值；未發券時寫入 "0"）
-o	CouponGainedTime：本次優惠券發放時間（datetime2，非空，預設 SYSUTCDATETIME()）
-o	HungerDelta：寵物飢餓值變化量（非空，資料庫無預設值，流程端通常寫入 0）
-o	MoodDelta：寵物心情值變化量（非空，資料庫無預設值，流程端通常寫入 0）
-o	StaminaDelta：寵物體力值變化量（非空，資料庫無預設值，流程端通常寫入 0）
-o	CleanlinessDelta：寵物清潔值變化量（非空，資料庫無預設值，流程端通常寫入 0）
-o	StartTime：遊戲開始時間（datetime2，非空，預設 SYSUTCDATETIME()）
-o	EndTime：遊戲結束時間（datetime2，非空，預設 SYSUTCDATETIME()，若實際流程確認為中途退出需覆寫為 NULL）
+o	PlayID：遊戲執行記錄 ID（主鍵，int IDENTITY，自動遞增）
+o	UserID：玩家會員 ID（int，非空，外鍵參考 Users.User_ID）
+o	PetID：出戰寵物 ID（int，非空，外鍵參考 Pet.PetID）
+o	Level：遊戲關卡等級（int，非空）
+o	MonsterCount：需面對的怪物數量（int，非空）
+o	SpeedMultiplier：怪物移動速度倍率（decimal(5,2)，非空）
+o	Result：遊戲結果（nvarchar(20)，非空）
+o	ExpGained：寵物本次獲得的經驗值（int，非空）
+o	ExpGainedTime：寵物經驗值入帳時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	PointsGained：本次會員點數獲得（int，非空）
+o	PointsGainedTime：本次會員點數發放時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	CouponGained：本次獲得的優惠券代碼（nvarchar(50)，非空）
+o	CouponGainedTime：本次優惠券發放時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	HungerDelta：寵物飢餓值變化量（int，非空）
+o	MoodDelta：寵物心情值變化量（int，非空）
+o	StaminaDelta：寵物體力值變化量（int，非空）
+o	CleanlinessDelta：寵物清潔值變化量（int，非空）
+o	StartTime：遊戲開始時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	EndTime：遊戲結束時間（datetime2(7)，可空，預設 sysutcdatetime()）
 o	Aborted：是否中途放棄（bit，非空，預設 0）
-外鍵關係與索引
-•	Users.User_ID → User_Introduce.User_ID
-•	Users.User_ID → User_Rights.User_Id
-•	Users.User_ID → User_wallet.User_Id
-•	UserSignInStats.UserID → Users.User_ID
-•	Pet.UserID → Users.User_ID
-•	MiniGame.UserID → Users.User_ID
-•	MiniGame.PetID → Pet.PetID
-注意：不得修改資料庫 Schema，所有欄位名稱必須與現有資料庫保持一致
+o	IsDeleted：軟刪除標記（bit，非空，預設 0）
+o	DeletedAt：刪除時間（datetime2(7)，可空）
+o	DeletedBy：刪除者 ID（int，可空）
+o	DeleteReason：刪除原因（nvarchar(500)，可空）
+•	WalletHistory：錢包異動歷史表
+o	LogID：異動記錄 ID（主鍵，int IDENTITY，自動遞增）
+o	UserID：會員 ID（int，非空，外鍵參考 Users.User_ID）
+o	ChangeType：異動類型（nvarchar(20)，非空）
+o	PointsChanged：點數變化量（int，非空，可正可負）
+o	ItemCode：相關項目代碼（nvarchar(50)，可空）
+o	Description：異動描述（nvarchar(255)，可空）
+o	ChangeTime：異動時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	IsDeleted：軟刪除標記（bit，非空，預設 0）
+o	DeletedAt：刪除時間（datetime2(7)，可空）
+o	DeletedBy：刪除者 ID（int，可空）
+o	DeleteReason：刪除原因（nvarchar(500)，可空）
+o	索引：IX_WalletHistory_user_time (UserID, ChangeTime)、IX_WalletHistory_type_time (ChangeType, ChangeTime)
+•	CouponType：優惠券類型定義表
+o	CouponTypeID：優惠券類型 ID（主鍵，int IDENTITY）
+o	Name：優惠券類型名稱（nvarchar(50)，非空，UNIQUE）
+o	DiscountType：折扣類型（nvarchar(20)，非空，可選：PERCENT 或 AMOUNT）
+o	DiscountValue：折扣值（decimal(18,2)，可空）
+o	MinSpend：最低消費金額（decimal(18,2)，可空）
+o	ValidFrom：有效期起始（datetime2(7)，非空）
+o	ValidTo：有效期結束（datetime2(7)，非空）
+o	PointsCost：兌換所需點數（int，非空）
+o	Description：描述（nvarchar(600)，可空）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+o	CHECK Constraint：ValidFrom <= ValidTo
+•	Coupon：優惠券實例表
+o	CouponID：優惠券 ID（主鍵，int IDENTITY）
+o	CouponCode：優惠券代碼（nvarchar(50)，非空，UNIQUE）
+o	CouponTypeID：優惠券類型 ID（int，非空，外鍵參考 CouponType.CouponTypeID）
+o	UserID：擁有者會員 ID（int，非空，外鍵參考 Users.User_ID）
+o	IsUsed：是否已使用（bit，非空，預設 0）
+o	AcquiredTime：獲得時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	UsedTime：使用時間（datetime2(7)，可空，預設 sysutcdatetime()）
+o	UsedInOrderID：使用於訂單 ID（int，可空）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+o	CHECK Constraint：IsUsed=0 時 UsedTime 和 UsedInOrderID 必須為 NULL；IsUsed=1 時兩者不可為 NULL
+o	索引：IX_Coupon_user_used (UserID, IsUsed, AcquiredTime)
+•	EVoucherType：電子禮券類型定義表
+o	EVoucherTypeID：禮券類型 ID（主鍵，int IDENTITY）
+o	Name：禮券類型名稱（nvarchar(50)，非空）
+o	ValueAmount：面額（decimal(18,2)，非空）
+o	ValidFrom：有效期起始（datetime2(7)，非空）
+o	ValidTo：有效期結束（datetime2(7)，非空）
+o	PointsCost：兌換所需點數（int，非空）
+o	TotalAvailable：總可兌換數量（int，非空）
+o	Description：描述（nvarchar(600)，可空）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+•	EVoucher：電子禮券實例表
+o	EVoucherID：禮券 ID（主鍵，int IDENTITY）
+o	EVoucherCode：禮券代碼（nvarchar(50)，非空，UNIQUE）
+o	EVoucherTypeID：禮券類型 ID（int，非空，外鍵參考 EVoucherType.EVoucherTypeID）
+o	UserID：擁有者會員 ID（int，非空，外鍵參考 Users.User_ID）
+o	IsUsed：是否已使用（bit，非空，預設 0）
+o	AcquiredTime：獲得時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	UsedTime：使用時間（datetime2(7)，可空，預設 sysutcdatetime()）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+o	索引：IX_EVoucher_user_used (UserID, IsUsed, AcquiredTime)
+•	EVoucherToken：電子禮券核銷憑證表
+o	TokenID：憑證 ID（主鍵，int IDENTITY）
+o	EVoucherID：禮券 ID（int，非空，外鍵參考 EVoucher.EVoucherID）
+o	Token：一次性憑證（varchar(64)，非空）
+o	ExpiresAt：過期時間（datetime2(7)，非空）
+o	IsRevoked：是否已撤銷（bit，非空，預設 0）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+•	EVoucherRedeemLog：電子禮券核銷記錄表
+o	RedeemID：核銷記錄 ID（主鍵，int IDENTITY）
+o	EVoucherID：禮券 ID（int，非空，外鍵參考 EVoucher.EVoucherID，CASCADE DELETE）
+o	TokenID：憑證 ID（int，可空，外鍵參考 EVoucherToken.TokenID）
+o	UserID：操作會員 ID（int，非空，外鍵參考 Users.User_ID）
+o	ScannedAt：掃描時間（datetime2(7)，非空，預設 sysutcdatetime()）
+o	Status：核銷狀態（nvarchar(20)，非空，可選：REVOKED/REJECTED/EXPIRED/ALREADYUSED/APPROVED）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+•	SystemSettings：系統設定表
+o	SettingId：設定 ID（主鍵，int IDENTITY）
+o	SettingKey：設定鍵（nvarchar(200)，非空，UNIQUE）
+o	SettingValue：設定值（nvarchar(MAX)，可空）
+o	Description：描述（nvarchar(500)，可空）
+o	Category：分類（nvarchar(100)，非空，預設 'General'）
+o	SettingType：設定類型（nvarchar(50)，非空，預設 'String'，可選：String/Boolean/Number/JSON）
+o	IsReadOnly：是否唯讀（bit，非空，預設 0）
+o	IsActive：是否啟用（bit，非空，預設 1）
+o	IsDeleted、DeletedAt、DeletedBy、DeleteReason：軟刪除欄位
+o	CreatedAt、UpdatedAt、UpdatedBy：審計欄位
+•	ManagerData：管理員基本資料表
+o	Manager_Id：管理員 ID（主鍵，int）
+o	Manager_Name：管理員姓名（nvarchar(30)，可空）
+o	Manager_Account：管理員帳號（varchar(30)，可空）
+o	Manager_Password：管理員密碼（nvarchar(200)，可空）
+o	Administrator_registration_date：註冊日期（datetime2(7)，可空）
+o	Manager_Email：管理員 Email（nvarchar(255)，非空）
+o	Manager_EmailConfirmed：Email 驗證狀態（bit，非空，預設 0）
+o	Manager_AccessFailedCount：登入失敗次數（int，非空，預設 0）
+o	Manager_LockoutEnabled：鎖定功能啟用（bit，非空，預設 0）
+o	Manager_LockoutEnd：鎖定結束時間（datetime2(7)，可空）
+•	ManagerRole：管理員角色分配表
+o	Manager_Id：管理員 ID（主鍵之一，int，外鍵參考 ManagerData.Manager_Id）
+o	ManagerRole_Id：角色 ID（主鍵之一，int，外鍵參考 ManagerRolePermission.ManagerRole_Id）
+o	複合主鍵：(Manager_Id, ManagerRole_Id)
+•	ManagerRolePermission：角色權限定義表
+o	ManagerRole_Id：角色 ID（主鍵，int）
+o	role_name：角色名稱（nvarchar(50)，非空）
+o	AdministratorPrivilegesManagement：管理員權限管理（bit，可空，預設 NULL）
+o	UserStatusManagement：用戶狀態管理（bit，可空，預設 NULL）
+o	ShoppingPermissionManagement：購物權限管理（bit，可空，預設 NULL）
+o	MessagePermissionManagement：留言權限管理（bit，可空，預設 NULL）
+o	Pet_Rights_Management：寵物權限管理（bit，可空，預設 NULL）
+o	customer_service：客服功能（bit，可空，預設 NULL）
+外鍵關係與索引（以實際資料庫為準）
+•	Users.User_ID → User_Wallet.User_Id（一對一）
+•	Users.User_ID → UserSignInStats.UserID（一對多）
+•	Users.User_ID → Pet.UserID（一對多）
+•	Users.User_ID → MiniGame.UserID（一對多）
+•	Users.User_ID → WalletHistory.UserID（一對多）
+•	Users.User_ID → Coupon.UserID（一對多）
+•	Users.User_ID → EVoucher.UserID（一對多）
+•	Users.User_ID → EVoucherRedeemLog.UserID（一對多）
+•	Pet.PetID → MiniGame.PetID（一對多）
+•	CouponType.CouponTypeID → Coupon.CouponTypeID（一對多）
+•	EVoucherType.EVoucherTypeID → EVoucher.EVoucherTypeID（一對多）
+•	EVoucher.EVoucherID → EVoucherToken.EVoucherID（一對多）
+•	EVoucher.EVoucherID → EVoucherRedeemLog.EVoucherID（一對多，CASCADE DELETE）
+•	EVoucherToken.TokenID → EVoucherRedeemLog.TokenID（一對多）
+•	ManagerData.Manager_Id → ManagerRole.Manager_Id（一對多）
+•	ManagerRolePermission.ManagerRole_Id → ManagerRole.ManagerRole_Id（一對多）
+【重要】不得修改資料庫 Schema，所有欄位名稱、資料型別、約束必須與實際資料庫保持完全一致
 作者必填項目
 •	 列出所有相關資料表與關鍵欄位
 •	 確認外鍵關係正確性

@@ -1,5 +1,15 @@
 # GameSpace MiniGame Area 完整描述文件
 
+## 更新記錄
+
+**2025-10-27 更新** - 根據實際資料庫結構更新所有技術細節
+- 更新所有資料表欄位定義與實際資料庫一致
+- 更新約束、索引、外鍵定義
+- 更新資料型別與預設值
+- 保持業務邏輯與功能描述不變
+
+---
+
 ## 文件概述
 
 本文件基於以下權威資料來源彙整而成：
@@ -48,27 +58,144 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
 
 #### User_Wallet 模組相關表
 
-- **User_Wallet** - 會員錢包主檔
-- **CouponType** - 優惠券類型定義
-- **Coupon** - 優惠券實例
-- **EVoucherType** - 電子禮券類型定義
-- **EVoucher** - 電子禮券實例
-- **EVoucherToken** - 禮券核銷憑證
-- **EVoucherRedeemLog** - 禮券核銷記錄
-- **WalletHistory** - 錢包異動歷史
+##### User_Wallet - 會員錢包主檔
+**欄位**:
+- User_Id (int, NOT NULL, PK & FK → Users.User_ID)
+- User_Point (int, NOT NULL, DEFAULT 0)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+##### CouponType - 優惠券類型定義
+**欄位**:
+- CouponTypeID (int, IDENTITY, PK)
+- Name (nvarchar(50), NOT NULL, UNIQUE)
+- DiscountType (nvarchar(20), NOT NULL) - 'PERCENT' 或 'AMOUNT'
+- DiscountValue (decimal(18,2), NULL)
+- MinSpend (decimal(18,2), NULL)
+- ValidFrom (datetime2(7), NOT NULL)
+- ValidTo (datetime2(7), NOT NULL)
+- PointsCost (int, NOT NULL)
+- Description (nvarchar(600), NULL)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+**約束**:
+- CK_CouponType_DiscountType: DiscountType 必須是 'PERCENT' 或 'AMOUNT' (大寫)
+- CK_CouponType_ValidRange: ValidFrom <= ValidTo
+
+##### Coupon - 優惠券實例
+詳見 3.3 節
+
+##### EVoucherType - 電子禮券類型定義
+**欄位**:
+- EVoucherTypeID (int, IDENTITY, PK)
+- Name (nvarchar(50), NOT NULL)
+- ValueAmount (decimal(18,2), NOT NULL)
+- ValidFrom (datetime2(7), NOT NULL)
+- ValidTo (datetime2(7), NOT NULL)
+- PointsCost (int, NOT NULL)
+- TotalAvailable (int, NOT NULL)
+- Description (nvarchar(600), NULL)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+##### EVoucher - 電子禮券實例
+詳見 3.2 節
+
+##### EVoucherToken - 禮券核銷憑證
+詳見 3.2.2 節
+
+##### EVoucherRedeemLog - 禮券核銷記錄
+詳見 3.2.3 節
+
+##### WalletHistory - 錢包異動歷史
+詳見 3.4 節
 
 #### UserSignInStats 模組相關表
 
-- **UserSignInStats** - 簽到統計記錄
-- **SignInRule** - 簽到規則設定
+##### UserSignInStats - 簽到統計記錄
+**欄位**:
+- LogID (int, IDENTITY, PK)
+- SignTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- UserID (int, NOT NULL, FK → Users.User_ID)
+- PointsGained (int, NOT NULL)
+- PointsGainedTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- ExpGained (int, NOT NULL)
+- ExpGainedTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- CouponGained (nvarchar(50), NOT NULL)
+- CouponGainedTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+##### SignInRule - 簽到規則設定
+**欄位**:
+- Id (int, IDENTITY, PK)
+- SignInDay (int, NOT NULL, UNIQUE) - 範圍 1-365
+- Points (int, NOT NULL) - >= 0
+- Experience (int, NOT NULL) - >= 0
+- HasCoupon (bit, NOT NULL, DEFAULT 0)
+- CouponTypeCode (nvarchar(50), NULL)
+- IsActive (bit, NOT NULL, DEFAULT 1)
+- CreatedAt (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- UpdatedAt (datetime2(7), NULL)
+- Description (nvarchar(255), NULL)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+**約束**:
+- CK_SignInRule_DayRange: SignInDay 必須在 1-365 之間
+- CK_SignInRule_Positive: Points 和 Experience 必須 >= 0
+- CK_SignInRule_CouponFlag: HasCoupon=1 時 CouponTypeCode 必須有值；HasCoupon=0 時必須為 NULL
+
+**索引**:
+- UQ_SignInRule_SignInDay_Active (UNIQUE) on SignInDay
+- IX_SignInRule_IsDeleted on IsDeleted
 
 #### Pet 模組相關表
 
-- **Pet** - 寵物狀態資料
+##### Pet - 寵物狀態資料
+詳見第 4.3 節
 
 #### MiniGame 模組相關表
 
-- **MiniGame** - 小遊戲記錄
+##### MiniGame - 小遊戲記錄
+詳見第 4.4 節
+
+#### 系統設定表
+
+##### SystemSettings - 系統設定
+**欄位**:
+- SettingId (int, IDENTITY, PK)
+- SettingKey (nvarchar(200), NOT NULL, UNIQUE)
+- SettingValue (nvarchar(MAX), NULL)
+- Description (nvarchar(500), NULL)
+- Category (nvarchar(100), NOT NULL, DEFAULT 'General')
+- SettingType (nvarchar(50), NOT NULL, DEFAULT 'String') - 可選值: 'String', 'Boolean', 'Number', 'JSON'
+- IsReadOnly (bit, NOT NULL, DEFAULT 0)
+- IsActive (bit, NOT NULL, DEFAULT 1)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+- CreatedAt (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- UpdatedAt (datetime2(7), NULL)
+- UpdatedBy (int, NULL)
+
+**CHECK Constraints**:
+- CHK_SystemSettings_SettingType: SettingType IN ('String', 'Boolean', 'Number', 'JSON')
+
+**索引**:
+- UQ_SystemSettings_SettingKey (UNIQUE) on SettingKey
 
 ### 2.2 權限管理表
 
@@ -76,35 +203,65 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
 
 #### 管理員資料表
 
-- **ManagerData** - 管理員基本資料
-  - Manager_Id (主鍵)
-  - Manager_Name (管理員姓名)
-  - Manager_Account (管理員帳號)
-  - Manager_Password (管理員密碼)
-  - Manager_Email (管理員信箱)
-  - Manager_EmailConfirmed (信箱確認狀態)
-  - Manager_AccessFailedCount (登入失敗次數)
-  - Manager_LockoutEnabled (帳號鎖定啟用)
-  - Manager_LockoutEnd (帳號鎖定結束時間)
-  - Administrator_registration_date (註冊日期)
+##### ManagerData - 管理員基本資料
+**主鍵**: Manager_Id (int)
+
+**欄位**:
+- Manager_Id (int, NOT NULL) - PK
+- Manager_Name (nvarchar(30), NULL) - 管理員姓名
+- Manager_Account (varchar(30), NULL) - 管理員帳號
+- Manager_Password (nvarchar(200), NULL) - 管理員密碼
+- Administrator_registration_date (datetime2(7), NULL) - 註冊日期
+- Manager_Email (nvarchar(255), NOT NULL) - 管理員信箱
+- Manager_EmailConfirmed (bit, NOT NULL, DEFAULT 0) - 信箱確認狀態
+- Manager_AccessFailedCount (int, NOT NULL, DEFAULT 0) - 登入失敗次數
+- Manager_LockoutEnabled (bit, NOT NULL, DEFAULT 0) - 帳號鎖定啟用
+- Manager_LockoutEnd (datetime2(7), NULL) - 帳號鎖定結束時間
 
 #### 角色權限表
 
-- **ManagerRolePermission** - 角色權限定義
-  - ManagerRole_Id (主鍵)
-  - role_name (角色名稱)
-  - AdministratorPrivilegesManagement (管理者平台管理權限)
-  - UserStatusManagement (使用者狀態管理權限)
-  - ShoppingPermissionManagement (購物權限管理)
-  - MessagePermissionManagement (訊息權限管理)
-  - Pet_Rights_Management (寵物權限管理)
-  - customer_service (客服權限)
+##### ManagerRolePermission - 角色權限定義
+**主鍵**: ManagerRole_Id (int)
+
+**欄位**:
+- ManagerRole_Id (int, NOT NULL) - PK
+- role_name (nvarchar(50), NOT NULL) - 角色名稱
+- AdministratorPrivilegesManagement (bit, NULL, DEFAULT NULL) - 管理者平台管理權限
+- UserStatusManagement (bit, NULL, DEFAULT NULL) - 使用者狀態管理權限
+- ShoppingPermissionManagement (bit, NULL, DEFAULT NULL) - 購物權限管理
+- MessagePermissionManagement (bit, NULL, DEFAULT NULL) - 訊息權限管理
+- Pet_Rights_Management (bit, NULL, DEFAULT NULL) - 寵物權限管理
+- customer_service (bit, NULL, DEFAULT NULL) - 客服權限
 
 #### 管理員角色分配表
 
-- **ManagerRole** - 管理員角色分配
-  - Manager_Id (外鍵 → ManagerData.Manager_Id)
-  - ManagerRole_Id (外鍵 → ManagerRolePermission.ManagerRole_Id)
+##### ManagerRole - 管理員角色分配
+**主鍵**: 複合主鍵 (Manager_Id, ManagerRole_Id)
+**外鍵**:
+- Manager_Id → ManagerData.Manager_Id (NO_ACTION)
+- ManagerRole_Id → ManagerRolePermission.ManagerRole_Id (NO_ACTION)
+
+**欄位**:
+- Manager_Id (int, NOT NULL) - PK & FK
+- ManagerRole_Id (int, NOT NULL) - PK & FK
+
+### 2.3 使用者資料表
+
+##### Users - 使用者基本資料
+**主鍵**: User_ID (int, IDENTITY)
+
+**欄位**:
+- User_ID (int, NOT NULL, IDENTITY) - PK
+- User_name (nvarchar(30), NOT NULL) - 使用者名稱
+- User_Account (nvarchar(30), NOT NULL) - 使用者帳號
+- User_Password (nvarchar(255), NOT NULL) - 使用者密碼
+- User_EmailConfirmed (bit, NOT NULL, DEFAULT 0) - 信箱確認狀態
+- User_PhoneNumberConfirmed (bit, NOT NULL, DEFAULT 0) - 手機號碼確認狀態
+- User_TwoFactorEnabled (bit, NOT NULL, DEFAULT 0) - 雙因素驗證啟用
+- User_AccessFailedCount (int, NOT NULL, DEFAULT 0) - 登入失敗次數
+- User_LockoutEnabled (bit, NOT NULL, DEFAULT 0) - 帳號鎖定啟用
+- User_LockoutEnd (datetime2(7), NULL) - 帳號鎖定結束時間
+- Create_Account (datetime2(6), NOT NULL) - 帳號建立時間
 
 ## 3. 會員錢包系統詳細分析
 
@@ -133,6 +290,24 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
 - **序號格式**: EV-{類型}-{隨機碼}-{6 位數字} (例如: EV-MOVIE-8JDW-064877)
 - **使用範圍**: 實體店核銷使用
 - **核銷機制**: 透過 EVoucherToken 和 EVoucherRedeemLog 管理
+
+**EVoucher 表結構**:
+- EVoucherID (int, IDENTITY, PK)
+- EVoucherCode (nvarchar(50), NOT NULL, UNIQUE)
+- EVoucherTypeID (int, NOT NULL, FK → EVoucherType.EVoucherTypeID)
+- UserID (int, NOT NULL, FK → Users.User_ID)
+- IsUsed (bit, NOT NULL, DEFAULT 0)
+- AcquiredTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- UsedTime (datetime2(7), NULL, DEFAULT sysutcdatetime())
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+**索引**:
+- UQ_EVoucher_EVoucherCode (UNIQUE) on EVoucherCode
+- IX_EVoucher_IsDeleted on IsDeleted
+- IX_EVoucher_user_used on (UserID, IsUsed, AcquiredTime)
 
 ### 3.2 電子禮券核銷系統詳細分析
 
@@ -165,17 +340,25 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
   "EVoucherID": 1,
   "Token": "TKN-GFWZIUGU-7603",
   "ExpiresAt": "2023-07-15 03:39:23",
-  "IsRevoked": 0
+  "IsRevoked": 0,
+  "IsDeleted": 0,
+  "DeletedAt": null,
+  "DeletedBy": null,
+  "DeleteReason": null
 }
 `
 
 **欄位說明**:
 
-- **TokenID**: 憑證唯一識別碼
-- **EVoucherID**: 對應的電子禮券 ID
-- **Token**: 核銷憑證碼，格式 TKN-{8 位隨機碼}-{4 位數字}
-- **ExpiresAt**: 憑證過期時間
-- **IsRevoked**: 是否已撤銷 (0=有效, 1=已撤銷)
+- **TokenID**: 憑證唯一識別碼 (int, IDENTITY, PK)
+- **EVoucherID**: 對應的電子禮券 ID (int, NOT NULL, FK → EVoucher.EVoucherID)
+- **Token**: 核銷憑證碼 (varchar(64), NOT NULL)，格式 TKN-{8 位隨機碼}-{4 位數字}
+- **ExpiresAt**: 憑證過期時間 (datetime2(7), NOT NULL)
+- **IsRevoked**: 是否已撤銷 (bit, NOT NULL, DEFAULT 0) - 0=有效, 1=已撤銷
+- **IsDeleted**: 軟刪除標記 (bit, NOT NULL, DEFAULT 0)
+- **DeletedAt**: 刪除時間 (datetime2(7), NULL)
+- **DeletedBy**: 刪除者 ID (int, NULL)
+- **DeleteReason**: 刪除原因 (nvarchar(500), NULL)
 
 #### 3.2.3 核銷記錄系統 (EVoucherRedeemLog)
 
@@ -186,18 +369,30 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
   "TokenID": 1,
   "UserID": 10000042,
   "ScannedAt": "2025-05-30 23:53:14",
-  "Status": "Approved"
+  "Status": "APPROVED",
+  "IsDeleted": 0,
+  "DeletedAt": null,
+  "DeletedBy": null,
+  "DeleteReason": null
 }
 `
 
 **欄位說明**:
 
-- **RedeemID**: 核銷記錄唯一識別碼
-- **EVoucherID**: 被核銷的電子禮券 ID
-- **TokenID**: 使用的核銷憑證 ID
-- **UserID**: 核銷操作的使用者 ID
-- **ScannedAt**: 核銷掃描時間
-- **Status**: 核銷狀態 (Approved/Rejected/Pending)
+- **RedeemID**: 核銷記錄唯一識別碼 (int, IDENTITY, PK)
+- **EVoucherID**: 被核銷的電子禮券 ID (int, NOT NULL, FK → EVoucher.EVoucherID, CASCADE DELETE)
+- **TokenID**: 使用的核銷憑證 ID (int, NULL, FK → EVoucherToken.TokenID)
+- **UserID**: 核銷操作的使用者 ID (int, NOT NULL, FK → Users.User_ID)
+- **ScannedAt**: 核銷掃描時間 (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- **Status**: 核銷狀態 (nvarchar(20), NOT NULL)
+  - 可選值: 'APPROVED', 'REJECTED', 'EXPIRED', 'ALREADYUSED', 'REVOKED' (大寫)
+- **IsDeleted**: 軟刪除標記 (bit, NOT NULL, DEFAULT 0)
+- **DeletedAt**: 刪除時間 (datetime2(7), NULL)
+- **DeletedBy**: 刪除者 ID (int, NULL)
+- **DeleteReason**: 刪除原因 (nvarchar(500), NULL)
+
+**CHECK Constraint**:
+- CK_EVoucherRedeemLog_Status: Status 必須是 'REVOKED', 'REJECTED', 'EXPIRED', 'ALREADYUSED', 'APPROVED' 其中之一（大寫）
 
 ### 3.3 商城優惠券系統詳細分析
 
@@ -223,20 +418,37 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
   "IsUsed": 0,
   "AcquiredTime": "2025-08-09 05:14:29",
   "UsedTime": null,
-  "UsedInOrderID": null
+  "UsedInOrderID": null,
+  "IsDeleted": 0,
+  "DeletedAt": null,
+  "DeletedBy": null,
+  "DeleteReason": null
 }
 `
 
 **欄位說明**:
 
-- **CouponID**: 優惠券唯一識別碼
-- **CouponCode**: 優惠券序號
-- **CouponTypeID**: 優惠券類型 ID (對應 CouponType 表)
-- **UserID**: 持有者會員 ID
-- **IsUsed**: 使用狀態 (0=未使用, 1=已使用)
-- **AcquiredTime**: 獲得時間
-- **UsedTime**: 使用時間 (未使用時為 null)
-- **UsedInOrderID**: 使用的訂單 ID (未使用時為 null)
+- **CouponID**: 優惠券唯一識別碼 (int, IDENTITY, PK)
+- **CouponCode**: 優惠券序號 (nvarchar(50), NOT NULL, UNIQUE)
+- **CouponTypeID**: 優惠券類型 ID (int, NOT NULL, FK → CouponType.CouponTypeID)
+- **UserID**: 持有者會員 ID (int, NOT NULL, FK → Users.User_ID)
+- **IsUsed**: 使用狀態 (bit, NOT NULL, DEFAULT 0) - 0=未使用, 1=已使用
+- **AcquiredTime**: 獲得時間 (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- **UsedTime**: 使用時間 (datetime2(7), NULL, DEFAULT sysutcdatetime()) - 未使用時為 null
+- **UsedInOrderID**: 使用的訂單 ID (int, NULL) - 未使用時為 null
+- **IsDeleted**: 軟刪除標記 (bit, NOT NULL, DEFAULT 0)
+- **DeletedAt**: 刪除時間 (datetime2(7), NULL)
+- **DeletedBy**: 刪除者 ID (int, NULL)
+- **DeleteReason**: 刪除原因 (nvarchar(500), NULL)
+
+**CHECK Constraints**:
+- CK_Coupon_IsUsed: IsUsed 必須是 0 或 1
+- CK_Coupon_UsedFields: IsUsed=0 時 UsedTime 和 UsedInOrderID 必須為 NULL；IsUsed=1 時兩者必須有值
+
+**索引**:
+- UQ_Coupon_CouponCode (UNIQUE) on CouponCode
+- IX_Coupon_IsDeleted on IsDeleted
+- IX_Coupon_user_used on (UserID, IsUsed, AcquiredTime)
 
 ### 3.4 錢包異動記錄系統 (WalletHistory)
 
@@ -250,19 +462,32 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
   "PointsChanged": -25,
   "ItemCode": null,
   "Description": "遊戲獎勵點數",
-  "ChangeTime": "2024-04-03 11:03:00"
+  "ChangeTime": "2024-04-03 11:03:00",
+  "IsDeleted": 0,
+  "DeletedAt": null,
+  "DeletedBy": null,
+  "DeleteReason": null
 }
 `
 
 **欄位說明**:
 
-- **LogID**: 記錄唯一識別碼
-- **UserID**: 會員 ID
-- **ChangeType**: 異動類型 (Point/Coupon/EVoucher)
-- **PointsChanged**: 點數變動量 (正數=增加, 負數=減少)
-- **ItemCode**: 相關物品代碼 (優惠券或禮券序號)
-- **Description**: 異動描述
-- **ChangeTime**: 異動時間
+- **LogID**: 記錄唯一識別碼 (int, IDENTITY, PK)
+- **UserID**: 會員 ID (int, NOT NULL, FK → Users.User_ID)
+- **ChangeType**: 異動類型 (nvarchar(20), NOT NULL) - Point/Coupon/EVoucher
+- **PointsChanged**: 點數變動量 (int, NOT NULL) - 正數=增加, 負數=減少
+- **ItemCode**: 相關物品代碼 (nvarchar(50), NULL) - 優惠券或禮券序號
+- **Description**: 異動描述 (nvarchar(255), NULL)
+- **ChangeTime**: 異動時間 (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- **IsDeleted**: 軟刪除標記 (bit, NOT NULL, DEFAULT 0)
+- **DeletedAt**: 刪除時間 (datetime2(7), NULL)
+- **DeletedBy**: 刪除者 ID (int, NULL)
+- **DeleteReason**: 刪除原因 (nvarchar(500), NULL)
+
+**索引**:
+- IX_WalletHistory_IsDeleted on IsDeleted
+- IX_WalletHistory_type_time on (ChangeType, ChangeTime)
+- IX_WalletHistory_user_time on (UserID, ChangeTime)
 
 #### 3.4.2 異動類型分析
 
@@ -361,7 +586,121 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
 - **升級獎勵**: 寵物等級 1–10 每升級 +10 點會員點數、11–20 每升級 +20 點，以此類推
 - **每日衰減**: 每日凌晨 00:00，飢餓值 -20、心情值 -30、體力值 -10、清潔值 -20
 
-#### 4.3.3 技術實作
+#### 4.3.3 Pet 資料表結構
+
+**主鍵**: PetID (int, IDENTITY)
+**外鍵**: UserID → Users.User_ID (NO_ACTION)
+
+**欄位**:
+- PetID (int, NOT NULL, IDENTITY) - PK
+- UserID (int, NOT NULL, FK)
+- PetName (nvarchar(50), NOT NULL)
+- Level (int, NOT NULL)
+- LevelUpTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- Experience (int, NOT NULL)
+- Hunger (int, NOT NULL) - 範圍 0-100
+- Mood (int, NOT NULL) - 範圍 0-100
+- Stamina (int, NOT NULL) - 範圍 0-100
+- Cleanliness (int, NOT NULL) - 範圍 0-100
+- Health (int, NOT NULL) - 範圍 0-100
+- SkinColor (varchar(7), NOT NULL) - 格式: #RRGGBB
+- SkinColorChangedTime (datetime2(7), NOT NULL)
+- BackgroundColor (nvarchar(20), NOT NULL)
+- BackgroundColorChangedTime (datetime2(7), NOT NULL)
+- PointsChanged_SkinColor (int, NOT NULL)
+- PointsChanged_BackgroundColor (int, NOT NULL)
+- PointsGained_LevelUp (int, NOT NULL)
+- PointsGainedTime_LevelUp (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- CurrentExperience (int, NOT NULL, DEFAULT 0)
+- ExperienceToNextLevel (int, NULL)
+- TotalPointsGained_LevelUp (int, NULL, DEFAULT 0)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+**CHECK Constraints**:
+- CK_Pet_Hunger: Hunger >= 0 AND Hunger <= 100
+- CK_Pet_Mood: Mood >= 0 AND Mood <= 100
+- CK_Pet_Stamina: Stamina >= 0 AND Stamina <= 100
+- CK_Pet_Cleanliness: Cleanliness >= 0 AND Cleanliness <= 100
+- CK_Pet_Health: Health >= 0 AND Health <= 100
+
+#### 4.3.4 寵物相關設定表
+
+##### PetSkinColorCostSettings - 寵物膚色價格設定
+**欄位**:
+- SettingId (int, IDENTITY, PK)
+- ColorCode (varchar(7), NOT NULL) - 格式: #RRGGBB
+- ColorName (nvarchar(50), NOT NULL)
+- PointsCost (int, NOT NULL, DEFAULT 2000) - >= 0
+- Rarity (nvarchar(20), NOT NULL, DEFAULT '普通') - 可選值: '普通', '稀有', '史詩', '傳說', '限定'
+- Description (nvarchar(500), NULL)
+- PreviewImagePath (nvarchar(500), NULL)
+- ColorHex (varchar(7), NULL)
+- IsActive (bit, NOT NULL, DEFAULT 1)
+- DisplayOrder (int, NOT NULL, DEFAULT 0)
+- IsFree (bit, NOT NULL, DEFAULT 0)
+- IsLimitedEdition (bit, NOT NULL, DEFAULT 0)
+- AvailableFrom (datetime2(7), NULL)
+- AvailableUntil (datetime2(7), NULL)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+- CreatedAt (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- UpdatedAt (datetime2(7), NULL)
+- UpdatedBy (int, NULL)
+
+**CHECK Constraints**:
+- CK_PetSkinColorCostSettings_PointsCost: PointsCost >= 0
+- CK_PetSkinColorCostSettings_ColorCode: ColorCode LIKE '#%' AND LEN(ColorCode) >= 4
+- CK_PetSkinColorCostSettings_Rarity: Rarity IN ('普通', '稀有', '史詩', '傳說', '限定')
+
+##### PetBackgroundCostSettings - 寵物背景價格設定
+**欄位**:
+- SettingId (int, IDENTITY, PK)
+- BackgroundCode (nvarchar(50), NOT NULL)
+- BackgroundName (nvarchar(100), NOT NULL)
+- PointsCost (int, NOT NULL) - >= 0
+- Description (nvarchar(500), NULL)
+- PreviewImagePath (nvarchar(200), NULL)
+- IsActive (bit, NOT NULL, DEFAULT 1)
+- DisplayOrder (int, NULL, DEFAULT 0)
+- Rarity (nvarchar(20), NULL)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+- CreatedAt (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- UpdatedAt (datetime2(7), NULL)
+- UpdatedBy (int, NULL)
+
+**CHECK Constraints**:
+- CK__PetBackgr__Point__541767F8: PointsCost >= 0
+
+##### PetLevelRewardSettings - 寵物升級獎勵規則
+**欄位**:
+- SettingId (int, IDENTITY, PK)
+- LevelRangeStart (int, NOT NULL) - > 0
+- LevelRangeEnd (int, NOT NULL) - >= LevelRangeStart
+- PointsReward (int, NOT NULL) - 範圍 0-999999
+- Description (nvarchar(500), NULL)
+- IsActive (bit, NOT NULL, DEFAULT 1)
+- DisplayOrder (int, NOT NULL, DEFAULT 0)
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+- CreatedAt (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- UpdatedAt (datetime2(7), NULL)
+- UpdatedBy (int, NULL)
+
+**CHECK Constraints**:
+- CK_PetLevelRewardSettings_LevelRange: LevelRangeStart > 0 AND LevelRangeEnd >= LevelRangeStart
+- CK_PetLevelRewardSettings_PointsReward: PointsReward >= 0 AND PointsReward <= 999999
+
+#### 4.3.5 技術實作
 
 - **Controller**: PetController 處理寵物相關請求
 - **Service**: PetInteractionService 處理寵物互動邏輯
@@ -386,7 +725,40 @@ MiniGame Area 是 GameSpace 遊戲論壇平台的核心功能區域，提供會�
   - 第 3 關：怪物數量 10、移動速度 2 倍；獎勵 +300 寵物經驗值，+30 會員點數，+1 張商城優惠券
 - **健康狀態檢查**: 冒險開始前檢查寵物狀態，若飢餓、心情、體力、清潔、健康任一屬性值為 0，則無法開始冒險
 
-#### 4.4.3 技術實作
+#### 4.4.3 MiniGame 資料表結構
+
+**主鍵**: PlayID (int, IDENTITY)
+**外鍵**:
+- PetID → Pet.PetID (NO_ACTION)
+- UserID → Users.User_ID (NO_ACTION)
+
+**欄位**:
+- PlayID (int, NOT NULL, IDENTITY) - PK
+- UserID (int, NOT NULL, FK)
+- PetID (int, NOT NULL, FK)
+- Level (int, NOT NULL) - 關卡等級
+- MonsterCount (int, NOT NULL) - 怪物數量
+- SpeedMultiplier (decimal(5,2), NOT NULL) - 速度倍率
+- Result (nvarchar(20), NOT NULL) - 遊戲結果 (Win/Lose/Abort)
+- ExpGained (int, NOT NULL) - 獲得經驗值
+- ExpGainedTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- PointsGained (int, NOT NULL) - 獲得點數
+- PointsGainedTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- CouponGained (nvarchar(50), NOT NULL) - 獲得優惠券
+- CouponGainedTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- HungerDelta (int, NOT NULL) - 飢餓值變化
+- MoodDelta (int, NOT NULL) - 心情值變化
+- StaminaDelta (int, NOT NULL) - 體力值變化
+- CleanlinessDelta (int, NOT NULL) - 清潔值變化
+- StartTime (datetime2(7), NOT NULL, DEFAULT sysutcdatetime())
+- EndTime (datetime2(7), NULL, DEFAULT sysutcdatetime())
+- Aborted (bit, NOT NULL, DEFAULT 0) - 是否中途退出
+- IsDeleted (bit, NOT NULL, DEFAULT 0)
+- DeletedAt (datetime2(7), NULL)
+- DeletedBy (int, NULL)
+- DeleteReason (nvarchar(500), NULL)
+
+#### 4.4.4 技術實作
 
 - **Controller**: GameController 處理遊戲相關請求
 - **Service**: GameEngineService 處理遊戲核心邏輯
@@ -618,11 +990,20 @@ Level 241-250: 每升級 +250 點會員點數（上限）`
 
 ### 8.2 資料庫規範
 
-- **權威來源**: database.json 為唯一真實來源
+- **權威來源**: 實際 SQL Server 資料庫為唯一真實來源，參考 db_schema_summary.md (2025-10-27 查詢)
+- **資料庫伺服器**: DESKTOP-8HQIS1S\SQLEXPRESS
+- **資料庫名稱**: GameSpaceDatabase
+- **SQL Server 版本**: Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 Express Edition
 - **禁止修改**: 不得使用 EF Migrations 或修改 schema
 - **讀取方式**: 使用 AsNoTracking() 進行讀取操作
-- **種子資料**: 使用 seedMiniGameArea.json 作為展示用假資料基準
-- **管理員資料**: 使用 script_manager.sql 建立管理員權限系統
+- **資料型別規範**:
+  - 字串: nvarchar (支援 Unicode), varchar (純 ASCII)
+  - 數值: int, decimal(18,2) (金額), decimal(5,2) (倍率)
+  - 布林: bit
+  - 日期時間: datetime2(7) (主要), datetime2(6) (Users.Create_Account)
+- **軟刪除**: 所有 MiniGame Area 表格都實作軟刪除 (IsDeleted, DeletedAt, DeletedBy, DeleteReason)
+- **審計追蹤**: 部分表格有 CreatedAt, UpdatedAt, UpdatedBy
+- **時間戳記**: 多數時間欄位使用 DEFAULT sysutcdatetime() 自動填入
 
 ### 8.3 權限控制實作
 
@@ -712,12 +1093,17 @@ public async Task<IActionResult> UpdateUserPoints(int userId, int points)
 
 ### 10.1 部署要求
 
-- **開發環境**: Visual Studio 2022+ 和 SQL Server 2019/2022
+- **開發環境**: Visual Studio 2022+ 和 SQL Server 2022 Express Edition
+- **資料庫伺服器**: DESKTOP-8HQIS1S\SQLEXPRESS
+- **資料庫名稱**: GameSpaceDatabase
 - **資料庫初始化**:
-  - 執行 database.json 建立初始資料
-  - 執行 script_manager.sql 建立管理員權限系統
-- **種子資料**: 執行 seedMiniGameArea.json 匯入展示用假資料
+  - 資料庫結構已建立完成，共 20 張表格
+  - MiniGame Area 主要表格：16 張
+  - 使用者/權限相關表格：4 張
 - **連線設定**: 設定 appsettings.json DefaultConnection
+- **注意事項**:
+  - 嚴禁使用 EF Migrations 修改資料庫結構
+  - 所有結構變更必須直接在 SQL Server 上執行
 
 ### 10.2 測試帳號
 
@@ -738,7 +1124,32 @@ public async Task<IActionResult> UpdateUserPoints(int userId, int points)
 
 MiniGame Area 是 GameSpace 平台的核心功能區域，提供完整的會員互動體驗。透過嚴格的權限控制、清晰的業務邏輯和穩定的技術架構，確保系統能夠安全、高效地為用戶提供優質的服務。
 
-本文件基於多個權威資料來源彙整而成，包含完整的權限管理系統設計，確保描述的完整性和準確性。開發團隊應嚴格遵循本文檔的規範進行開發和維護工作。
+### 11.1 文件更新說明
+
+本文件於 2025-10-27 根據實際資料庫結構進行全面更新，確保所有技術細節與實際環境一致：
+
+**更新內容**:
+- 所有資料表欄位定義更新為實際資料庫結構
+- 補充完整的約束條件（CHECK Constraints）
+- 補充完整的索引資訊
+- 補充完整的外鍵關係
+- 更新所有資料型別定義
+- 更新預設值設定
+- 補充軟刪除欄位 (IsDeleted, DeletedAt, DeletedBy, DeleteReason)
+- 補充審計追蹤欄位 (CreatedAt, UpdatedAt, UpdatedBy)
+
+**資料來源**:
+- 實際資料庫：DESKTOP-8HQIS1S\SQLEXPRESS\GameSpaceDatabase
+- 參考文件：db_schema_summary.md (2025-10-27 查詢結果)
+- 總表格數：20 張 (MiniGame Area 16 張 + 使用者/權限 4 張)
+
+**保持不變**:
+- 業務邏輯與功能描述
+- 前後台功能規劃
+- 權限控制架構
+- 開發流程與規範
+
+開發團隊應以本文檔為準進行開發和維護工作，確保實作與文件描述完全一致。
 
 ---
 

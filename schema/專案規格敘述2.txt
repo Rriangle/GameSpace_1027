@@ -1,4 +1,5 @@
 GameSpace 遊戲論壇平台精簡規格（去除敘事流程版）
+【最後更新日期：2025-10-27】
 
 【系統總覽】
 - 定位：遊戲討論＋社群互動平台（會員、追蹤、社群、交易）。
@@ -24,23 +25,42 @@ GameSpace 遊戲論壇平台精簡規格（去除敘事流程版）
 - 鍵索引：主鍵多為自增 INT；必要唯一/複合索引優化查詢；完整外鍵關聯。
 - 稽核：過期/已用紀錄保留；避免物理刪除（必要時邏輯標記）。
 
-【優惠券（Coupon）】
-- CouponType（券類型）：
-  - 欄位：Name、DiscountType（Amount/Percent）、DiscountValue、MinSpend、ValidFrom/ValidTo、PointsCost、Description。
-  - 主鍵：CouponTypeID。
-- Coupon（發給會員的券）：
-  - 欄位：CouponID、CouponCode（唯一）、CouponTypeID、UserID、IsUsed、AcquiredTime、UsedTime、UsedInOrderID（參考）。
-  - 索引：(UserID, IsUsed, CouponID)。
+【優惠券（Coupon）- 實際資料庫結構】
+- CouponType（券類型定義）：
+  - 主鍵：CouponTypeID (int IDENTITY)
+  - 欄位：Name (nvarchar(50), UNIQUE)、DiscountType (nvarchar(20), 'PERCENT'或'AMOUNT')、DiscountValue (decimal(18,2))、MinSpend (decimal(18,2))、ValidFrom (datetime2(7))、ValidTo (datetime2(7))、PointsCost (int)、Description (nvarchar(600))
+  - 軟刪除：IsDeleted、DeletedAt、DeletedBy、DeleteReason
+  - CHECK 約束：ValidFrom <= ValidTo
+- Coupon（優惠券實例）：
+  - 主鍵：CouponID (int IDENTITY)
+  - 外鍵：CouponTypeID → CouponType、UserID → Users.User_ID
+  - 欄位：CouponCode (nvarchar(50), UNIQUE)、IsUsed (bit, 預設0)、AcquiredTime (datetime2(7))、UsedTime (datetime2(7), 可空)、UsedInOrderID (int, 可空)
+  - 軟刪除：IsDeleted、DeletedAt、DeletedBy、DeleteReason
+  - CHECK 約束：IsUsed=0 時 UsedTime 和 UsedInOrderID 必須為 NULL；IsUsed=1 時兩者不可為 NULL
+  - 索引：IX_Coupon_user_used (UserID, IsUsed, AcquiredTime)
 
-【電子禮券（E‑voucher）與核銷】
-- EVoucherType（禮券類型）：
-  - 欄位：Name、ValueAmount、ValidFrom/ValidTo、PointsCost、TotalAvailable、Description。
-  - 主鍵：EVoucherTypeID。
-- EVoucher（實際禮券）：
-  - 欄位：EVoucherID、EVoucherCode（唯一/可轉條碼或QR）、EVoucherTypeID、UserID、IsUsed、AcquiredTime、UsedTime。
-  - 索引：(UserID, IsUsed, EVoucherID)。
-- EVoucherToken（一次性憑證）：TokenID、EVoucherID、Token（64字元唯一）、ExpiresAt、IsRevoked。
-- EVoucherRedeemLog（核銷日誌）：RedeemID、EVoucherID、TokenID(NULL可人工輸入)、UserID、ScannedAt、Status（Approved/Rejected/Expired/AlreadyUsed/Revoked）；索引：(EVoucherID, ScannedAt)、(UserID, ScannedAt)。
+【電子禮券（EVoucher）與核銷 - 實際資料庫結構】
+- EVoucherType（禮券類型定義）：
+  - 主鍵：EVoucherTypeID (int IDENTITY)
+  - 欄位：Name (nvarchar(50))、ValueAmount (decimal(18,2))、ValidFrom (datetime2(7))、ValidTo (datetime2(7))、PointsCost (int)、TotalAvailable (int)、Description (nvarchar(600))
+  - 軟刪除：IsDeleted、DeletedAt、DeletedBy、DeleteReason
+- EVoucher（電子禮券實例）：
+  - 主鍵：EVoucherID (int IDENTITY)
+  - 外鍵：EVoucherTypeID → EVoucherType、UserID → Users.User_ID
+  - 欄位：EVoucherCode (nvarchar(50), UNIQUE)、IsUsed (bit, 預設0)、AcquiredTime (datetime2(7))、UsedTime (datetime2(7), 可空)
+  - 軟刪除：IsDeleted、DeletedAt、DeletedBy、DeleteReason
+  - 索引：IX_EVoucher_user_used (UserID, IsUsed, AcquiredTime)
+- EVoucherToken（一次性核銷憑證）：
+  - 主鍵：TokenID (int IDENTITY)
+  - 外鍵：EVoucherID → EVoucher
+  - 欄位：Token (varchar(64), 非空)、ExpiresAt (datetime2(7))、IsRevoked (bit, 預設0)
+  - 軟刪除：IsDeleted、DeletedAt、DeletedBy、DeleteReason
+- EVoucherRedeemLog（核銷記錄）：
+  - 主鍵：RedeemID (int IDENTITY)
+  - 外鍵：EVoucherID → EVoucher (CASCADE DELETE)、TokenID → EVoucherToken (可空)、UserID → Users.User_ID
+  - 欄位：ScannedAt (datetime2(7))、Status (nvarchar(20), 可選值：'REVOKED'/'REJECTED'/'EXPIRED'/'ALREADYUSED'/'APPROVED')
+  - 軟刪除：IsDeleted、DeletedAt、DeletedBy、DeleteReason
+  - CHECK 約束：Status 必須為上述五個值之一
 
 【兌換（以點數）】
 - 條件：User_Point ≥ PointsCost。
@@ -76,9 +96,28 @@ GameSpace 遊戲論壇平台精簡規格（去除敘事流程版）
 - 系統公告：全站通知（標題/內容/對象）。
 - 券與點數：券發放、點數調整、例外處理（取消訂單後人工返券/補發）。
 
-【差異與未決】
-- 錢包調整：User_Wallet 不存「券數量」，券改由 Coupon/EVoucher 表管理；錢包僅保留點數餘額。
-- 簽到輔助：以 UserSignInStats 索引判斷是否簽到，無需額外輔助表。
+【實際資料庫結構重點說明（2025-10-27更新）】
+- User_Wallet 表：僅包含 User_Id (PK, FK)、User_Point (int)、軟刪除欄位（IsDeleted、DeletedAt、DeletedBy、DeleteReason）
+  【已移除】Coupon_Number、EVoucher_Number 欄位（券類改由專用表 Coupon/EVoucher 管理）
+- WalletHistory 表：完整欄位為 LogID、UserID、ChangeType (nvarchar(20))、PointsChanged (int)、ItemCode (nvarchar(50))、Description (nvarchar(255))、ChangeTime (datetime2(7))、軟刪除欄位
+  索引：IX_WalletHistory_user_time (UserID, ChangeTime)、IX_WalletHistory_type_time (ChangeType, ChangeTime)
+- SignInRule 表：新增表格，用於設定簽到規則
+  欄位：Id (PK)、SignInDay (int, 1-365, UNIQUE)、Points (int)、Experience (int)、HasCoupon (bit)、CouponTypeCode (nvarchar(50))、IsActive (bit)、CreatedAt、UpdatedAt、Description、軟刪除欄位
+  CHECK 約束：HasCoupon=1 時 CouponTypeCode 不可為 NULL；HasCoupon=0 時必須為 NULL
+- Pet 表欄位更新：
+  【欄位名稱變更】SkinColor (varchar(7), 格式#RRGGBB)、SkinColorChangedTime、BackgroundColor (nvarchar(20))、BackgroundColorChangedTime
+  【欄位名稱變更】PointsChanged_SkinColor、PointsChanged_BackgroundColor（取代舊名 PointsChanged_color）
+  【新增欄位】CurrentExperience (int)、ExperienceToNextLevel (int)、TotalPointsGained_LevelUp (int)
+- 新增設定表：
+  • PetSkinColorCostSettings：膚色價格設定（SettingId, ColorCode, ColorName, PointsCost, Rarity, IsFree, IsLimitedEdition等）
+  • PetBackgroundCostSettings：背景價格設定（SettingId, BackgroundCode, BackgroundName, PointsCost等）
+  • PetLevelRewardSettings：升級獎勵規則（SettingId, LevelRangeStart, LevelRangeEnd, PointsReward等）
+  • SystemSettings：系統設定（SettingId, SettingKey (UNIQUE), SettingValue (nvarchar(MAX)), Category, SettingType等）
+- Users 表新增欄位：User_EmailConfirmed、User_PhoneNumberConfirmed、User_TwoFactorEnabled、User_AccessFailedCount、User_LockoutEnabled、User_LockoutEnd
+- ManagerData 表新增欄位：Manager_Email、Manager_EmailConfirmed、Manager_AccessFailedCount、Manager_LockoutEnabled、Manager_LockoutEnd
+- 所有 MiniGame Area 主要表格均實作軟刪除：IsDeleted (bit)、DeletedAt (datetime2(7))、DeletedBy (int)、DeleteReason (nvarchar(500))
+
+【未決與排除範圍】
 - 文章評論：thread_posts＋target_type 區分即可，DB 無需調整。
 - 購物車：採 Session 流程，未納入持久化（不影響關鍵交易）；未來若需再增表。
 - 即時聊天：文字為主、允許 Emoji；無影音訊息存儲。

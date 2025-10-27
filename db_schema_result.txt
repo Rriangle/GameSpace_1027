@@ -1,0 +1,4 @@
+訊息 156, 層級 15, 狀態 1, 伺服器 DESKTOP-8HQIS1S\SQLEXPRESS, 行 91
+接近關鍵字 'RowCount' 之處的語法不正確。
+訊息 156, 層級 15, 狀態 1, 伺服器 DESKTOP-8HQIS1S\SQLEXPRESS, 行 94
+接近關鍵字 'AND' 之處的語法不正確。

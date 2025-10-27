@@ -1,7 +1,8 @@
 ﻿# GameSpace – MiniGame Area（Admin 專注）整合規格（README\_合併版）
 
-> 說明語言：**zh-TW**（程式識別符、檔名、路徑、SQL/CLI 關鍵字不可翻譯）  
-> 編碼：**UTF-8 with BOM**  
+> **最後更新日期：2025-10-27**
+> 說明語言：**zh-TW**（程式識別符、檔名、路徑、SQL/CLI 關鍵字不可翻譯）
+> 編碼：**UTF-8 with BOM**
 > 本檔為你提供：**單一文件就能讓 AI/開發者理解整個 MiniGame Area 的後台規格、資料庫覆蓋清單、權限/登入整合、檔案落點與驗收清單**。
 > **請一律用 powershell 寫檔案**
 
@@ -167,13 +168,14 @@
 
 > 讀取**既有本機 SQL Server**（SSMS 已建與灑 seed），`schema/` 內 SQL/JSON 僅供 AI 參考。**嚴禁**修改 schema、**不使用** EF Migrations。
 
-**必覆蓋（讀/寫依功能而定）**（摘自整體規格與 MiniGame 區域職能）：
+**必覆蓋（讀/寫依功能而定）**（以實際資料庫結構為準）：
 
-- **錢包/券類**：`User_Wallet`、`WalletHistory`、`CouponType`、`Coupon`、`EVoucherType`、`EVoucher`、`EVoucherToken`、`EVoucherRedeemLog`
-- **簽到**：`UserSignInStats`、`SignInRule`
-- **寵物**：`Pet`（含五大屬性、等級/經驗、外觀與消費紀錄欄位）
-- **小遊戲**：`MiniGame`（每局遊戲紀錄、屬性 delta、獎勵）
-- **管理者/權限**：`ManagerData`、`ManagerRole`、`ManagerRolePermission`（名稱以實際 schema 為準）
+- **錢包/券類**：`User_Wallet`（僅含 User_Id、User_Point、軟刪除欄位）、`WalletHistory`（含 ChangeType、PointsChanged、ItemCode、Description、ChangeTime）、`CouponType`（含 Name、DiscountType、DiscountValue、MinSpend、ValidFrom、ValidTo、PointsCost）、`Coupon`（含 CouponCode、IsUsed、AcquiredTime、UsedTime、UsedInOrderID）、`EVoucherType`（含 Name、ValueAmount、ValidFrom、ValidTo、PointsCost、TotalAvailable）、`EVoucher`（含 EVoucherCode、IsUsed、AcquiredTime、UsedTime）、`EVoucherToken`（含 Token、ExpiresAt、IsRevoked）、`EVoucherRedeemLog`（含 Status: REVOKED/REJECTED/EXPIRED/ALREADYUSED/APPROVED）
+- **簽到**：`UserSignInStats`（含 SignTime、PointsGained、PointsGainedTime、ExpGained、ExpGainedTime、CouponGained、CouponGainedTime）、`SignInRule`（含 SignInDay、Points、Experience、HasCoupon、CouponTypeCode、IsActive）
+- **寵物**：`Pet`（含五大屬性：Hunger/Mood/Stamina/Cleanliness/Health 範圍 0-100、Level、Experience、CurrentExperience、ExperienceToNextLevel、SkinColor(varchar(7) #RRGGBB)、SkinColorChangedTime、BackgroundColor(nvarchar(20))、BackgroundColorChangedTime、PointsChanged_SkinColor、PointsChanged_BackgroundColor、PointsGained_LevelUp、PointsGainedTime_LevelUp、TotalPointsGained_LevelUp）、`PetSkinColorCostSettings`（含 ColorCode、ColorName、PointsCost、Rarity、IsFree、IsLimitedEdition）、`PetBackgroundCostSettings`（含 BackgroundCode、BackgroundName、PointsCost）、`PetLevelRewardSettings`（含 LevelRangeStart、LevelRangeEnd、PointsReward）
+- **小遊戲**：`MiniGame`（含 Level、MonsterCount、SpeedMultiplier、Result、ExpGained、ExpGainedTime、PointsGained、PointsGainedTime、CouponGained、CouponGainedTime、HungerDelta、MoodDelta、StaminaDelta、CleanlinessDelta、StartTime、EndTime、Aborted）
+- **管理者/權限**：`ManagerData`（含 Manager_Email、Manager_EmailConfirmed、Manager_AccessFailedCount、Manager_LockoutEnabled、Manager_LockoutEnd）、`ManagerRole`、`ManagerRolePermission`（含 role_name、AdministratorPrivilegesManagement、UserStatusManagement、ShoppingPermissionManagement、MessagePermissionManagement、Pet_Rights_Management、customer_service）
+- **系統設定**：`SystemSettings`（含 SettingKey、SettingValue、Category、SettingType: String/Boolean/Number/JSON、IsReadOnly、IsActive）
 
 **約束必守**：`PK`/`FK`/`UNIQUE`/`CHECK`/`DEFAULT` 全通過；**Idempotent** 寫入、批量上限 **≤ 1000**。
 

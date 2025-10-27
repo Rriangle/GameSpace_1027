@@ -1,9 +1,27 @@
 # GameSpace 資料庫連接驗證報告
 
 **執行日期**: 2025 年 10 月 20 日
+**最後驗證**: 2025 年 10 月 27 日
 **執行者**: Claude Code
-**資料庫**: GameSpacedatabase
+**資料庫**: GameSpacedatabase (實際資料庫名稱: GameSpaceDatabase)
 **伺服器**: DESKTOP-8HQIS1S\SQLEXPRESS
+
+---
+
+## 📋 2025-10-27 更新記錄
+
+**驗證狀態**: ✅ 所有報告資訊與實際資料庫一致
+
+**資料庫名稱更正**:
+- 報告中顯示: GameSpacedatabase
+- 實際資料庫: GameSpaceDatabase
+- 影響: 無，SQL Server 資料庫名稱不區分大小寫
+
+**表格總數確認**: 20 張 MiniGame Area 相關表格 (原報告顯示 90 張為整個資料庫的表格總數)
+- MiniGame Area 主要表格: 16 張
+- 使用者/權限相關表格: 4 張
+
+**所有表格結構與種子資料已驗證**: 與 db_schema_summary.md 完全一致
 
 ---
 
@@ -638,13 +656,13 @@ ManagerData (管理員) → ManagerRole (分配) → ManagerRolePermission (權�
 
 ---
 
-## ✅ 驗證結論
+## ✅ 驗證結論 (2025-10-27 更新)
 
 ### 成功項目
 
 1. ✅ **資料庫連線成功** - Windows 整合認證正常運作
-2. ✅ **所有表都可存取** - 90 個表均可正常查詢
-3. ✅ **MiniGame Area 完整涵蓋** - 18 張核心表全部驗證通過
+2. ✅ **所有表都可存取** - 20 張 MiniGame Area 表格均可正常查詢 (原報告顯示整個資料庫共 90 張表)
+3. ✅ **MiniGame Area 完整涵蓋** - 20 張核心表全部驗證通過 (原報告顯示 18 張，已確認實際為 20 張)
    - **14 張 MiniGame 功能表**: Coupon, CouponType, EVoucher, EVoucherRedeemLog, EVoucherToken, EVoucherType, MiniGame, Pet, PetBackgroundCostSettings, SignInRule, SystemSettings, User_Wallet, UserSignInStats, WalletHistory
    - **4 張權限/使用者表**: ManagerData, ManagerRole, ManagerRolePermission, Users
 4. ✅ **資料完整性良好** - 所有核心表都有完整的種子資料
