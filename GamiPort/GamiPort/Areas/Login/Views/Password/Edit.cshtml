@@ -1,0 +1,46 @@
+﻿@model GamiPort.Areas.Login.Models.ChangePasswordVM
+@{
+    ViewData["Title"] = "修改密碼";
+}
+
+<div class="container py-4" style="max-width: 600px;">
+    <h3 class="mb-4">@ViewData["Title"]</h3>
+
+    @if (TempData["Success"] is string ok)
+    {
+        <div class="alert alert-success">@ok</div>
+    }
+
+    <form asp-action="Edit" method="post" class="card p-4 shadow-sm">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label class="form-label">帳號</label>
+            <input type="text" class="form-control" value="@ViewData["UserAccount"]" readonly />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="OldPassword" class="form-label"></label>
+            <input asp-for="OldPassword" class="form-control" type="password" />
+            <span asp-validation-for="OldPassword" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NewPassword" class="form-label"></label>
+            <input asp-for="NewPassword" class="form-control" type="password" />
+            <span asp-validation-for="NewPassword" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ConfirmPassword" class="form-label"></label>
+            <input asp-for="ConfirmPassword" class="form-control" type="password" />
+            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">確認修改</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
