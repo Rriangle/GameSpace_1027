@@ -5,14 +5,12 @@
     var af = Xsrf.GetAndStoreTokens(Context);
 }
 
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"]</title>
-
 
     <meta name="request-verification-token" content="@af.RequestToken" />
 
@@ -27,7 +25,7 @@
     <link href="~/css/topbar2.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/css/right-rail.css" rel="stylesheet" asp-append-version="true" />
 
-    @RenderSection("Styles", required: false) @* 頁面額外樣式才用這個 *@
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     @await Component.InvokeAsync("TopbarLevel1")
@@ -36,8 +34,8 @@
         <aside class="layout-sidebar d-none d-lg-block">
             @await Html.PartialAsync("_Sidebar")
         </aside>
+
         <main class="layout-main">
-            <!-- 頂部置中：水平置中 + 靠上，縮小上方間距 -->
             <div class="container d-flex justify-content-center align-items-start pt-3 pb-5"
                  style="min-height: calc(100vh - 64px);">
                 <div class="w-100" style="max-width: 520px;">
@@ -50,9 +48,7 @@
     <footer class="layout-footer border-top">
         @await Html.PartialAsync("_Footer")
     </footer>
-   
 
-  
     @* 建議：只有登入後才載入聊天 UI *@
     @if (User.Identity?.IsAuthenticated == true)
     {
@@ -61,10 +57,16 @@
         @await Html.PartialAsync("_FloatingDock")
     }
 
+    <!-- ✅ 先載入 jQuery（正確 SRI 值） -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+
+    <!-- Bootstrap（含 Popper） -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- 全站共用腳本 -->
     <script src="~/js/sidebar.js" asp-append-version="true"></script>
 
+    @* 讓各視圖自行放驗證腳本或其他頁面腳本 *@
     @RenderSection("Scripts", required: false)
 </body>
 </html>

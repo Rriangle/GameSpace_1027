@@ -1,4 +1,5 @@
 ﻿@model GamiPort.Areas.Login.Models.UserIntroduceVM
+@using GamiPort.Services
 @{
     ViewData["Title"] = "編輯個人資料";
 }
@@ -72,6 +73,10 @@
             <div class="col-12 col-lg-4">
                 <div class="mb-3 text-center">
                     @{
+                        // 預設頭像（共用常數）
+                        var defaultAvatar = Url.Content(ImagePathService.DefaultUserAvatar);
+
+                        // 若資料庫有頭像位元組就顯示 base64，否則使用預設頭像
                         string? imgSrc = null;
                         if (Model?.UserPicture != null && Model.UserPicture.Length > 0)
                         {
@@ -79,8 +84,13 @@
                             imgSrc = $"data:image/*;base64,{b64}";
                         }
                     }
-                    <img src="@(imgSrc ?? "https://via.placeholder.com/240x240?text=No+Image")"
-                         alt="頭像預覽" class="rounded-circle mb-2" style="width: 240px; height: 240px; object-fit: cover;" />
+
+                    <img src="@(imgSrc ?? defaultAvatar)"
+                         alt="頭像預覽"
+                         class="rounded-circle mb-2"
+                         style="width:150px;height:150px;object-fit:cover;"
+                         onerror="this.onerror=null;this.src='@defaultAvatar';" />
+
                     <div class="text-muted small">目前頭像</div>
                 </div>
 

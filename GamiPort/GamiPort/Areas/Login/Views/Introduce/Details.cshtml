@@ -1,6 +1,8 @@
 ﻿@model GamiPort.Areas.Login.Models.UserIntroduceVM
+@using GamiPort.Services
 @{
     ViewData["Title"] = "我的個人資料";
+
 }
 
 <div class="container py-4" style="max-width: 960px;">
@@ -22,16 +24,22 @@
             <div class="row g-4">
                 <div class="col-12 col-lg-4 text-center">
                     @{
+                        var defaultAvatar = Url.Content("~/images/預設人物.png"); // ← 放在 wwwroot/images
                         string? imgSrc = null;
+
                         if (Model?.UserPicture != null && Model.UserPicture.Length > 0)
                         {
                             var b64 = Convert.ToBase64String(Model.UserPicture);
                             imgSrc = $"data:image/*;base64,{b64}";
                         }
                     }
-                    <img src="@(imgSrc ?? "https://via.placeholder.com/260x260?text=No+Image")"
-                         alt="頭像" class="rounded-circle mb-2"
-                         style="width: 260px; height: 260px; object-fit: cover;" />
+
+                    <img src="@(imgSrc ?? defaultAvatar)"
+                         alt="頭像"
+                         class="rounded-circle mb-2"
+                         style="width:150px;height:150px;object-fit:cover;"
+                         onerror="this.onerror=null;this.src='@defaultAvatar';" />
+
                     <div class="text-muted">頭像</div>
                 </div>
 
