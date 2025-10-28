@@ -1,0 +1,298 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.TicketDetailVM
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
+
+@{
+    ViewData["Title"] = "工單 #" + Model.TicketId;
+    // 產生一次性的 Anti-Forgery Token（全頁共用；AJAX 以 Header 帶上）
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/social_hub/css/support-bubbles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --chat-pane-h: 72vh;
+        }
+
+        @@media (max-width: 991.98px) {
+            :root {
+                --chat-pane-h: 65vh;
+            }
+        }
+
+        .left-col {
+            height: var(--chat-pane-h);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-card {
+            height: var(--chat-pane-h);
+            display: flex;
+            flex-direction: column;
+        }
+
+            .chat-card #message-host {
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow-y: auto;
+                padding: 18px 20px;
+                background: #fff;
+            }
+    </style>
+}
+
+<!-- 全域 Anti-Forgery Token（JS 以 Header: RequestVerificationToken 帶出） -->
+<input type="hidden" id="af-token" value="@tokens.RequestToken" />
+
+<a href="@Url.Action("Index")" class="btn btn-link mb-2">← 返回工作台</a>
+
+<div class="row g-3">
+    <!-- ========== 左欄：基本資訊 + 指派歷史 ========== -->
+    <div class="col-12 col-lg-4 left-col">
+        <div class="card shadow-sm info-card">
+            <div class="card-header"><strong>工單資訊</strong></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-4">工單ID</dt>
+                    <dd class="col-8">@Model.TicketId</dd>
+
+                    <dt class="col-4">使用者ID</dt>
+                    <dd class="col-8">@Model.UserId</dd>
+
+                    <dt class="col-4">主旨</dt>
+                    <dd class="col-8">@Model.Subject</dd>
+
+                    <dt class="col-4">狀態</dt>
+                    <dd class="col-8">
+                        @if (Model.IsClosed)
+                        {
+                            <span class="badge bg-secondary">已結單</span>
+                        }
+                        else
+                        {
+
+                            <span class="badge bg-success">處理中</span>
+                        }
+                    </dd>
+
+                    <dt class="col-4">指派客服</dt>
+                    <dd class="col-8">@(@Model.AssignedManagerId?.ToString() ?? "未指派")</dd>
+
+                    <!-- ★ 時間顯示：使用 App 時區（台灣） -->
+                    <dt class="col-4">建立時間</dt>
+                    <dd class="col-8">@Html.AppTime(Model.CreatedAt, "yyyy/MM/dd HH:mm")</dd>
+
+                    <dt class="col-4">最後訊息</dt>
+                    <dd class="col-8">@Html.AppTime(Model.LastMessageAt ?? Model.CreatedAt, "yyyy/MM/dd HH:mm")</dd>
+
+                    @if (Model.IsClosed)
+                    {
+                        <dt class="col-4">結單時間</dt>
+                        <dd class="col-8">@Html.AppTime(Model.ClosedAt, "yyyy/MM/dd HH:mm")</dd>
+
+                        <dt class="col-4">結單備註</dt>
+                        <dd class="col-8">@Model.CloseNote</dd>
+                    }
+                </dl>
+                <hr />
+                <div class="d-flex gap-2 flex-wrap">
+                    @* 自接未指派 *@
+                    @if (Model.CanAssignToMe)
+                    {
+                        <button class="btn btn-sm btn-outline-primary js-assign-me">指派給我</button>
+                    }
+                    @* 轉單：沿用共用 .js-modal-open（你的站上已有對應 JS 處理 data-url） *@
+                    @if (Model.CanReassign)
+                    {
+                        <button class="btn btn-sm btn-outline-warning js-modal-open"
+                                data-url="@Url.Action("Reassign", "Support", new { area = "social_hub", id = Model.TicketId, modal = true, returnUrl = Url.Action("Ticket", "Support", new { area = "social_hub", id = Model.TicketId }) })"
+                                data-title="指派他人 / 轉單"
+                                data-size="lg">
+                            轉單
+                        </button>
+                    }
+                    @* 結單：沿用共用 .js-modal-open *@
+                    @if (Model.CanClose)
+                    {
+                        <button class="btn btn-sm btn-outline-danger js-modal-open"
+                                data-title="結單確認"
+                                data-size="md"
+                                data-url="@Url.Action("Close", "Support", new { area = "social_hub", id = Model.TicketId, modal = true })">
+                            結單
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm detail-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>詳細資料</strong>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="@Url.Action("AssignmentHistoryPage", "Support", new { area = "social_hub", id = Model.TicketId })">
+                        完整歷史
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-refresh-assign">重新整理</button>
+                </div>
+            </div>
+            <div class="card-body" id="assign-history">
+                <div class="text-muted">載入中…</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 右欄：對話區 ========== -->
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm chat-card">
+            <div class="card-header"><strong>對話紀錄</strong></div>
+            <div class="card-body" id="message-host">
+                @* 注意：_MessageList 內請改成使用 @Html.AppTime(m.SentAt, "yyyy/MM/dd HH:mm") 顯示 *@
+                @await Html.PartialAsync("_MessageList", Model.Messages)
+            </div>
+
+            @if (!Model.IsClosed && Model.AssignedManagerId == Model.MeManagerId)
+            {
+                <div class="card-footer">
+                    @* _Composer 內請包含 @Html.AntiForgeryToken()，並建議同步提供一個 hidden 的 #af-token（可省略，因為本頁已提供全域 #af-token） *@
+                    @await Html.PartialAsync("_Composer", Model.TicketId)
+                </div>
+            }
+            else
+            {
+                <div class="card-footer">
+                    @if (Model.IsClosed)
+                    {
+                        <div class="alert alert-secondary mb-0 py-2">此工單已結單，無法回覆。</div>
+                    }
+                    else if (Model.AssignedManagerId == null)
+                    {
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="alert alert-warning mb-0 py-2 flex-grow-1 me-2">尚未指派客服。請先指派後再回覆。</div>
+                            @if (Model.CanAssignToMe)
+                            {
+                                <button class="btn btn-sm btn-outline-primary js-assign-me">指派給我</button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0 py-2">
+                            目前由客服 <strong>@Model.AssignedManagerId</strong> 負責；你僅能檢視。如需接手，請使用「轉單」或請對方轉派。
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const TICKET_ID = @Model.TicketId;
+        let assignPage = 1;
+
+        function getAfToken(){
+          // 優先取全域 #af-token；若沒有，再找 form 裡的 __RequestVerificationToken
+          const g = document.getElementById('af-token')?.value;
+          if(g) return g;
+          const f = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+          return f || '';
+        }
+
+        function scrollMessagesToBottom(){
+          const host = document.getElementById('message-host');
+          if(host) host.scrollTop = host.scrollHeight;
+        }
+
+        async function reloadMessages(page=1, keepTop=false){
+          const res = await fetch(`/social_hub/Support/MessageList?id=${TICKET_ID}&page=${page}`, {
+            headers: {'X-Requested-With':'XMLHttpRequest'},
+            credentials:'same-origin'
+          });
+          const html = await res.text();
+          const host = document.getElementById('message-host');
+          host.innerHTML = html;
+          if(!keepTop) scrollMessagesToBottom();
+        }
+
+        async function loadAssignHistory(page=1){
+          const host = document.getElementById('assign-history');
+          try{
+            const res = await fetch(`/social_hub/Support/AssignmentHistory?id=${TICKET_ID}&page=${page}`, {
+              headers:{'X-Requested-With':'XMLHttpRequest'},
+              credentials:'same-origin'
+            });
+            host.innerHTML = await res.text();
+            assignPage = page;
+          }catch{
+            host.innerHTML = `<div class="alert alert-danger mb-0">載入失敗，請重試。</div>`;
+          }
+        }
+
+        // 左側歷史分頁
+        document.addEventListener('click', async (e)=>{
+          const a = e.target.closest('#assign-history a.page-link');
+          if(!a) return;
+          e.preventDefault();
+          const page = parseInt(new URL(a.href).searchParams.get('page')||'1',10);
+          await loadAssignHistory(page);
+        });
+
+        // 送出訊息（帶 Anti-Forgery Header）
+        document.addEventListener('click', async (e) => {
+          if (e.target?.id !== 'btn-send') return;
+
+          const ta = document.getElementById('msg-text');
+          const token = getAfToken();
+          const text = (ta?.value || '').trim();
+          if (!text) return;
+
+          const fd = new FormData();
+          fd.append('text', text);
+
+          try {
+            const res = await fetch(`/social_hub/Support/SendMessage?id=${TICKET_ID}`, {
+              method: 'POST',
+              body: fd,
+              credentials: 'same-origin',
+              headers: { 'X-Requested-With': 'XMLHttpRequest', 'RequestVerificationToken': token }
+            });
+
+            if (!res.ok) {
+              const msg = (await res.text()) || `${res.status} ${res.statusText}`;
+              alert('送出失敗：' + msg);
+              return;
+            }
+
+            // 成功：清空輸入，重載訊息並捲到底
+            if (ta) ta.value = '';
+            await reloadMessages(1);
+          } catch (err) {
+            alert('送出失敗：網路或伺服器錯誤');
+          }
+        });
+
+        // 指派給我（帶 Anti-Forgery Header；允許同頁多個 .js-assign-me）
+        document.addEventListener('click', async (e)=>{
+          const btn = e.target.closest('.js-assign-me');
+          if(!btn) return;
+          const token = getAfToken();
+          const res = await fetch(`/social_hub/Support/AssignToMe?id=${TICKET_ID}`, {
+            method:'POST',
+            credentials:'same-origin',
+            headers: { 'RequestVerificationToken': token, 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          if(res.ok) location.reload(); else alert(await res.text());
+        });
+
+        // 初始載入
+        document.addEventListener('DOMContentLoaded', ()=>{
+          scrollMessagesToBottom();
+          loadAssignHistory(1);
+        });
+    </script>
+}

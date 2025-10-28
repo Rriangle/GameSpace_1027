@@ -1,0 +1,32 @@
+﻿@model GameSpace.Areas.Forum.Models.Admin.AdminPostDetailsVm
+
+<div class="mb-2 d-flex gap-2 align-items-center">
+    <span class="badge @(Model.Status == "published" ? "bg-success" : Model.Status == "hidden" ? "bg-secondary" : "bg-warning text-dark")">
+        @Model.Status
+    </span>
+    @if (Model.Pinned)
+    {
+        <span class="badge bg-primary">置頂</span>
+    }
+</div>
+
+<h5>@Model.Title</h5>
+@if (!string.IsNullOrWhiteSpace(Model.Tldr))
+{
+    <p class="text-muted">@Model.Tldr</p>
+}
+
+<hr />
+<pre style="white-space:pre-wrap">@Model.BodyMd</pre>
+
+<div class="text-muted small mt-2">
+    建立：@(Model.CreatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")
+    @if (Model.PublishedAt.HasValue)
+    {
+        <span class="ms-3">發布：@Model.PublishedAt.Value.ToString("yyyy-MM-dd HH:mm")</span>
+    }
+    @if (Model.UpdatedAt.HasValue)
+    {
+        <span class="ms-3">更新：@Model.UpdatedAt.Value.ToString("yyyy-MM-dd HH:mm")</span>
+    }
+</div>

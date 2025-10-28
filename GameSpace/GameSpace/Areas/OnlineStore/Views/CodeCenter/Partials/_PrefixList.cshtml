@@ -1,0 +1,54 @@
+﻿@model IEnumerable<GameSpace.Areas.OnlineStore.ViewModels.CodePrefixVM>
+
+@if (!(Model?.Any() ?? false))
+{
+    <div class="text-center text-muted py-4">
+        <i class="bi bi-collection me-2"></i>尚無前綴規則
+    </div>
+}
+else
+{
+    <div class="table-responsive rounded shadow-sm border">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light sticky-top">
+                <tr>
+                    <th style="width:140px;">前綴</th>
+                    <th>商品類型</th>
+                    <th style="width:120px;">長度</th>
+                    <th style="width:120px;" class="text-end">商品數</th>
+                    <th style="width:200px;" class="text-end">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model)
+                {
+                    <tr>
+                        <td><span class="badge bg-secondary fs-6">@x.Prefix</span></td>
+                        <td class="fw-semibold">@x.ProductType</td>
+                        <td>@x.PadLength</td>
+                        <td class="text-end">@x.ProductCount</td>
+                        <td class="text-end">
+                            <button class="btn btn-outline-primary btn-sm me-1"
+                                    onclick="(async()=>{
+                                const html = await (await fetch('@Url.Action("PrefixEditModal", "CodeCenter", new { area = "OnlineStore" })?id=@x.Id')).text();
+                                document.getElementById('modalHost').innerHTML = html;
+                                new bootstrap.Modal(document.getElementById('modalHost')).show();
+                            })()">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <form method="post" class="d-inline"
+                                  action="@Url.Action("PrefixDelete","CodeCenter",new{area="OnlineStore"})"
+                                  onsubmit="return confirm('確定刪除此規則？')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@x.Id" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,16 @@
+﻿@model GameSpace.Areas.MemberManagement.Models.ManagerRoleEntry
+
+<h2>角色詳細資料</h2>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">@Html.DisplayNameFor(m => m.ManagerId)</dt>
+        <dd class="col-sm-10">@Model.ManagerId</dd>
+        <dt class="col-sm-2">@Html.DisplayNameFor(m => m.ManagerRoleId)</dt>
+        <dd class="col-sm-10">@Model.ManagerRoleId</dd>
+    </dl>
+</div>
+<p>
+    <a asp-action="Edit" asp-route-managerId="@Model.ManagerId" asp-route-managerRoleId="@Model.ManagerRoleId">編輯</a> |
+    <a asp-action="Index">返回清單</a>
+</p>

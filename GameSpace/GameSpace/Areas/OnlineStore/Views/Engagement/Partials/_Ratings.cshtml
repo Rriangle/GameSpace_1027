@@ -1,0 +1,41 @@
+﻿@using GameSpace.Areas.OnlineStore.ViewModels
+@using GameSpace.Areas.OnlineStore.ViewModels.Common
+@model IEnumerable<GameSpace.Areas.OnlineStore.ViewModels.RatingRowVM>
+@{
+    var paging = (PagingVM)ViewBag.Paging;
+}
+@if (!(Model?.Any() ?? false))
+{
+    <div class="text-muted">無資料</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>RatingId</th>
+                    <th>ProductId</th>
+                    <th>UserId</th>
+                    <th>Rating</th>
+                    <th>Created</th>
+                    <th>Text</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model)
+                {
+                    <tr>
+                        <td>@x.RatingId</td>
+                        <td>@x.ProductId</td>
+                        <td>@x.UserId</td>
+                        <td>@x.Rating</td>
+                        <td>@x.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                        <td class="text-truncate" style="max-width:400px">@x.ReviewText</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="text-end text-muted small">共 @paging.Total 筆，頁 @paging.Page</div>
+}

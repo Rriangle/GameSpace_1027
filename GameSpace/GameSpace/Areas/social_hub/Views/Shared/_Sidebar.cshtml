@@ -1,0 +1,73 @@
+﻿@* /Views/Shared/_Sidebar.cshtml *@
+@using GameSpace.Areas.social_hub.Permissions
+@inject IManagerPermissionService Perm
+
+@{
+    // 以目前 HttpContext 檢查是否具備 CustomerService Gate
+    var gate = await Perm.GetCustomerServiceContextAsync(Context);
+    var canEnterCS = gate.CanEnter;
+}
+
+<nav class="navbar-nav flex-column w-100">
+
+    <!-- 社群系統 -->
+    <a class="nav-link d-flex align-items-center text-white" href="#">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        <span class="sidebar-text d-none d-sm-inline">社群系統</span>
+    </a>
+
+    <!-- 通知相關 -->
+    <a class="nav-link d-flex align-items-center text-white" data-bs-toggle="collapse" href="#collapseLayouts" role="button" aria-expanded="false" aria-controls="collapseLayouts">
+        <i class="fas fa-columns me-2"></i>
+        <span class="sidebar-text d-none d-sm-inline">通知相關</span>
+        <i class="fas fa-angle-down ms-auto"></i>
+    </a>
+    <div class="collapse ps-3 bg-white rounded-bottom" id="collapseLayouts">
+        <a class="nav-link d-flex align-items-center text-dark" asp-area="social_hub" asp-controller="MessageCenter" asp-action="Index">
+            <span class="sidebar-text d-none d-sm-inline">通知主頁</span>
+        </a>
+        <a class="nav-link d-flex align-items-center text-dark" asp-area="social_hub" asp-controller="MessageCenter" asp-action="Create">
+            <span class="sidebar-text d-none d-sm-inline">通知創建</span>
+        </a>
+    </div>
+
+    @* 只有通過客服 Gate 才顯示以下功能 *@
+    @if (canEnterCS)
+    {
+        <!-- 客服工作台（僅放工單相關） -->
+        <a class="nav-link d-flex align-items-center text-white" data-bs-toggle="collapse" href="#collapsePages" role="button" aria-expanded="false" aria-controls="collapsePages">
+            <i class="fas fa-book me-2"></i>
+            <span class="sidebar-text d-none d-sm-inline">客服工作台</span>
+            <i class="fas fa-angle-down ms-auto"></i>
+        </a>
+        <div class="collapse ps-3 bg-white rounded-bottom" id="collapsePages">
+            <a class="nav-link d-flex align-items-center text-dark" asp-area="social_hub" asp-controller="Support" asp-action="Index">
+                工單主頁
+            </a>
+        </div>
+
+        <!-- 客服權限（獨立入口，導到 Index） -->
+        <a class="nav-link d-flex align-items-center text-white"
+           asp-area="social_hub" asp-controller="CsPermissions" asp-action="Index">
+            <i class="fas fa-user-shield me-2"></i>
+            <span class="sidebar-text d-none d-sm-inline">客服權限</span>
+        </a>
+
+        <!-- 穢語設定 -->
+        <a class="nav-link d-flex align-items-center text-white"
+           asp-area="social_hub" asp-controller="Mutes" asp-action="Index">
+            <i class="fas fa-table me-2"></i>
+            <span class="sidebar-text d-none d-sm-inline">穢語設定</span>
+        </a>
+    }
+
+    <!-- 聊天測試 -->
+    <a class="nav-link d-flex align-items-center text-white" asp-area="social_hub" asp-controller="Chat" asp-action="Index">
+        <i class="fas fa-chart-area me-2"></i>
+        <span class="sidebar-text d-none d-sm-inline">聊天測試</span>
+    </a>
+
+    <div class="mt-auto text-white small ps-3">
+        此為社交客服系統
+    </div>
+</nav>

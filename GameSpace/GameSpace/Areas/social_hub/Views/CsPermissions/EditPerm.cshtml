@@ -1,0 +1,110 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.CsPermEditVM
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "客服權限";
+    // 旗標：是否唯讀、最高權限是否可編
+    bool isReadOnly = Model?.IsReadOnly ?? true;
+    bool canEditAssign = Model?.EditableCanAssign ?? false;
+}
+
+<div class="mutes-header">
+    <h2 class="mutes-title">
+        <span>@ViewData["Title"]</span>
+        @if (isReadOnly)
+        {
+            <span class="badge rounded-pill badge-readonly" title="此頁面為唯讀模式">唯讀</span>
+        }
+        else
+        {
+            <span class="badge rounded-pill badge-manage" title="可以修改欄位">可編輯</span>
+        }
+    </h2>
+    <div class="mutes-subtle">
+        <i class="far fa-id-badge me-1"></i>
+        管理員：@Model?.ManagerName（ID: @Model?.ManagerId）
+    </div>
+</div>
+
+<partial name="~/Areas/social_hub/Views/Mutes/_Toast.cshtml" />
+
+<div class="mutes-card">
+    <div class="card-body">
+        <form asp-area="social_hub"
+              asp-controller="CsPermissions"
+              asp-action="EditPerm"
+              method="post"
+              class="js-prevent-double-submit">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="AgentId" />
+            <input type="hidden" asp-for="ManagerId" />
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input asp-for="CanAssign"
+                               class="form-check-input"
+                               disabled="@(isReadOnly || !canEditAssign)" />
+                        <label asp-for="CanAssign" class="form-check-label">
+                            可派單/幫轉單/結單（最高權限）
+                        </label>
+                        <div class="form-text">
+                            具此權限者可協助他人處理工單（含轉派、結單）；此旗標通常只開給主管/資深。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="form-check form-switch">
+                        <input asp-for="CanTransfer"
+                               class="form-check-input"
+                               disabled="@isReadOnly" />
+                        <label asp-for="CanTransfer" class="form-check-label">可轉單</label>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="form-check form-switch">
+                        <input asp-for="CanAccept"
+                               class="form-check-input"
+                               disabled="@isReadOnly" />
+                        <label asp-for="CanAccept" class="form-check-label">可接單</label>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="form-check form-switch">
+                        <input asp-for="CanEditMuteAll"
+                               class="form-check-input"
+                               disabled="@isReadOnly" />
+                        <label asp-for="CanEditMuteAll" class="form-check-label">
+                            穢語可編修全部（否則僅可編修自己建立）
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <a class="btn btn-secondary"
+                   asp-area="social_hub" asp-controller="CsPermissions" asp-action="Index">
+                    <i class="fas fa-arrow-left me-1"></i>返回
+                </a>
+
+                @if (!isReadOnly)
+                {
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>儲存
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/lib/social_hub/css/mutes.css" rel="stylesheet" asp-append-version="true" />
+}
+@section Scripts {
+    <script src="~/lib/social_hub/js/mutes.js" asp-append-version="true"></script>
+}

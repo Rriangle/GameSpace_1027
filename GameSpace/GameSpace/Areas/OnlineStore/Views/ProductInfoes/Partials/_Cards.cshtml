@@ -1,0 +1,68 @@
+﻿@using GameSpace.Areas.OnlineStore.ViewModels
+@using GameSpace.Areas.OnlineStore.ViewModels.Common
+@model IEnumerable<GameSpace.Areas.OnlineStore.ViewModels.ProductCardVM>
+@{
+    var paging = (PagingVM)ViewBag.Paging;
+}
+@if (!(Model?.Any() ?? false))
+{
+    <div class="text-muted">無資料</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var x in Model)
+        {
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <div class="ratio ratio-16x9 bg-light">
+                        @if (!string.IsNullOrEmpty(x.CoverUrl))
+                        {
+                            <img src="@x.CoverUrl" class="card-img-top" style="object-fit:cover" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center text-muted">無圖片</div>
+                        }
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-bold">@x.ProductName</div>
+                                <div class="text-muted small">@x.ProductCode · @(x.ProductType == "game" ? "遊戲" : "周邊")</div>
+                            </div>
+                            @if (x.IsActive)
+                            {
+                                <span class="badge bg-success">上架</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-secondary">下架</span>
+                            }
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            @if (x.ProductType == "game")
+                            {
+                                <div>平台：@x.PlatformName / 類型：@x.GameType</div>
+                            }
+                            else
+                            {
+                                <div>分類：@x.MerchTypeName / 規格：@x.Size @x.Color</div>
+                            }
+                            <div>供應商：@x.SupplierName</div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <div class="fw-bold">@x.Price.ToString("N0") @x.CurrencyCode</div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary btn-edit" data-id="@x.ProductId"><i class="bi bi-pencil-square"></i> 編輯</button>
+                            <button class="btn btn-outline-warning btn-toggle" data-id="@x.ProductId"><i class="bi bi-power"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="text-end text-muted small">共 @paging.Total 筆</div>
+}

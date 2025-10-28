@@ -1,0 +1,155 @@
+﻿@model GameSpace.Models.ViewModels.OrderDetailVm
+@{
+    ViewData["Title"] = "訂單明細";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+
+<style>
+    .kv {
+        margin-bottom: .25rem;
+    }
+
+        .kv .k {
+            color: #6c757d;
+            width: 110px;
+            display: inline-block;
+        }
+
+    .num {
+        text-align: right;
+    }
+
+    .sticky-total {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex align-items-center mb-3">
+        <h3 class="me-3 mb-0">📄 訂單明細</h3>
+        <span class="badge @Model.ShipmentBadgeClass">@Model.ShipmentStatusText</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">訂單資訊</div>
+                <div class="card-body">
+                    <div class="kv"><span class="k">訂單編號</span> @Model.OrderCode</div>
+                    <div class="kv"><span class="k">會員ID</span> @Model.UserId</div>
+                    <div class="kv"><span class="k">下單時間</span> @Model.OrderDate.ToString("yyyy-MM-dd HH:mm")</div>
+                    <div class="kv"><span class="k">狀態</span> <span class="badge @Model.ShipmentBadgeClass">@Model.ShipmentStatusText</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">收件資訊</div>
+                <div class="card-body">
+                    <div class="kv"><span class="k">收件人</span> @(Model.Recipient ?? "—")</div>
+                    <div class="kv"><span class="k">電話</span> @(Model.Phone ?? "—")</div>
+                    <div class="kv"><span class="k">地址</span> @(Model.AddressFull ?? "—")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-header fw-semibold">訂單明細</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:80px;">#</th>
+                            <th style="width:120px;">商品ID</th>
+                            <th>商品名稱</th>
+                            <th class="num" style="width:140px;">單價</th>
+                            <th class="num" style="width:100px;">數量</th>
+                            <th class="num" style="width:160px;">小計</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.Items)
+                        {
+                            <tr>
+                                <td>@d.LineNo</td>
+                                <td>@d.ProductId</td>
+                                <td>@(d.ProductName ?? "—")</td>
+                                <td class="num">@d.UnitPrice.ToString("N0")</td>
+                                <td class="num">@d.Quantity</td>
+                                <td class="num">@d.Subtotal.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4"></td>
+                            <th class="text-end">小計</th>
+                            <td class="num">@((Model.Subtotal ?? Model.Items.Sum(x => x.Subtotal)).ToString("N0"))</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4"></td>
+                            <th class="text-end">運費</th>
+                            <td class="num">@((Model.ShippingFee ?? 0).ToString("N0"))</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4"></td>
+                            <th class="text-end">折扣</th>
+                            <td class="num">-@((Model.Discount ?? 0).ToString("N0"))</td>
+                        </tr>
+                        <tr class="sticky-total">
+                            <td colspan="4"></td>
+                            <th class="text-end fs-5">應付金額</th>
+                            <td class="num fs-5 fw-semibold">
+                                @((Model.GrandTotal
+                                                                ?? (Model.Subtotal ?? Model.Items.Sum(x => x.Subtotal))
+                                                                + (Model.ShippingFee ?? 0) - (Model.Discount ?? 0)
+                                                                ).ToString("N0"))
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+        @{
+            var returnUrl = Context.Request.Query["returnUrl"].ToString();
+            var backHref = string.IsNullOrEmpty(returnUrl)
+            ? Url.Action("Index", "SoOrderInfoes")
+            : returnUrl;
+        }
+        <a href="@backHref" id="btnBack" class="btn btn-outline-secondary">返回列表</a> 
+        <!-- 預留：僅未出貨時可顯示 -->
+        @* <a asp-action="EditAddress" asp-route-id="@Model.OrderId" class="btn btn-warning">修改地址</a>
+       <a asp-action="Void" asp-route-id="@Model.OrderId" class="btn btn-danger">作廢訂單</a> *@
+    </div>
+    <script>
+        (function () {
+          const backHref = '@backHref';
+          const btn = document.getElementById('btnBack');
+          if (!btn) return;
+
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // 由 Index 用 window.open 開啟：有 opener → 聚焦原頁並關閉自己（不刷新列表頁）
+            if (window.opener && !window.opener.closed) {
+              try { window.opener.focus(); } catch {}
+              window.close();
+              return;
+            }
+
+            // 不是由 window.open 開啟（例如直接打網址/新分頁）→ 正常導回
+            window.location.href = backHref;
+          });
+        })(); // ←←← 這個 () 不能少
+    </script>
+    
+</div>

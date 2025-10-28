@@ -1,0 +1,32 @@
+﻿@model int   
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+<div class="d-flex gap-2 align-items-start">
+  <textarea id="msg-text"
+            class="form-control"
+            rows="2"
+            maxlength="255"
+            placeholder="輸入訊息…"></textarea>
+
+  <div class="d-flex flex-column align-items-end" style="min-width: 110px;">
+    <button id="btn-send" type="button" class="btn btn-primary">送出</button>
+    <small class="text-muted mt-1"><span id="msg-count">0</span>/255</small>
+  </div>
+</div>
+
+<!-- Anti-forgery：父頁 JS 會從這裡取 token 並放到 header -->
+<input type="hidden"
+       id="af-token"
+       value="@Antiforgery.GetAndStoreTokens(ViewContext.HttpContext).RequestToken" />
+
+<script>
+  // 簡單字數計數
+  (function () {
+    const ta = document.getElementById('msg-text');
+    const cnt = document.getElementById('msg-count');
+    if (!ta || !cnt) return;
+    const upd = () => cnt.textContent = (ta.value || '').length;
+    ta.addEventListener('input', upd);
+    upd();
+  })();
+</script>

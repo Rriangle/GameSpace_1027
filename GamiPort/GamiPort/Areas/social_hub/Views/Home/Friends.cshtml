@@ -1,0 +1,175 @@
+﻿@* ============================================================
+   頁面：交友測試（按鈕傳參數）
+   用法：按不同顆按鈕 → 送出 RelationCommand → 服務驗證與寫入
+   重要：
+     - 若控制器有 [ValidateAntiForgeryToken]，這頁要有 @Html.AntiForgeryToken() 並在 fetch header 帶回
+     - 預設回小駝峰 JSON：{ noOp, relationId, newStatusCode, reason }
+   ============================================================ *@
+@{
+    ViewData["Title"] = "交友測試（按鈕）";
+    var execUrl = Url.Action("Exec", "Relations", new { area = "social_hub" });
+}
+<div class="container py-4">
+    <h2 class="mb-3">交友測試（按鈕傳參數）</h2>
+    @Html.AntiForgeryToken()
+
+    @* ------------------------------------------------------------
+       每顆按鈕都對應一次 RelationCommand：
+       - data-actor-user-id
+       - data-target-user-id
+       - data-action-code  : friend_request / accept / reject / cancel_request / block / unblock / set_nickname
+       - data-nickname     : 只在 set_nickname 使用（上限 10）
+       ------------------------------------------------------------ *@
+    <div class="d-grid gap-2 col-md-6">
+        <!-- 送出交友邀請 -->
+        <button class="btn btn-primary" data-rel
+                data-url="@execUrl"
+                data-actor-user-id="10000001"
+                data-target-user-id="10000002"
+                data-action-code="friend_request">
+            送出交友邀請（1 → 2）
+        </button>
+
+        <!-- 接受邀請 -->
+        <button class="btn btn-success" data-rel
+                data-url="@execUrl"
+                data-actor-user-id="10000002"
+                data-target-user-id="10000001"
+                data-action-code="accept">
+            接受邀請（2 接受 1）
+        </button>
+
+        <!-- 拒絕邀請 -->
+        <button class="btn btn-outline-danger" data-rel
+                data-url="@execUrl"
+                data-actor-user-id="10000002"
+                data-target-user-id="10000001"
+                data-action-code="reject">
+            拒絕邀請（2 拒絕 1）
+        </button>
+
+        <!-- 取消邀請（由邀請者取消） -->
+        <button class="btn btn-warning" data-rel
+                data-url="@execUrl"
+                data-actor-user-id="10000001"
+                data-target-user-id="10000002"
+                data-action-code="cancel_request">
+            取消邀請（1 取消）
+        </button>
+
+        <!-- 封鎖 / 解除封鎖 -->
+        <button class="btn btn-dark" data-rel
+                data-url="@execUrl"
+                data-actor-user-id="10000001"
+                data-target-user-id="10000002"
+                data-action-code="block">
+            封鎖（1 封鎖 2）
+        </button>
+
+        <button class="btn btn-secondary" data-rel
+                data-url="@execUrl"
+                data-actor-user-id="10000001"
+                data-target-user-id="10000002"
+                data-action-code="unblock">
+            解除封鎖（1 → 2）
+        </button>
+
+        <!-- 設定暱稱（雙向關係一筆資料；這裡僅示範存 FriendNickname） -->
+        <button class="btn btn-info" data-rel
+                data-url="@execUrl"
+                data-actor-user-id="10000001"
+                data-target-user-id="10000002"
+                data-action-code="set_nickname"
+                data-nickname="小明">
+            設定暱稱（1 對 2：小明）
+        </button>
+    </div>
+
+    <div id="rel-status" class="mt-3 small text-muted"></div>
+</div>
+
+@section Scripts {
+    <script>
+        /* ============================================================
+           前端腳本：
+           - 讀按鈕 data-* → 組 RelationCommand → POST 到 /social_hub/relations/exec
+           - 防呆：檢查必填欄位（actor/target/action）
+           - 顯示結果：No-Op / 新狀態 / 理由
+           ============================================================ */
+        (function () {
+          const $ = (s) => document.querySelector(s);
+          const toInt = (v) => (v==null || v==="" ? null : (isFinite(v) ? Number(v) : null));
+
+          function buildCmd(ds) {
+            return {
+              actorUserId:  toInt(ds.actorUserId),
+              targetUserId: toInt(ds.targetUserId),
+              actionCode:   (ds.actionCode || "").trim(),
+              nickname:     (ds.nickname || null)
+            };
+          }
+
+          document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-rel]');
+            if (!btn) return;
+
+            const url = btn.dataset.url;
+            const cmd = buildCmd(btn.dataset);
+
+            if (!cmd.actorUserId || !cmd.targetUserId || !cmd.actionCode) {
+              alert('actorUserId / targetUserId / actionCode 為必填。');
+              return;
+            }
+
+            $('#rel-status').textContent = '送出中…';
+
+            // Anti-Forgery（若控制器沒 [ValidateAntiForgeryToken] 可拿掉）
+            const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenEl ? tokenEl.value : null;
+
+            const headers = {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            };
+            if (token) headers['RequestVerificationToken'] = token;
+
+            try {
+              const res = await fetch(url, {
+                method: 'POST',
+                headers,
+                credentials: 'same-origin',
+                body: JSON.stringify(cmd)
+              });
+
+              const ct  = res.headers.get('content-type') || '';
+              const txt = await res.text();
+
+              if (!res.ok) {
+                alert(`失敗 (HTTP ${res.status})：${txt.slice(0,200)}`);
+                $('#rel-status').textContent = '';
+                return;
+              }
+              if (!ct.includes('application/json')) {
+                alert('伺服器回的不是 JSON（可能被轉址或打錯路由）。');
+                $('#rel-status').textContent = '';
+                return;
+              }
+
+              const data = JSON.parse(txt); // { noOp, relationId, newStatusCode, reason }
+              const info = [
+                `NoOp=${data.noOp}`,
+                `relationId=${data.relationId ?? '—'}`,
+                `status=${data.newStatusCode ?? '—'}`,
+                data.reason ? `reason=${data.reason}` : null
+              ].filter(Boolean).join(' | ');
+
+              alert('OK！' + info);
+              $('#rel-status').textContent = info;
+            } catch (err) {
+              alert('例外：' + err.message);
+              $('#rel-status').textContent = '';
+            }
+          });
+        })();
+    </script>
+}

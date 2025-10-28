@@ -1,0 +1,86 @@
+﻿@model GamiPort.Models.ViewModels.LoginVM
+@{
+    ViewData["Title"] = "登入";
+}
+
+<div class="container d-flex justify-content-center align-items-start pt-3 pb-5" style="min-height: calc(100vh - 64px);">
+    <div class="w-100" style="max-width: 420px;">
+        <h3 class="text-center mb-3 mt-0">登入 GamiPort</h3>
+
+        <form asp-area="Login" asp-controller="Login" asp-action="Login"
+              method="post" class="card p-4 shadow-sm">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div class="mb-3">
+                <label class="form-label">帳號 </label>
+                <input asp-for="UserAccount" class="form-control" autocomplete="username" />
+                <span asp-validation-for="UserAccount" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">密碼</label>
+                <input asp-for="UserPassword" class="form-control" type="password" autocomplete="current-password" />
+                <span asp-validation-for="UserPassword" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label class="form-check-label" asp-for="RememberMe"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">登入</button>
+
+            <environment include="Development">
+                <button type="button" id="Member1" class="btn btn-outline-secondary">使用者1</button>
+                <button type="button" id="Member2" class="btn btn-outline-secondary">使用者 #10000002</button>
+                <button type="button" id="Member200" class="btn btn-outline-secondary">使用者 #10000200</button>
+            </environment>
+
+
+        </form>
+
+        <div class="text-center mt-3">
+            <a asp-area="Login" asp-controller="Register" asp-action="Step1">註冊會員</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+             //最高管理者資料填入
+            (function () {
+                    const btn = document.getElementById('Member1');
+                btn?.addEventListener('click', function () {
+                            const acc = document.getElementById('UserAccount');
+                        const pwd = document.getElementById('UserPassword');
+                        if (acc) acc.value = 'dragonknight88';
+                        if (pwd) pwd.value = 'Password001@@';
+                    acc?.focus();
+                });
+        })();
+         (function () {
+            const btn = document.getElementById('Member2');
+                btn?.addEventListener('click', function () {
+                            const acc = document.getElementById('UserAccount');
+                        const pwd = document.getElementById('UserPassword');
+                        if (acc) acc.value = 'tech_guru_92';
+                        if (pwd) pwd.value = 'SecurePass002#';
+                    acc?.focus();
+                    });
+        })();
+        (function () {
+            const btn = document.getElementById('Member200');
+                btn?.addEventListener('click', function () {
+                            const acc = document.getElementById('UserAccount');
+                        const pwd = document.getElementById('UserPassword');
+                        if (acc) acc.value = 'mexican_chef_85';
+                        if (pwd) pwd.value = 'TacoMaster200[';
+                    acc?.focus();
+                    });
+        })();
+    </script>
+}

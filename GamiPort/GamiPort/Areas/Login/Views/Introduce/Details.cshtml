@@ -1,0 +1,100 @@
+﻿@model GamiPort.Areas.Login.Models.UserIntroduceVM
+@using GamiPort.Services
+@{
+    ViewData["Title"] = "我的個人資料";
+
+}
+
+<div class="container py-4" style="max-width: 960px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">@ViewData["Title"]</h3>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="~/">返回首頁</a>
+            <a class="btn btn-primary" asp-area="Login" asp-controller="Introduce" asp-action="Edit">編輯資料</a>
+        </div>
+    </div>
+
+    @if (TempData["Info"] is string info)
+    {
+        <div class="alert alert-info">@info</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-12 col-lg-4 text-center">
+                    @{
+                        var defaultAvatar = Url.Content("~/images/預設人物.png"); // ← 放在 wwwroot/images
+                        string? imgSrc = null;
+
+                        if (Model?.UserPicture != null && Model.UserPicture.Length > 0)
+                        {
+                            var b64 = Convert.ToBase64String(Model.UserPicture);
+                            imgSrc = $"data:image/*;base64,{b64}";
+                        }
+                    }
+
+                    <img src="@(imgSrc ?? defaultAvatar)"
+                         alt="頭像"
+                         class="rounded-circle mb-2"
+                         style="width:150px;height:150px;object-fit:cover;"
+                         onerror="this.onerror=null;this.src='@defaultAvatar';" />
+
+                    <div class="text-muted">頭像</div>
+                </div>
+
+                <div class="col-12 col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">使用者編號</label>
+                            <div class="form-control-plaintext">@Model.UserId</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">暱稱</label>
+                            <div class="form-control-plaintext">@Model.UserNickName</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">性別</label>
+                            <div class="form-control-plaintext">@Model.Gender</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">手機</label>
+                            <div class="form-control-plaintext">@Model.Cellphone</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <div class="form-control-plaintext">@Model.Email</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">身分證/識別碼</label>
+                            <div class="form-control-plaintext">@Model.IdNumber</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">地址</label>
+                            <div class="form-control-plaintext">@Model.Address</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">生日</label>
+                            <div class="form-control-plaintext">@Model.DateOfBirth.ToString("yyyy-MM-dd")</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">建立時間</label>
+                            <div class="form-control-plaintext">@Model.CreateAccount.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">自我介紹</label>
+                            <div class="form-control-plaintext" style="white-space: pre-line;">
+                                @Model.UserIntroduce1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- row -->
+        </div><!-- card-body -->
+    </div><!-- card -->
+</div>

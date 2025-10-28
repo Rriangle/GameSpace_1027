@@ -1,0 +1,118 @@
+﻿@model GameSpace.Models.Mute
+@{
+    ViewData["Title"] = "刪除詞彙";
+    string managerName = ViewBag.ManagerName as string ?? "-";
+}
+
+<div class="mutes-header">
+    <h2 class="mutes-title">
+        <span class="text-danger"><i class="fas fa-trash-alt me-2"></i>@ViewData["Title"]</span>
+        <span class="badge rounded-pill bg-danger">不可復原</span>
+    </h2>
+    <div class="mutes-subtle">
+        <i class="far fa-clock me-1"></i>@Html.AppTime(Model?.CreatedAt, "yyyy/MM/dd HH:mm")
+    </div>
+</div>
+
+<partial name="_Toast" />
+
+<div class="mutes-card">
+    <div class="card-body">
+        <p class="mb-3">確定要刪除下列詞彙嗎？刪除後將無法復原。</p>
+
+        <dl class="row dl-clean">
+            <dt class="col-sm-2">ID</dt>
+            <dd class="col-sm-10">@Model.MuteId</dd>
+
+            <dt class="col-sm-2">詞彙</dt>
+            <dd class="col-sm-10">
+                <span data-copy="@Model.Word" title="點擊複製">@Model.Word</span>
+            </dd>
+
+            <dt class="col-sm-2">替代字</dt>
+            <dd class="col-sm-10">
+                @if (!string.IsNullOrWhiteSpace(Model.Replacement))
+                {
+                    <span data-copy="@Model.Replacement" title="點擊複製">@Model.Replacement</span>
+                }
+                else
+                {
+                    <span class="text-muted">（預設遮罩）</span>
+                }
+            </dd>
+
+            <dt class="col-sm-2">狀態</dt>
+            <dd class="col-sm-10">
+                @if (Model.IsActive == true)
+                {
+                    <span class="cell-chip on">啟用</span>
+                }
+                else
+                {
+                    <span class="cell-chip off">停用</span>
+                }
+            </dd>
+
+            <dt class="col-sm-2">管理員</dt>
+            <dd class="col-sm-10">
+                <span title="ID: @Model.ManagerId">@managerName</span>
+                <span class="text-muted ms-1">(#@Model.ManagerId)</span>
+            </dd>
+        </dl>
+
+        <form asp-action="Delete" method="post" class="d-flex gap-2 js-delete-form" id="mute-del-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="MuteId" />
+            <button type="submit" class="btn btn-danger" id="btn-del">
+                <i class="fas fa-trash me-1"></i><span>刪除</span>
+            </button>
+            <a class="btn btn-secondary" asp-action="Index" id="btn-back">
+                <i class="fas fa-arrow-left me-1"></i>返回
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/lib/social_hub/css/mutes.css" rel="stylesheet" />
+}
+@section Scripts {
+    <script src="~/lib/social_hub/js/mutes.js"></script>
+    <script>
+        (function () {
+            const f   = document.getElementById('mute-del-form');
+            const btn = document.getElementById('btn-del');
+            const back= document.getElementById('btn-back');
+            const word= @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model?.Word ?? ""));
+
+            // 送出前確認 + 防連點
+            f?.addEventListener('submit', function (e) {
+                const msg = word ? `確定刪除「${word}」？\n此動作無法復原。` : '確定刪除？此動作無法復原。';
+                if (!confirm(msg)) {
+                    e.preventDefault();
+                    return;
+                }
+                // 防連點＋Spinner
+                btn.disabled = true;
+                btn.classList.add('disabled');
+                const span = btn.querySelector('span');
+                if (span && !btn.querySelector('.spinner-border')) {
+                    span.insertAdjacentHTML('afterbegin',
+                      '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>');
+                }
+            });
+
+            // 快捷鍵：Esc 返回、Enter 送出（避免在按鈕上重複觸發以外的送出）
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    back?.click();
+                } else if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                    // 頁面上沒有可編輯欄位，直接視為確認
+                    e.preventDefault();
+                    btn?.click();
+                }
+            });
+        })();
+    </script>
+}

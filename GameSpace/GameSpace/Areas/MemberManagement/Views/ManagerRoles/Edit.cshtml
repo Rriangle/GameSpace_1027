@@ -1,0 +1,16 @@
+﻿@model GameSpace.Areas.MemberManagement.Models.ManagerRoleEntry
+
+<h2>編輯角色</h2>
+
+<form asp-action="Edit" method="post">
+    <!-- 主鍵保留 hidden -->
+    <input type="hidden" asp-for="ManagerId" />
+
+    <div class="form-group">
+        <label asp-for="ManagerRoleId"></label>
+        <input asp-for="ManagerRoleId" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">儲存</button> |
+    <a asp-action="Index">返回清單</a>
+</form>

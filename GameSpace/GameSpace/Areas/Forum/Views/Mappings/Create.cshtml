@@ -1,0 +1,24 @@
+﻿@model GameSpace.Areas.Forum.Models.Mapping.MappingEditVm
+@{
+    ViewData["Title"] = "新增對應";
+}
+<h2>新增對應</h2>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label class="form-label">遊戲</label>
+        <select asp-for="GameId" asp-items="ViewBag.Games" class="form-select"></select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">來源</label>
+        <select asp-for="SourceId" asp-items="ViewBag.Sources" class="form-select"></select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">External Key</label>
+        <input asp-for="ExternalKey" class="form-control" />
+    </div>
+    <div class="text-danger">@Html.ValidationSummary()</div>
+    <button class="btn btn-primary">儲存</button>
+    <a asp-action="Index" class="btn btn-secondary">返回</a>
+</form>

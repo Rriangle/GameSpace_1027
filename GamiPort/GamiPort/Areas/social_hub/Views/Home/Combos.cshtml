@@ -1,0 +1,282 @@
+﻿@* ==========================================================================
+   檔案：Areas/social_hub/Views/Home/Combos.cshtml
+   目的：同一顆按鈕 → 同時執行 交友 +（視條件）通知；只有狀態「有變更」才寄（on-change）
+   端點：POST /social_hub/combos/relation_and_notify
+
+   通知來源/動作對應（依你 DB 現況）：
+   - source_id = 1  交友
+   - action_id = 6  好友邀請（對應 friend_request）
+   - action_id = 5  封鎖（對應 block）
+   - action_id = 1  公告（泛用；暫時用在 accept / reject / cancel_request / unblock / unfriend / set_nickname）
+
+   回傳 JSON：
+   { noOp, relationId, newStatusId, newStatusCode, notificationId?, reason? }
+
+   必要條件（CSRF）：
+   - 本頁輸出 @Html.AntiForgeryToken()
+   - fetch 時帶 "RequestVerificationToken"（Program.cs 的 AddAntiforgery HeaderName 要一致）
+   ========================================================================== *@
+@{
+    ViewData["Title"] = "組合操作（交友 + 通知）— 僅有變更才寄";
+    var comboUrl = Url.Action("RelationAndNotify", "Combos", new { area = "social_hub" });
+}
+
+<div class="container py-4">
+    <h2 class="mb-3">組合操作（交友 + 通知）— 僅有變更才寄</h2>
+
+    @Html.AntiForgeryToken()
+
+    <p class="text-muted">
+        每顆按鈕都會把 <code>data-*</code> 轉成
+        <code>{ relation, notification, notifyIf }</code>，POST 到 <code>@comboUrl</code>。
+        全部按鈕均設定 <code>data-notify-if="on-change"</code>：只有狀態真的變更才會寄通知。
+    </p>
+
+    <hr />
+
+    <div class="d-grid gap-2 col-md-7">
+
+        @* 1) 送出好友邀請：通知對方（好友邀請） *@
+        <button class="btn btn-primary" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000003"
+                data-rel-target-user-id="10000102"
+                data-rel-action-code="friend_request"
+                data-ntf-source-id="1"
+                data-ntf-action-id="6"
+                data-ntf-to-user-id="10000102"
+                data-ntf-title="好友邀請"
+                data-ntf-message="使用者 #10000003 向你送出了好友邀請。">
+            送出好友邀請（通知 #10000102）
+        </button>
+
+        @* 2) 接受好友邀請：通知邀請人（泛用：公告） *@
+        <button class="btn btn-success" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000102"
+                data-rel-target-user-id="10000003"
+                data-rel-action-code="accept"
+                data-ntf-source-id="1"
+                data-ntf-action-id="1"
+                data-ntf-to-user-id="10000003"
+                data-ntf-title="好友邀請已接受"
+                data-ntf-message="你的好友邀請已被 #10000102 接受。">
+            接受邀請（通知 #10000003）
+        </button>
+
+        @* 3) 拒絕好友邀請：通知邀請人（泛用：公告） *@
+        <button class="btn btn-outline-danger" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000102"
+                data-rel-target-user-id="10000003"
+                data-rel-action-code="reject"
+                data-ntf-source-id="1"
+                data-ntf-action-id="1"
+                data-ntf-to-user-id="10000003"
+                data-ntf-title="好友邀請被拒絕"
+                data-ntf-message="你對 #10000102 的好友邀請已被拒絕。">
+            拒絕邀請（通知 #10000003）
+        </button>
+
+        @* 4) 取消我送出的邀請：通知對方（暫用：公告；若你願意，也可用 action_id=3 表示取消） *@
+        <button class="btn btn-outline-warning" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000003"
+                data-rel-target-user-id="10000102"
+                data-rel-action-code="cancel_request"
+                data-ntf-source-id="1"
+                data-ntf-action-id="1"
+                data-ntf-to-user-id="10000102"
+                data-ntf-title="好友邀請已取消"
+                data-ntf-message="使用者 #10000003 已取消對你的好友邀請。">
+            取消我送出的邀請（通知 #10000102）
+        </button>
+
+        @* 5) 封鎖對方：通知對方（封鎖） *@
+        <button class="btn btn-warning" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000003"
+                data-rel-target-user-id="10000102"
+                data-rel-action-code="block"
+                data-ntf-source-id="1"
+                data-ntf-action-id="5"
+                data-ntf-to-user-id="10000102"
+                data-ntf-title="封鎖通知"
+                data-ntf-message="你已被使用者 #10000003 設為封鎖。">
+            封鎖對方（通知 #10000102）
+        </button>
+
+        @* 6) 解除封鎖：通知對方（泛用：公告；狀態 BLOCKED → NONE） *@
+        <button class="btn btn-secondary" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000003"
+                data-rel-target-user-id="10000102"
+                data-rel-action-code="unblock"
+                data-ntf-source-id="1"
+                data-ntf-action-id="1"
+                data-ntf-to-user-id="10000102"
+                data-ntf-title="解除封鎖"
+                data-ntf-message="你已被使用者 #10000003 解除封鎖。">
+            解除封鎖（通知 #10000102）
+        </button>
+
+        @* 7) 設定暱稱：僅好友可，變更才寄（泛用：公告） *@
+        <button class="btn btn-info" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000003"
+                data-rel-target-user-id="10000102"
+                data-rel-action-code="set_nickname"
+                data-rel-nickname="小白"
+                data-ntf-source-id="1"
+                data-ntf-action-id="1"
+                data-ntf-to-user-id="10000102"
+                data-ntf-title="好友暱稱變更"
+                data-ntf-message="使用者 #10000003 將你的暱稱設定為「小白」。">
+            設定暱稱（通知 #10000102）
+        </button>
+
+        @* 8) 解除好友：ACCEPTED → NONE，通知對方（泛用：公告） *@
+        <button class="btn btn-outline-secondary" data-combo
+                data-url="@comboUrl"
+                data-notify-if="on-change"
+                data-rel-actor-user-id="10000003"
+                data-rel-target-user-id="10000102"
+                data-rel-action-code="unfriend"
+                data-ntf-source-id="1"
+                data-ntf-action-id="1"
+                data-ntf-to-user-id="10000102"
+                data-ntf-title="解除好友"
+                data-ntf-message="使用者 #10000003 已將你從好友中移除。">
+            解除好友（通知 #10000102）
+        </button>
+
+    </div>
+
+    <hr />
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <h5>最後一次送出的 Payload</h5>
+            <pre id="lastPayload" class="bg-light p-2 border small" style="min-height: 160px; white-space: pre-wrap;"></pre>
+        </div>
+        <div class="col-md-6">
+            <h5>伺服器回應</h5>
+            <pre id="lastResponse" class="bg-light p-2 border small" style="min-height: 160px; white-space: pre-wrap;"></pre>
+        </div>
+    </div>
+
+    <div class="mt-3 small text-muted">
+        <span id="status"></span>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+          const $ = (s) => document.querySelector(s);
+
+          const toInt = (v) => (v==null || v==="" ? null : (isFinite(v) ? Number(v) : null));
+          const toStr = (v) => (v==null || v==="" ? null : String(v));
+
+          function buildPayload(ds) {
+            const relation = {
+              actorUserId:  toInt(ds.relActorUserId),
+              targetUserId: toInt(ds.relTargetUserId),
+              actionCode:   toStr(ds.relActionCode) || "",
+              nickname:     toStr(ds.relNickname)
+            };
+            const ntf = {
+              sourceId:        toInt(ds.ntfSourceId),
+              actionId:        toInt(ds.ntfActionId),
+              toUserId:        toInt(ds.ntfToUserId),
+              toManagerId:     toInt(ds.ntfToManagerId),
+              groupId:         toInt(ds.ntfGroupId),
+              senderUserId:    toInt(ds.ntfSenderUserId),
+              senderManagerId: toInt(ds.ntfSenderManagerId),
+              title:           toStr(ds.ntfTitle) || "",
+              message:         toStr(ds.ntfMessage)
+            };
+            const hasRecipient = (ntf.toUserId != null) || (ntf.toManagerId != null);
+            const notification = hasRecipient ? stripNulls(ntf) : null;
+
+            const notifyIf = (ds.notifyIf || 'on-change').toLowerCase();
+            return { relation, notification, notifyIf };
+          }
+
+          function stripNulls(obj) {
+            const x = { ...obj };
+            Object.keys(x).forEach(k => { if (x[k] === null || x[k] === "") delete x[k]; });
+            return x;
+          }
+
+          async function postJson(url, payload) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+            if (token) headers['RequestVerificationToken'] = token;
+
+            const res = await fetch(url, {
+              method: 'POST',
+              headers,
+              credentials: 'same-origin',
+              body: JSON.stringify(payload)
+            });
+
+            const ct  = res.headers.get('content-type') || '';
+            const txt = await res.text();
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt.slice(0, 200)}`);
+            if (!ct.includes('application/json')) throw new Error('伺服器回的不是 JSON（可能被轉址或路由打錯）。');
+
+            return JSON.parse(txt);
+          }
+
+          document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-combo]');
+            if (!btn) return;
+
+            const url = btn.dataset.url;
+            const payload = buildPayload(btn.dataset);
+
+            if (!payload.relation.actorUserId || !payload.relation.targetUserId || !payload.relation.actionCode) {
+              alert('relation 欄位不足（actorUserId / targetUserId / actionCode）');
+              return;
+            }
+            if (!payload.notification) {
+              alert('通知參數缺少收件人（toUserId 或 toManagerId）。');
+              return;
+            }
+
+            $('#status').textContent       = '送出中…';
+            $('#lastPayload').textContent  = JSON.stringify(payload, null, 2);
+            $('#lastResponse').textContent = '';
+
+            try {
+              const data = await postJson(url, payload);
+              $('#lastResponse').textContent = JSON.stringify(data, null, 2);
+
+              const info = [
+                `NoOp=${data.noOp}`,
+                `relationId=${data.relationId ?? '—'}`,
+                `newStatusId=${data.newStatusId ?? '—'}`,
+                `newStatusCode=${data.newStatusCode ?? '—'}`,
+                (data.notificationId != null) ? `notificationId=${data.notificationId}` : null,
+                data.reason ? `reason=${data.reason}` : null
+              ].filter(Boolean).join(' | ');
+
+              alert('OK！' + info);
+              $('#status').textContent = '完成';
+            } catch (err) {
+              alert(err.message);
+              $('#status').textContent = '';
+            }
+          });
+        })();
+    </script>
+}

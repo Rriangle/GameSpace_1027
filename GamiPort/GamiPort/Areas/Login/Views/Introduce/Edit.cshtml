@@ -1,0 +1,133 @@
+﻿@model GamiPort.Areas.Login.Models.UserIntroduceVM
+@using GamiPort.Services
+@{
+    ViewData["Title"] = "編輯個人資料";
+}
+
+<div class="container py-4" style="max-width: 980px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">@ViewData["Title"]</h3>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" asp-area="Login" asp-controller="Introduce" asp-action="Details">返回檢視</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string ok)
+    {
+        <div class="alert alert-success">@ok</div>
+    }
+
+    <form asp-area="Login" asp-controller="Introduce" asp-action="Edit" method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+        <div class="row g-4">
+            <!-- 左：可編輯 -->
+            <div class="col-12 col-lg-8">
+                <div class="mb-3">
+                    <label class="form-label" asp-for="UserNickName">暱稱（唯一）</label>
+                    <input class="form-control" asp-for="UserNickName" maxlength="30" />
+                    <span class="text-danger" asp-validation-for="UserNickName"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-block">性別</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="Gender" id="genderM" value="M" />
+                        <label class="form-check-label" for="genderM">男 (M)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="Gender" id="genderF" value="F" />
+                        <label class="form-check-label" for="genderF">女 (F)</label>
+                    </div>
+                    <span class="text-danger" asp-validation-for="Gender"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Cellphone">手機（唯一）</label>
+                    <input class="form-control" asp-for="Cellphone" maxlength="20" />
+                    <span class="text-danger" asp-validation-for="Cellphone"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Address">地址</label>
+                    <input class="form-control" asp-for="Address" maxlength="200" />
+                    <span class="text-danger" asp-validation-for="Address"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="UserIntroduce1">自我介紹</label>
+                    <textarea class="form-control" asp-for="UserIntroduce1" rows="5"></textarea>
+                    <span class="text-danger" asp-validation-for="UserIntroduce1"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">大頭貼</label>
+                    <input type="file" name="userPictureFile" class="form-control" accept="image/*" />
+                    <div class="form-text">可不選；若選擇將覆蓋原圖。</div>
+                </div>
+            </div>
+
+            <!-- 右：不可編輯（唯讀） -->
+            <div class="col-12 col-lg-4">
+                <div class="mb-3 text-center">
+                    @{
+                        // 預設頭像（共用常數）
+                        var defaultAvatar = Url.Content(ImagePathService.DefaultUserAvatar);
+
+                        // 若資料庫有頭像位元組就顯示 base64，否則使用預設頭像
+                        string? imgSrc = null;
+                        if (Model?.UserPicture != null && Model.UserPicture.Length > 0)
+                        {
+                            var b64 = Convert.ToBase64String(Model.UserPicture);
+                            imgSrc = $"data:image/*;base64,{b64}";
+                        }
+                    }
+
+                    <img src="@(imgSrc ?? defaultAvatar)"
+                         alt="頭像預覽"
+                         class="rounded-circle mb-2"
+                         style="width:150px;height:150px;object-fit:cover;"
+                         onerror="this.onerror=null;this.src='@defaultAvatar';" />
+
+                    <div class="text-muted small">目前頭像</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">使用者編號</label>
+                    <input class="form-control" value="@Model.UserId" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">身分證/識別碼</label>
+                    <input class="form-control" value="@Model.IdNumber" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" value="@Model.Email" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">生日</label>
+                    <input class="form-control" value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">建立時間</label>
+                    <input class="form-control" value="@Model.CreateAccount.ToString("yyyy-MM-dd HH:mm:ss")" readonly />
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-2">
+            <a class="btn btn-outline-secondary" asp-area="Login" asp-controller="Introduce" asp-action="Details">取消</a>
+            <button type="submit" class="btn btn-primary">儲存變更</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

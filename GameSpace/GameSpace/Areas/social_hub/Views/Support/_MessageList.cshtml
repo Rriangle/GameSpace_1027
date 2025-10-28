@@ -1,0 +1,38 @@
+﻿@model IReadOnlyList<GameSpace.Areas.social_hub.Models.ViewModels.SupportMessageVM>
+
+<div class="support-chat">
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="text-muted">目前沒有訊息。</div>
+    }
+    else
+    {
+        <div class="d-flex flex-column">
+            @foreach (var m in Model)
+            {
+                var mine = m.IsMine;
+                <div class="msg-row @(mine ? "mine" : "other")">
+                    <div class="msg-col">
+                        <div class="msg-meta">
+                            @if (m.SenderUserId != null)
+                            {
+                                <span class="badge bg-secondary">使用者</span>
+                            }
+                            else if (m.SenderManagerId != null)
+                            {
+                                <span class="badge bg-warning text-dark">客服@(mine ? "(我)" : "")</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-dark">系統</span>
+                            }
+                            <!-- ★ 用 App 時區顯示（台灣），DB 仍存 UTC -->
+                            <span>@Html.AppTime(m.SentAt, "yyyy/MM/dd HH:mm")</span>
+                        </div>
+                        <div class="msg-bubble">@m.MessageText</div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,61 @@
+﻿@model IEnumerable<GameSpace.Models.CouponType>
+@{
+    ViewData["Title"] = "優惠類型";
+    var q = ViewBag.Query as string ?? "";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> 新增
+    </a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-sm-8 col-md-6 col-lg-4">
+        <input type="text" name="q" value="@q" class="form-control" placeholder="搜尋名稱…" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">搜尋</button>
+        <a asp-action="Index" class="btn btn-link">重設</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Id</th>
+                <th>名稱</th>
+                <th>類型</th>
+                <th class="text-end">折扣值</th>
+                <th class="text-end">最低消費</th>
+                <th>起訖</th>
+                <th class="text-end">點數</th>
+                <th style="width:160px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.CouponTypeId</td>
+                    <td>@item.Name</td>
+                    <td>@item.DiscountType</td>
+                    <td class="text-end">@item.DiscountValue</td>
+                    <td class="text-end">@item.MinSpend</td>
+                    <td>
+                        <div class="small text-nowrap">@item.ValidFrom.ToString("yyyy/MM/dd HH:mm")</div>
+                        <div class="small text-muted text-nowrap">→ @item.ValidTo.ToString("yyyy/MM/dd HH:mm")</div>
+                    </td>
+                    <td class="text-end">@item.PointsCost</td>
+                    <td class="text-nowrap">
+                        <a asp-action="Details" asp-route-id="@item.CouponTypeId" class="btn btn-sm btn-outline-secondary">明細</a>
+                        <a asp-action="Edit" asp-route-id="@item.CouponTypeId" class="btn btn-sm btn-warning">編輯</a>
+                        <a asp-action="Delete" asp-route-id="@item.CouponTypeId" class="btn btn-sm btn-danger">刪除</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

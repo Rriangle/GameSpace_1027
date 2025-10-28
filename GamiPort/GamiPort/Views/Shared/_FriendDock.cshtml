@@ -1,0 +1,360 @@
+﻿@* ===================================================================
+   _FriendDock.cshtml － 好友清單（可拖移小視窗）
+   功能一覽：
+   1) 進場：呼叫 PeersLatest 一次性把「未讀 / 最後時間 / 預覽」畫上去
+   2) 即時：監聽 Hub 的 UnreadUpdate（兼容不同欄位命名），即時更新紅點
+   3) 同步：收到聊天窗廣播 'gp-chat-latest' 更新該列時間/預覽並置頂
+   4) 保險：收到 'gp-unread-zero' 事件 → 將該 peer 的所有徽章都清空（跨頁/多處 DOM 均成立）
+   DOM 規範（盡量寬容）：
+     - 未讀徽章： [data-chat-badge="<peerId>"]          ← 主選取器
+                   .fd-row[data-uid="<peerId>"] .fd-badge ← 備援
+     - 時間：     [data-chat-time-iso="<peerId>"] 或 .fd-row[data-uid] 內的 [data-time]
+     - 預覽：     [data-chat-preview="<peerId>"] 或 .fd-row[data-uid] 內的 [data-last]
+   時間顯示：一律 GPTime.hm(UTC ISO) → 台灣 HH:mm
+   =================================================================== *@
+@{
+    var friendsApi = Url.Action("Friends", "RelationsQuery", new { area = "social_hub", onlyAccepted = true, take = 200 });
+    var peersApi = Url.Action("PeersLatest", "Chat", new { area = "social_hub" });
+    var historyApi = Url.Action("History", "Chat", new { area = "social_hub" });
+}
+
+<style>
+    .frd-dock {
+        position: fixed;
+        right: 86px;
+        top: 84px;
+        width: 420px;
+        max-height: 56vh;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 16px 44px rgba(0,0,0,.14);
+        z-index: 1085;
+        display: none
+    }
+
+        .frd-dock.open {
+            display: block
+        }
+
+    .fd-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e9ecef
+    }
+
+    .fd-title {
+        font-weight: 700
+    }
+
+    .fd-body {
+        max-height: 48vh;
+        overflow: auto;
+        background: linear-gradient(#fff,#f8fafc)
+    }
+
+    .fd-row {
+        display: flex;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px dashed #eef2f7;
+        cursor: pointer
+    }
+
+        .fd-row:hover {
+            background: #f8fafc
+        }
+
+    .fd-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #475569
+    }
+
+    .fd-main {
+        flex: 1;
+        min-width: 0
+    }
+
+    .fd-name {
+        display: flex;
+        align-items: center;
+        gap: 8px
+    }
+
+    .fd-base {
+        font-weight: 600;
+        color: #1f2937
+    }
+
+    .fd-nick {
+        color: #8b5cf6;
+        font-size: .85rem
+    }
+
+    .fd-id {
+        color: #64748b;
+        font-size: .85rem
+    }
+
+    .fd-preview {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 2px;
+        color: #475569;
+        font-size: .92rem
+    }
+
+    .fd-last {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap
+    }
+
+    .fd-time {
+        flex: 0 0 auto;
+        color: #94a3b8;
+        font-size: .8rem
+    }
+
+    .fd-badge {
+        display: inline-block;
+        min-width: 18px;
+        padding: 0 6px;
+        margin-left: auto;
+        line-height: 18px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #fff;
+        font-size: .75rem;
+        font-weight: 700;
+        display: none
+    }
+
+    .fd-empty {
+        padding: 12px;
+        color: #94a3b8
+    }
+
+    .fd-tools button {
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        padding: 4px 10px;
+        border-radius: 8px;
+        cursor: pointer
+    }
+    @@media (max-width:480px) {
+        .frd-dock
+
+    {
+        right: 6px;
+        left: 6px;
+        width: auto
+    }
+
+    }
+</style>
+
+<div id="FriendDock" class="frd-dock" aria-hidden="true" role="dialog">
+    <div class="fd-head" id="fdHead">
+        <div class="fd-title">好友清單</div>
+        <div class="fd-tools"><button id="fdClose">關閉</button></div>
+    </div>
+    <div class="fd-body" id="fdBody"><div class="fd-empty">讀取中…</div></div>
+</div>
+
+<script>
+    ;(async ()=>{
+      // ------------- 相依：時間/SignalR -------------
+      if(!window.__gpEnsureTime){
+        window.__gpEnsureTime=new Promise(res=>{
+          if(window.GPTime) return res();
+          const s=document.createElement('script'); s.src='~/js/social_hub/gp-time.js'.replace('~',location.origin);
+          s.onload=()=>res(); s.onerror=()=>res(); document.head.appendChild(s);
+        });
+      }
+      if(!window.__gpEnsureSignalR){
+        window.__gpEnsureSignalR=new Promise((res,rej)=>{
+          if(window.signalR||window.SignalR||window.signalr) return res();
+          const s=document.createElement('script');
+          s.src='https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js';
+          s.crossOrigin='anonymous'; s.onload=()=>res(); s.onerror=()=>rej(); document.head.appendChild(s);
+        });
+      }
+      await window.__gpEnsureTime;
+
+      // ------------- DOM & 基本互動 -------------
+      const dock=document.getElementById('FriendDock');
+      const head=document.getElementById('fdHead');
+      const body=document.getElementById('fdBody');
+      document.getElementById('fdClose').addEventListener('click', ()=>dock.classList.remove('open'));
+
+      // 拖移（避開按鈕）
+      (function drag(el,handle){
+        let sx=0,sy=0,ox=0,oy=0,drag=false;
+        const isBtn=t=>(t.closest?.('.fd-tools')||t.tagName==='BUTTON');
+        handle.addEventListener('pointerdown',e=>{ if(isBtn(e.target))return; drag=true; sx=e.clientX; sy=e.clientY;
+          const r=el.getBoundingClientRect(); ox=r.left; oy=r.top; handle.setPointerCapture(e.pointerId);});
+        handle.addEventListener('pointermove',e=>{ if(!drag)return;
+          const nx=ox+(e.clientX-sx), ny=oy+(e.clientY-sy);
+          el.style.left=Math.max(6,Math.min(window.innerWidth-el.offsetWidth-6,nx))+'px';
+          el.style.top =Math.max(6,Math.min(window.innerHeight-80,ny))+'px'; el.style.right='auto';});
+        handle.addEventListener('pointerup',()=>drag=false);
+      })(dock, head);
+
+      // ------------- DOM 工具（寬容選取） -------------
+      function findRow(pid){ return body.querySelector(`.fd-row[data-uid="${pid}"]`); }
+      function findBadge(pid){
+        return document.querySelector(`[data-chat-badge="${pid}"]`)
+            || (findRow(pid)?.querySelector('.fd-badge')) || null;
+      }
+      function findTimeEl(pid){
+        return document.querySelector(`[data-chat-time-iso="${pid}"]`)
+            || (findRow(pid)?.querySelector('[data-time]')) || null;
+      }
+      function findPreviewEl(pid){
+        return document.querySelector(`[data-chat-preview="${pid}"]`)
+            || (findRow(pid)?.querySelector('[data-last]')) || null;
+      }
+      function setBadge(pid, unread){
+        const b=findBadge(pid);
+        if(!b) return;
+        b.textContent = unread>0 ? unread : '';
+        b.style.display = unread>0 ? 'inline-block':'none';
+      }
+      function clearBadgeEverywhere(pid){
+        // 清所有可能的徽章（跨模組/多處 DOM）
+        document.querySelectorAll(`[data-chat-badge="${pid}"], .fd-row[data-uid="${pid}"] .fd-badge`).forEach(el=>{
+          el.textContent=''; el.style.display='none';
+        });
+      }
+
+      // ------------- 生成一列 -------------
+      function makeRow(friend){
+        const id   = String(friend.friendUserId ?? friend.userId ?? '').trim();
+        const base = (friend.friendName || friend.fullName || friend.displayName || ('朋友 #'+id)).trim();
+        const nick = (friend.nickname || friend.remark || '').trim();
+
+        const row=document.createElement('div');
+        row.className='fd-row'; row.dataset.uid=id;
+        row.innerHTML=`
+          <div class="fd-avatar">${(base||'?').slice(0,1).toUpperCase()}</div>
+          <div class="fd-main">
+            <div class="fd-name">
+              <span class="fd-base">${base}</span>
+              ${nick? `<span class="fd-nick">(${nick})</span>`:''}
+              <span class="fd-badge" data-chat-badge="${id}"></span>
+            </div>
+            <div class="fd-preview">
+              <span class="fd-last" data-last></span>
+              <span class="fd-time" data-time data-chat-time-iso="${id}"></span>
+            </div>
+            <div class="fd-id">#${id}</div>
+          </div>`;
+        row.addEventListener('click',()=> window.gpOpenChat?.(id, base));
+        return row;
+      }
+
+      async function fetchFriends(){
+        const r=await fetch('@friendsApi',{credentials:'same-origin'});
+        return r.ok? await r.json():[];
+      }
+      async function fetchPeersLatest(ids){
+        if(!ids.length) return [];
+        const url=new URL('@peersApi', location.origin);
+        url.searchParams.set('peerIds', ids.join(','));
+        const r=await fetch(url,{credentials:'same-origin'});
+        return r.ok? await r.json():[];
+      }
+
+      // ------------- 初始化載入 -------------
+      async function loadFriends(){
+        body.innerHTML='<div class="fd-empty">讀取中…</div>';
+        const friends = await fetchFriends();
+        if(!Array.isArray(friends) || !friends.length){
+          body.innerHTML='<div class="fd-empty">尚無好友</div>'; return;
+        }
+        body.innerHTML='';
+        const rows=[];
+        for(const f of friends){ const row=makeRow(f); rows.push(row); body.appendChild(row); }
+
+        const ids = rows.map(r=>r.dataset.uid);
+        const peers = await fetchPeersLatest(ids);
+        const map = new Map((peers||[]).map(x=> [String(x.PeerId??x.peerId), x]));
+
+        for(const pid of ids){
+          const info = map.get(pid);
+          if(!info) continue;
+          const unread = Number(info.Unread ?? info.unread ?? 0);
+          const iso    = info.LastIso ?? info.lastIso ?? '';
+          const prev   = info.LastContent ?? info.lastContent ?? '';
+
+          setBadge(pid, unread);
+          const tEl=findTimeEl(pid); if(tEl && iso) tEl.textContent = GPTime.hm(iso);
+          const pEl=findPreviewEl(pid); if(pEl && prev) pEl.textContent = prev;
+        }
+      }
+
+      // ------------- Hub 綁定（即時未讀） -------------
+      (async function bindHub(){
+        try{
+          await window.__gpEnsureSignalR;
+          const SR=window.signalR||window.SignalR||window.signalr;
+          const conn=new SR.HubConnectionBuilder().withUrl("/social_hub/chatHub").withAutomaticReconnect().build();
+          await conn.start().catch(()=>{});
+
+          // 未讀更新（事件欄位容錯）
+          conn.on("UnreadUpdate", data=>{
+            const pid = String(data.peerId ?? data.PeerId ?? data.pid ?? '');
+            if(!pid) return;
+            const unread = Number(data.unread ?? data.Unread ?? data.count ?? 0);
+
+            setBadge(pid, unread); // 顯示/隱藏紅點
+
+            // 如事件帶時間/預覽就一併更新（非必填）
+            const iso  = data.lastIso ?? data.LastIso ?? '';
+            const prev = data.preview ?? data.Preview ?? '';
+            const tEl=findTimeEl(pid); if(tEl && iso)  tEl.textContent = GPTime.hm(iso);
+            const pEl=findPreviewEl(pid); if(pEl && prev) pEl.textContent = prev;
+          });
+        }catch(e){ console.warn('[FriendDock] Hub bind fail:', e); }
+      })();
+
+      // ------------- 與聊天窗同步 -------------
+      // 由聊天窗廣播（新訊息到/或我送出）→ 更新該列預覽/時間並置頂
+      window.addEventListener('gp-chat-latest', (ev)=>{
+        const pid = String(ev.detail?.peerId ?? ''); if(!pid) return;
+        const row = findRow(pid); if(!row) return;
+        const pEl=findPreviewEl(pid); if(pEl) pEl.textContent = ev.detail?.content ?? '';
+        const tEl=findTimeEl(pid);    if(tEl && ev.detail?.iso) tEl.textContent = GPTime.hm(ev.detail.iso);
+        if(row.previousElementSibling) body.insertBefore(row, body.firstChild);
+      });
+
+      // 聊天窗通知「已讀清零」的保險事件（本地立即清紅點）
+      window.addEventListener('gp-unread-zero', (ev)=>{
+        const pid=String(ev.detail?.peerId??''); if(!pid) return;
+        clearBadgeEverywhere(pid);
+      });
+
+      // ------------- 對外 API（給 _QuickFab 使用） -------------
+      const api = {
+        show: ()=>{ dock.classList.add('open'); if(!dock.dataset.loaded){ loadFriends().then(()=>dock.dataset.loaded='1'); } },
+        hide: ()=> dock.classList.remove('open'),
+        toggle: ()=> (dock.classList.contains('open')? api.hide(): api.show()),
+        refresh: ()=>{ dock.dataset.loaded=''; api.show(); }
+      };
+      window.FriendDock = api;
+      window.dispatchEvent(new Event('gp-friend-ready'));
+    })();
+</script>

@@ -1,0 +1,207 @@
+﻿@* /Areas/social_hub/Views/Shared/_ActionModalHost.cshtml *@
+<div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
+    <div id="actionModalDialog" class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="actionModalTitle" class="modal-title">處理中</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="actionModalFrame" class="w-100" style="border:0;height:60vh;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 父框不出直向捲軸，高度交給 JS 設定 iframe */
+    #actionModal .modal-body {
+        overflow: visible;
+    }
+
+    #actionModal .modal-content {
+        max-height: none;
+    }
+
+    #actionModal .modal-header {
+        cursor: move;
+    }
+
+    /* 以 CSS 變數做偏移；translate3d + will-change 提升流暢度 */
+    #actionModal .modal-dialog {
+        --dx: 0px;
+        --dy: 0px;
+        transform: translate3d(var(--dx), var(--dy), 0);
+        will-change: transform;
+        transition: none;
+    }
+
+    /* 拖移時避免選到文字、讓游標與互動更像桌面視窗 */
+    #actionModal.dragging .modal-header {
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: grabbing;
+    }
+</style>
+
+<script>
+    (function(){
+      const modalEl  = document.getElementById('actionModal');
+      const dialogEl = document.getElementById('actionModalDialog');
+      const titleEl  = document.getElementById('actionModalTitle');
+      const frameEl  = document.getElementById('actionModalFrame');
+      if(!modalEl || !dialogEl || !titleEl || !frameEl) return;
+
+      const bs = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+      // ========= 尺寸 =========
+      function setSize(sz){
+        dialogEl.classList.remove('modal-sm','modal-lg','modal-xl','modal-fullscreen');
+        switch((sz||'lg')){
+          case 'sm': dialogEl.classList.add('modal-sm'); break;
+          case 'md': break;
+          case 'lg': dialogEl.classList.add('modal-lg'); break;
+          case 'xl': dialogEl.classList.add('modal-xl'); break;
+          case 'fullscreen': dialogEl.classList.add('modal-fullscreen'); break;
+          default: dialogEl.classList.add('modal-lg'); break;
+        }
+      }
+
+      // ========= 高度 =========
+      function applyIframeHeight(contentH){
+        const headerH = modalEl.querySelector('.modal-header')?.getBoundingClientRect().height || 56;
+        const pad     = 24;
+        const maxH    = Math.max(240, window.innerHeight - headerH - pad);
+        const want    = Math.min(Math.max(240, Math.round(contentH + 4)), maxH);
+        frameEl.style.height = want + 'px';
+      }
+
+      let fallbackTimer = null;
+      function startFallbackProbe(){
+        stopFallbackProbe();
+        fallbackTimer = setTimeout(()=>{
+          try{
+            const d = frameEl.contentWindow?.document;
+            if(!d) return;
+            const h = Math.max(
+              d.documentElement?.scrollHeight || 0,
+              d.body?.scrollHeight || 0
+            );
+            if(h) applyIframeHeight(h);
+          }catch{}
+        }, 250);
+      }
+      function stopFallbackProbe(){
+        if(fallbackTimer){ clearTimeout(fallbackTimer); fallbackTimer = null; }
+      }
+
+      // ========= 開啟入口 =========
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.js-modal-open[data-url]');
+        if(!btn) return;
+        e.preventDefault();
+
+        titleEl.textContent = btn.getAttribute('data-title') || '處理中';
+        setSize(btn.getAttribute('data-size') || 'lg');
+
+        frameEl.style.height = Math.round(window.innerHeight * 0.6) + 'px';
+        frameEl.src = btn.getAttribute('data-url');
+
+        // 重置拖移偏移量
+        setVar('--dx', 0); setVar('--dy', 0);
+
+        startFallbackProbe();
+        bs.show();
+      });
+
+      // ========= 子頁回報 =========
+      window.addEventListener('message', (ev)=>{
+        const d = ev?.data || {};
+        if (d.type === 'modal:height' && typeof d.height === 'number') {
+          stopFallbackProbe();
+          applyIframeHeight(d.height);
+          return;
+        }
+        if (d.type === 'modal:done' || d.type === 'reassign-done' || d.type === 'close-done') {
+          bs.hide(); frameEl.src = 'about:blank'; location.reload();
+          return;
+        }
+        if (d.type === 'modal:cancel' || d.type === 'reassign-cancelled' || d.type === 'close-cancelled') {
+          bs.hide(); frameEl.src = 'about:blank';
+          return;
+        }
+      });
+
+      window.addEventListener('resize', ()=>{
+        const cur = parseFloat(frameEl.style.height || '0') || 0;
+        if(!cur) return;
+        applyIframeHeight(cur);
+      });
+
+      // ========= 拖移（允許越界） =========
+      const ALLOW_OVERFLOW = true; // 想恢復原本的邊界限制，把它改成 false
+
+      function getVar(name){
+        const v = getComputedStyle(dialogEl).getPropertyValue(name).trim();
+        return parseFloat(v || '0') || 0;
+      }
+      function setVar(name, val){ dialogEl.style.setProperty(name, `${val}px`); }
+
+      (function makeDraggable(){
+        let dragging=false, sx=0, sy=0, startX=0, startY=0;
+        let halfW=0, halfH=0;      // 只在按下時量測一次
+        let rafId=null;
+        const header = modalEl.querySelector('.modal-header');
+        if(!header) return;
+
+        header.addEventListener('mousedown', (e)=>{
+          // 點關閉鈕不啟動拖移
+          if (e.target.closest('.btn-close')) return;
+
+          dragging = true; sx=e.clientX; sy=e.clientY;
+          startX = getVar('--dx'); startY = getVar('--dy');
+
+          const rect = dialogEl.getBoundingClientRect();
+          halfW = rect.width/2; halfH = rect.height/2;
+
+          modalEl.classList.add('dragging');
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp, {once:true});
+          e.preventDefault();
+        });
+
+        function onMove(e){
+          if(!dragging) return;
+
+          let nx = startX + (e.clientX - sx);
+          let ny = startY + (e.clientY - sy);
+
+          if (!ALLOW_OVERFLOW){
+            // 原本的邊界限制（保留 12px 緩衝）
+            const margin = 12;
+            const boundX = Math.max(0, window.innerWidth  / 2 - halfW - margin);
+            const boundY = Math.max(0, window.innerHeight / 2 - halfH - margin);
+            nx = Math.max(-boundX, Math.min(boundX, nx));
+            ny = Math.max(-boundY, Math.min(boundY, ny));
+          }
+
+          if(rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(()=>{
+            setVar('--dx', nx);
+            setVar('--dy', ny);
+          });
+        }
+
+        function onUp(){
+          dragging=false;
+          modalEl.classList.remove('dragging');
+          document.removeEventListener('mousemove', onMove);
+        }
+
+        // 顯示時歸零偏移
+        modalEl.addEventListener('shown.bs.modal', ()=>{
+          setVar('--dx', 0); setVar('--dy', 0);
+        });
+      })();
+    })();
+</script>

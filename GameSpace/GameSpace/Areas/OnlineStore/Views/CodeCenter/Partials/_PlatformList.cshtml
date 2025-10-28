@@ -1,0 +1,40 @@
+﻿@model IEnumerable<GameSpace.Areas.OnlineStore.ViewModels.PlatformVM>
+@if (!(Model?.Any() ?? false))
+{
+    <div class="text-muted">尚無資料。</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>平台名稱</th>
+                    <th class="text-end" style="width:120px;">商品數</th>
+                    <th class="text-end" style="width:220px;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model)
+                {
+                    <tr>
+                        <td>@x.PlatformName</td>
+                        <td class="text-end">@x.ProductCount</td>
+                        <td class="text-end">
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    onclick="(async()=>{ const html = await (await fetch('@Url.Action("PlatformEditModal", "CodeCenter", new { area = "OnlineStore" })&id=@x.PlatformId')).text(); document.getElementById('modalHost').innerHTML = html; new bootstrap.Modal(document.getElementById('modalHost')).show(); })()">
+                                <i class="bi bi-pencil-square"></i> 編輯
+                            </button>
+                            <form method="post" class="d-inline" action="@Url.Action("PlatformDelete","CodeCenter", new{area="OnlineStore"})"
+                                  onsubmit="return confirm('確定刪除此平台？')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@x.PlatformId" />
+                                <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> 刪除</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

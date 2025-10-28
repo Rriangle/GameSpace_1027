@@ -1,0 +1,65 @@
+﻿@using GameSpace.Areas.OnlineStore.ViewModels
+@using GameSpace.Areas.OnlineStore.ViewModels.Common
+@model IEnumerable<GameSpace.Areas.OnlineStore.ViewModels.ProductIndexRowVM>
+@{
+    var paging = (PagingVM)ViewBag.Paging;
+}
+@if (!(Model?.Any() ?? false))
+{
+    <div class="text-muted">無資料</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>代碼</th>
+                    <th>名稱</th>
+                    <th>類型</th>
+                    <th class="text-end">價格</th>
+                    <th class="text-end">存量</th>
+                    <th>狀態</th>
+                    <th>圖片</th>
+                    <th style="width:160px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model)
+                {
+                    <tr>
+                        <td>@x.ProductCode</td>
+                        <td>@x.ProductName</td>
+                        <td>@(x.ProductType == "game" ? "遊戲" : "周邊")</td>
+                        <td class="text-end">@x.Price.ToString("N0")</td>
+                        <td class="text-end">@x.ShipmentQuantity</td>
+                        <td>
+                            @if (x.IsActive)
+                            {
+                                <span class="badge bg-success">上架</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-secondary">下架</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(x.CoverUrl))
+                            {
+                                <img src="@x.CoverUrl" style="width:48px;height:48px;object-fit:cover;border-radius:6px" />
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary btn-edit" data-id="@x.ProductId"><i class="bi bi-pencil-square"></i> 編輯</button>
+                                <button class="btn btn-outline-warning btn-toggle" data-id="@x.ProductId"><i class="bi bi-power"></i> @((x.IsActive) ? "下架" : "上架")</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="text-end text-muted small">共 @paging.Total 筆</div>
+}

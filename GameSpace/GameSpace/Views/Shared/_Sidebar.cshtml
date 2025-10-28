@@ -1,0 +1,119 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.EntityFrameworkCore
+@using GameSpace.Models
+@inject GameSpacedatabaseContext Db
+
+@{
+    // 先決定要用哪個 Principal
+    var adminAuth = await Context.AuthenticateAsync("AdminCookie");
+    var principal =
+        (User?.Identity?.IsAuthenticated == true && User.HasClaim(c => c.Type == "IsManager" && c.Value == "true"))
+        ? User
+        : (adminAuth?.Principal ?? User);
+
+    bool isAuthed = principal?.Identity?.IsAuthenticated == true;
+
+    // 取 ManagerId
+    int? managerId = null;
+    var idStr =
+        principal?.FindFirst("ManagerId")?.Value ??
+        principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+        principal?.FindFirst("uid")?.Value;
+
+    if (int.TryParse(idStr, out var parsed)) managerId = parsed;
+
+    // 先用 Claims 取各權限旗標（登入時就把這些 boolean Claims 帶上）
+    bool hasAdmin = principal?.HasClaim("AdministratorPrivilegesManagement", "true") ?? false;
+    bool hasUserStat = principal?.HasClaim("UserStatusManagement", "true") ?? false;
+    bool hasShopping = principal?.HasClaim("ShoppingPermissionManagement", "true") ?? false;
+    bool hasMessage = principal?.HasClaim("MessagePermissionManagement", "true") ?? false;
+    bool hasPetRight = principal?.HasClaim("PetRightsManagement", "true") ?? false;
+    bool hasCS = principal?.HasClaim("CustomerService", "true") ?? false;
+
+    // 如果 Claims 沒帶任何旗標，再回 DB 撈一次匯總
+    if (!(hasAdmin || hasUserStat || hasShopping || hasMessage || hasPetRight || hasCS)
+        && isAuthed && managerId.HasValue)
+    {
+        var mid = managerId.Value;
+
+        // 注意：這裡假設 ManagerRolePermission 有導覽屬性 p.Managers 對應到該角色下有哪些管理者
+        // 若你的模型不同，請改成你專案實際的 JOIN。
+        var flags = await Db.ManagerRolePermissions
+            .Where(p => p.Managers.Any(m => m.ManagerId == mid))
+            .Select(p => new
+            {
+                p.AdministratorPrivilegesManagement,
+                p.UserStatusManagement,
+                p.ShoppingPermissionManagement,
+                p.MessagePermissionManagement,
+                p.PetRightsManagement,
+                p.CustomerService
+            })
+            .ToListAsync();
+
+        hasAdmin = flags.Any(x => x.AdministratorPrivilegesManagement == true);
+        hasUserStat = flags.Any(x => x.UserStatusManagement == true);
+        hasShopping = flags.Any(x => x.ShoppingPermissionManagement == true);
+        hasMessage = flags.Any(x => x.MessagePermissionManagement == true);
+        hasPetRight = flags.Any(x => x.PetRightsManagement == true);
+        hasCS = flags.Any(x => x.CustomerService == true);
+    }
+
+    // 對應到你的側邊選單
+    bool canMember = hasAdmin || hasUserStat; // 帳號/職位管理
+    bool canSocialHub = hasCS || hasAdmin || hasUserStat || hasShopping || hasMessage || hasPetRight;              // 訊息/社群
+    bool canStore = hasShopping ;             // 商城
+    bool canForum = hasMessage  ;       // 論壇（示範邏輯，可自訂）
+    bool canMiniGame = hasPetRight ;                // 小遊戲（示範邏輯，可自訂）
+}
+
+<nav class="nav flex-column p-2">
+    @if (!(isAuthed && (managerId ?? 0) > 0))
+    {
+        <div class="text-white   ">請先登入解鎖功能。</div>
+    }
+    else
+    {
+        if (canMember)
+        {
+            <a class="nav-link d-flex align-items-center text-white"
+               asp-area="MemberManagement" asp-controller="Home" asp-action="Index">
+                <i class="fas fa-user-cog me-2"></i>
+                <span class="sidebar-text d-none d-sm-inline">帳號管理系統</span>
+            </a>
+        }
+        if (canSocialHub)
+        {
+            <a class="nav-link d-flex align-items-center text-white"
+               asp-area="social_hub" asp-controller="MessageCenter" asp-action="Index">
+                <i class="fas fa-comments me-2"></i>
+                <span class="sidebar-text d-none d-sm-inline">社群管理系統</span>
+            </a>
+        }
+        if (canStore)
+        {
+            <a class="nav-link d-flex align-items-center text-white"
+               asp-area="OnlineStore" asp-controller="Home" asp-action="Index">
+                <i class="fas fa-store me-2"></i>
+                <span class="sidebar-text d-none d-sm-inline">商城管理系統</span>
+            </a>
+        }
+        if (canForum)
+        {
+            <a class="nav-link d-flex align-items-center text-white"
+               asp-area="Forum" asp-controller="Home" asp-action="Index">
+                <i class="fas fa-comments-dollar me-2"></i>
+                <span class="sidebar-text d-none d-sm-inline">論壇管理系統</span>
+            </a>
+        }
+        if (canMiniGame)
+        {
+            <a class="nav-link d-flex align-items-center text-white"
+               asp-area="MiniGame" asp-controller="CouponTypes" asp-action="Index">
+                <i class="fas fa-gamepad me-2"></i>
+                <span class="sidebar-text d-none d-sm-inline">小遊戲管理系統</span>
+            </a>
+        }
+    }
+</nav>

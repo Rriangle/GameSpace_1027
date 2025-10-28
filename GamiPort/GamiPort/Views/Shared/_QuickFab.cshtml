@@ -1,0 +1,129 @@
+﻿@* ================================================================
+   _QuickFab.cshtml － 右下角 +（Speed Dial）
+   只有一個動作：好友清單切換（呼叫 window.FriendDock.toggle()）
+   注意：不提供重新整理鍵（你說先不用）。
+   ================================================================ *@
+<style>
+    :root {
+        --fab-right: calc(env(safe-area-inset-right,0px) + 16px);
+        --fab-bottom: calc(env(safe-area-inset-bottom,0px) + 16px);
+    }
+
+    .gp-fab {
+        position: fixed;
+        right: var(--fab-right);
+        bottom: var(--fab-bottom);
+        z-index: 1080
+    }
+
+        .gp-fab .fab-main {
+            width: 56px;
+            height: 56px;
+            border-radius: 999px;
+            border: 0;
+            background: #0d6efd;
+            color: #fff;
+            box-shadow: 0 12px 32px rgba(13,110,253,.35);
+            cursor: pointer;
+            font-size: 22px;
+        }
+
+        .gp-fab .fab-actions {
+            position: absolute;
+            right: 10px;
+            bottom: 72px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .gp-fab.open .fab-actions {
+            pointer-events: auto;
+        }
+
+        .gp-fab .fab-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 0;
+            background: #fff;
+            color: #111827;
+            box-shadow: 0 10px 24px rgba(0,0,0,.16);
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity .18s, transform .18s;
+        }
+
+        .gp-fab.open .fab-btn {
+            opacity: 1;
+            transform: translateY(0)
+        }
+
+        .gp-fab .fab-wrap {
+            position: relative
+        }
+
+        .gp-fab .fab-tip {
+            position: absolute;
+            right: 52px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #111827;
+            color: #fff;
+            font-size: .75rem;
+            padding: 4px 6px;
+            border-radius: 6px;
+            white-space: nowrap;
+            display: none;
+        }
+
+        .gp-fab .fab-wrap:hover .fab-tip {
+            display: block
+        }
+
+    @@media(max-width:420px) {
+        .gp-fab {
+            right: calc(env(safe-area-inset-right,0px) + 8px);
+        }
+    }
+</style>
+
+<div class="gp-fab" id="QuickFab" aria-hidden="false">
+    <button class="fab-main" id="fabMain" aria-expanded="false" title="快速動作">＋</button>
+    <div class="fab-actions" aria-hidden="true">
+        <div class="fab-wrap">
+            <button class="fab-btn" id="fabFriends" title="好友清單">💬</button>
+            <div class="fab-tip">好友清單</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+      const fab = document.getElementById('QuickFab');
+      const main= document.getElementById('fabMain');
+      const btnF= document.getElementById('fabFriends');
+
+      function setOpen(open){
+        fab.classList.toggle('open', open);
+        main.setAttribute('aria-expanded', open?'true':'false');
+      }
+      main.addEventListener('click', (e)=>{ e.stopPropagation(); setOpen(!fab.classList.contains('open')); });
+      document.addEventListener('click', ()=> setOpen(false));
+
+      // 好友清單按鈕
+      btnF.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(window.FriendDock?.toggle){ window.FriendDock.toggle(); }
+        else{
+          // 若 FriendDock 尚未就緒，等到它發出 gp-friend-ready 再觸發一次
+          const once = ()=>{ window.removeEventListener('gp-friend-ready', once); window.FriendDock?.toggle?.(); };
+          window.addEventListener('gp-friend-ready', once, { once:true });
+        }
+        setOpen(false);
+      }, { passive:true });
+    })();
+</script>

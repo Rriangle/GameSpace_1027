@@ -1,0 +1,123 @@
+﻿@model GameSpace.Models.Mute
+@{
+    ViewData["Title"] = "新增詞彙";
+}
+<div class="mutes-header">
+    <h2 class="mutes-title">
+        <span>@ViewData["Title"]</span>
+        <span class="badge rounded-pill badge-manage">管理</span>
+    </h2>
+    <div class="mutes-subtle">
+        <i class="fas fa-info-circle me-1"></i>建立新的禁詞
+    </div>
+</div>
+
+<partial name="_Toast" />
+
+<div class="mutes-card">
+    <div class="card-body">
+        <form asp-action="Create" method="post" class="js-prevent-double-submit" id="mute-create-form">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+            <div class="mb-3">
+                <label asp-for="Word" class="form-label">詞彙</label>
+                <div class="d-flex align-items-end gap-2">
+                    <input asp-for="Word"
+                           class="form-control"
+                           placeholder="請輸入要過濾的詞彙"
+                           autocomplete="off"
+                           maxlength="50"
+                           required />
+                    <small class="text-muted" id="word-count">0/50</small>
+                </div>
+                <span asp-validation-for="Word" class="text-danger"></span>
+                <div class="form-text">系統會自動攔截詞彙間夾雜的空白、標點與零寬字。</div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Replacement" class="form-label">替代字（選填）</label>
+                <div class="d-flex align-items-end gap-2">
+                    <input asp-for="Replacement"
+                           class="form-control"
+                           placeholder="例：＊＊＊，或自訂如【封鎖】"
+                           autocomplete="off"
+                           maxlength="50" />
+                    <small class="text-muted" id="repl-count">0/50</small>
+                </div>
+                <span asp-validation-for="Replacement" class="text-danger"></span>
+                <div class="form-text">
+                    留白時將使用預設遮罩（星號或固定字樣）；此設定<strong>只影響顯示</strong>，資料庫會保留原文。
+                </div>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label">啟用</label>
+                <div class="form-text">可先建立為「停用」，確認後再啟用。</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" id="btn-save">
+                    <i class="fas fa-save me-1"></i><span>儲存</span>
+                </button>
+                <a asp-action="Index" class="btn btn-secondary" id="btn-back">
+                    <i class="fas fa-arrow-left me-1"></i>返回
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/lib/social_hub/css/mutes.css" rel="stylesheet" />
+}
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const f   = document.getElementById('mute-create-form');
+            const btn = document.getElementById('btn-save');
+            const back= document.getElementById('btn-back');
+            const word = document.getElementById('Word');
+            const repl = document.getElementById('Replacement');
+            const wc = document.getElementById('word-count');
+            const rc = document.getElementById('repl-count');
+
+            // 計數器
+            function bindCounter(input, counter, maxLen) {
+                if (!input || !counter) return;
+                const upd = () => { counter.textContent = (input.value || '').length + '/' + maxLen; };
+                input.addEventListener('input', upd);
+                upd();
+            }
+            bindCounter(word, wc, 50);
+            bindCounter(repl, rc, 50);
+
+            // 防連點 + 載入中狀態
+            if (f && btn) {
+                f.addEventListener('submit', function (e) {
+                    if (!f.checkValidity()) return; // 讓驗證訊息跑
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+                    btn.querySelector('span')?.insertAdjacentHTML('afterbegin',
+                        '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>');
+                });
+            }
+
+            // 快捷鍵：Enter 送出、Esc 返回
+            f?.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && (e.target.tagName === 'INPUT')) {
+                    e.preventDefault();
+                    btn?.click();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    back?.click();
+                }
+            });
+
+            // 自動聚焦
+            word?.focus();
+        })();
+    </script>
+}

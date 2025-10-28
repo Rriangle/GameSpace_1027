@@ -1,0 +1,9 @@
+﻿@model object
+@{
+    Layout = "~/Areas/social_hub/Views/Shared/_ModalLayout.cshtml";
+    var partial = ViewData["Partial"] as string;
+    if (string.IsNullOrWhiteSpace(partial))
+        throw new InvalidOperationException("ModalWrapper 需要 ViewData[\"Partial\"] 指定要載入的 partial 名稱。");
+}
+
+@await Html.PartialAsync(partial!, Model)

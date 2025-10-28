@@ -1,0 +1,32 @@
+﻿@model GameSpace.Areas.Forum.Models.Metric.MetricEditVm
+@{
+    ViewData["Title"] = "編輯指標";
+}
+<h2>編輯指標</h2>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="MetricId" />
+    <div class="mb-3">
+        <label class="form-label">來源</label>
+        <select asp-for="SourceId" asp-items="ViewBag.Sources" class="form-select"></select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">代碼</label>
+        <input asp-for="Code" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">單位</label>
+        <input asp-for="Unit" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">說明</label>
+        <input asp-for="Description" class="form-control" />
+    </div>
+    <div class="form-check mb-3">
+        <input asp-for="IsActive" class="form-check-input" />
+        <label asp-for="IsActive" class="form-check-label">啟用</label>
+    </div>
+    <button class="btn btn-primary">儲存</button>
+    <a asp-action="Index" class="btn btn-secondary">返回</a>
+</form>

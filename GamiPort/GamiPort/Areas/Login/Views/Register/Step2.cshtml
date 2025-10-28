@@ -1,0 +1,115 @@
+﻿@model GamiPort.Areas.Login.Models.UserIntroduceVM
+@if (!string.IsNullOrEmpty(ViewBag.Step2Error as string))
+{
+    <div class="alert alert-danger">@ViewBag.Step2Error</div>
+}
+@if (ViewBag.DebugErrors != null)
+{
+    <pre class="text-danger">
+    @System.Text.Json.JsonSerializer.Serialize(ViewBag.DebugErrors)
+        </pre>
+}
+@{
+    ViewData["Title"] = "個人資料（第 2/2 步）";
+}
+<div class="container py-4" style="max-width:720px;">
+    <h3 class="mb-3 text-center">@ViewData["Title"]</h3>
+
+    <form asp-area="Login" asp-controller="Register" asp-action="Step2" method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="UserNickName" class="form-label"></label>
+                <input asp-for="UserNickName" class="form-control" />
+                <span asp-validation-for="UserNickName" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Gender" class="form-label"></label>
+                <select asp-for="Gender" class="form-select">
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                </select>
+                <span asp-validation-for="Gender" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="IdNumber" class="form-label"></label>
+                <input asp-for="IdNumber" class="form-control" />
+                <span asp-validation-for="IdNumber" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Cellphone" class="form-label"></label>
+                <input asp-for="Cellphone" class="form-control" />
+                <span asp-validation-for="Cellphone" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="DateOfBirth" class="form-label"></label>
+                <input asp-for="DateOfBirth" type="date" class="form-control" />
+                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Address" class="form-label"></label>
+                <input asp-for="Address" class="form-control" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">大頭照（選填）</label>
+                <input type="file" name="UserPictureFile" class="form-control" accept="image/*" />
+            </div>
+
+            <div class="col-12">
+                <label asp-for="UserIntroduce1" class="form-label"></label>
+                <textarea asp-for="UserIntroduce1" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="UserIntroduce1" class="text-danger"></span>
+            </div>
+        </div>
+        <environment include="Development">
+            <button type="button" id="Member" class="btn btn-outline-secondary">使用者1</button>
+        </environment>
+        <button type="submit" class="btn btn-primary mt-3 w-100">完成註冊</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+         (function () {
+                    const btn = document.getElementById('Member');
+                    btn?.addEventListener('click', function () {
+                        const NickName = document.getElementById('UserNickName');
+                        const Gender = document.getElementById('Gender');
+                        const IdNumber = document.getElementById('IdNumber');
+                        const Cellphone = document.getElementById('Cellphone');
+                        const Email = document.getElementById('Email');
+                        const DateOfBirth = document.getElementById('DateOfBirth');
+                        const Address = document.getElementById('Address');
+                        const UserIntroduce1 = document.getElementById('UserIntroduce1');
+
+                        if(NickName) NickName.value = 'Milk';
+                        if (Gender) Gender.value = 'M';
+                        if (IdNumber) IdNumber.value = 'K123123321';
+                        if (Cellphone) Cellphone.value = '0912123453';
+                        if (Email) Email.value = 'smile288023@yahoo.com.tw';
+                        if (DateOfBirth) DateOfBirth.value = '1999-03-07';
+                        if (Address) Address.value = '苗栗縣竹南鎮復興路125號';
+                        if (UserIntroduce1) UserIntroduce1.value = 'Hello';
+
+                    acc?.focus();
+                });
+        })();
+    </script>
+}

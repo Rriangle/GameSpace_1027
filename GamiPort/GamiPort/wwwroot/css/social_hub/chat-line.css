@@ -1,0 +1,49 @@
+/* ------------------------------------------------------------------
+   chat-line.css
+   只包含「日期分隔線」樣式，避免與 Dock 既有 .bubble CSS 互相覆蓋
+   你可依主題調整底下三個 CSS 變數
+------------------------------------------------------------------- */
+
+:root {
+    --chat-divider-color: #6c757d; /* 日期文字顏色 */
+    --chat-divider-line: #e9ecef; /* 左右橫線顏色 */
+    --chat-divider-font: 12px; /* 字體大小 */
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --chat-divider-color: #98a2b3;
+        --chat-divider-line: #263241;
+    }
+}
+
+/* 日期分隔線：置中文案、左右細線 */
+.chat-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--chat-divider-color);
+    font-size: var(--chat-divider-font);
+    user-select: none;
+    margin: 6px 0;
+}
+
+    .chat-divider::before,
+    .chat-divider::after {
+        content: "";
+        flex: 1 1;
+        border-top: 1px solid var(--chat-divider-line);
+    }
+
+    .chat-divider > span {
+        padding: 0 10px;
+        white-space: nowrap;
+        line-height: 1;
+        letter-spacing: .2px;
+    }
+
+/*（可選）訊息容器加語義 class，不會影響你的排版 */
+.chat-log {
+    display: flex;
+    flex-direction: column;
+}

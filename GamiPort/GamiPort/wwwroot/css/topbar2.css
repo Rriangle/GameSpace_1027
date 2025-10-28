@@ -1,0 +1,29 @@
+﻿/* Topbar2 橫幅：固定框高、圖片 cover 填滿且不外露 */
+.topbar-2 .hero-box {
+    aspect-ratio: var(--banner-aspect);
+    max-height: var(--banner-max-h);
+    width: 100%;
+    border: 1px solid #e9ecef;
+    border-radius: .75rem;
+    overflow: hidden;
+    clip-path: inset(0 round .75rem);
+    background-repeat: no-repeat;
+    background-size: cover; /* 預設仍為 cover */
+    background-position: center;
+    background-color: #fff;
+}
+
+/* 只在需要完整顯示圖片時加這個 class */
+.topbar-2 .hero-box--contain {
+    background-size: contain; /* 顯示整張圖，不裁切 */
+    background-position: center center;
+    /* 可選：讓上下或左右的留白看起來更自然 */
+    background-color: #fff; /* 或改成與圖接近的色 */
+}
+/* 右側欄 sticky（xxl+） */
+@media (min-width:1400px) {
+    .right-rail {
+        position: sticky;
+        top: calc(var(--topbar-h) + var(--topbar-gap))
+    }
+}

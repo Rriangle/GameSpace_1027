@@ -1,0 +1,118 @@
+﻿@model IEnumerable<GameSpace.Areas.Forum.Models.Game.GameListItemVm>
+@{
+    ViewData["Title"] = "遊戲清單";
+
+    string sort = (string)(ViewBag.Sort ?? "created");
+    string dir = (string)(ViewBag.Dir ?? "desc");
+    string Flip(string d) => d == "desc" ? "asc" : "desc";
+    string Arrow(string d) => d == "desc" ? "▼" : "▲";
+}
+
+<h2 class="mb-3">遊戲清單</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input type="text" name="q" value="@ViewBag.Q" class="form-control" placeholder="搜尋名稱/中文名" />
+    </div>
+    <div class="col-auto">
+        <input type="text" name="genre" value="@ViewBag.Genre" class="form-control" placeholder="類型(MOBA/FPS)" />
+    </div>
+    <div class="col-auto d-flex gap-2">
+        <button class="btn btn-primary">查詢</button>
+        <a asp-action="Create" class="btn btn-success">新增</a>
+    </div>
+
+    @* 查詢時保留目前排序參數 *@
+    <input type="hidden" name="sort" value="@sort" />
+    <input type="hidden" name="dir" value="@dir" />
+</form>
+
+@* 排序切換按鈕（零JS） *@
+<div class="d-flex align-items-center gap-2 mb-2">
+    <div class="btn-group" role="group" aria-label="Sort Field">
+        <a class="btn @(sort=="id"?"btn-primary":"btn-outline-primary")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+           asp-route-sort="id" asp-route-dir="@(sort=="id"?Flip(dir):"asc")">
+            ID @(sort == "id" ? Arrow(dir) : "")
+        </a>
+        <a class="btn @(sort=="name"?"btn-primary":"btn-outline-primary")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+           asp-route-sort="name" asp-route-dir="@(sort=="name"?Flip(dir):"asc")">
+            英文名 @(sort == "name" ? Arrow(dir) : "")
+        </a>
+        <a class="btn @(sort=="namezh"?"btn-primary":"btn-outline-primary")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+           asp-route-sort="namezh" asp-route-dir="@(sort=="namezh"?Flip(dir):"asc")">
+            中文名 @(sort == "namezh" ? Arrow(dir) : "")
+        </a>
+        <a class="btn @(sort=="created"?"btn-primary":"btn-outline-primary")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+           asp-route-sort="created" asp-route-dir="@(sort=="created"?Flip(dir):"desc")">
+            建立時間 @(sort == "created" ? Arrow(dir) : "")
+        </a>
+    </div>
+
+    <div class="btn-group ms-2" role="group" aria-label="Sort Dir">
+        <a class="btn @(dir == "asc" ? "btn-success" : "btn-outline-success")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+           asp-route-sort="@sort" asp-route-dir="asc">升冪 ▲</a>
+        <a class="btn @(dir == "desc" ? "btn-success" : "btn-outline-success")"
+           asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+           asp-route-sort="@sort" asp-route-dir="desc">降冪 ▼</a>
+    </div>
+</div>
+
+<table class="table table-bordered table-sm align-middle">
+    <thead>
+        <tr>
+            <th>
+                <a asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+                   asp-route-sort="id" asp-route-dir="@(sort=="id"?Flip(dir):"asc")">
+                    ID @(sort == "id" ? Arrow(dir) : "")
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+                   asp-route-sort="name" asp-route-dir="@(sort=="name"?Flip(dir):"asc")">
+                    名稱 @(sort == "name" ? Arrow(dir) : "")
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+                   asp-route-sort="namezh" asp-route-dir="@(sort=="namezh"?Flip(dir):"asc")">
+                    中文名 @(sort == "namezh" ? Arrow(dir) : "")
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-q="@(ViewBag.Q)" asp-route-genre="@(ViewBag.Genre)"
+                   asp-route-sort="created" asp-route-dir="@(sort=="created"?Flip(dir):"desc")">
+                    建立時間 @(sort == "created" ? Arrow(dir) : "")
+                </a>
+            </th>
+            <th>類型</th>
+            <th style="width:110px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="6" class="text-center text-muted py-4">沒有資料</td></tr>
+        }
+        else
+        {
+            @foreach (var x in Model)
+            {
+                <tr>
+                    <td>@x.GameId</td>
+                    <td>@x.Name</td>
+                    <td>@x.NameZh</td>
+                    <td>@x.Genre</td>
+                    <td>@(x.CreatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@x.GameId" class="btn btn-sm btn-warning">編輯</a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

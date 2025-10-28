@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-GameSpace-38e0b594-8684-40b2-b330-7fb94b733c73</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Areas\OnlineStore\Views\ProductInfoes2\**" />
+    <Compile Remove="TEST\**" />
+    <Content Remove="Areas\OnlineStore\Views\ProductInfoes2\**" />
+    <Content Remove="TEST\**" />
+    <EmbeddedResource Remove="Areas\OnlineStore\Views\ProductInfoes2\**" />
+    <EmbeddedResource Remove="TEST\**" />
+    <None Remove="Areas\OnlineStore\Views\ProductInfoes2\**" />
+    <None Remove="TEST\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.19" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.19" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.19" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.19" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.19" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.19" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\Forum\Data\" />
+    <Folder Include="Areas\MemberManagement\Data\" />
+    <Folder Include="Areas\MiniGame\Data\" />
+    <Folder Include="Areas\MiniGame\Models\" />
+    <Folder Include="Areas\OnlineStore\Data\" />
+    <Folder Include="Areas\OnlineStore\Models\" />
+    <Folder Include="Areas\social_hub\Data\" />
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\lib\image\" />
+    <Folder Include="wwwroot\icon\" />
+    <Folder Include="wwwroot\NewFolder\" />
+  </ItemGroup>
+
+</Project>

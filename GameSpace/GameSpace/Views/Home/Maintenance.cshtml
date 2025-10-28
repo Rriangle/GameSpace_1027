@@ -1,0 +1,602 @@
+﻿@{
+    ViewData["Title"] = "GameSpace 維修中";
+    // 需要用到站台的 Layout 就保留，若要全畫面可改成 Layout = null;
+    Layout = "_Layout";
+}
+
+<!--
+  放置路徑：Views/Home/Index.cshtml
+  若你只想在「維修中」時顯示此頁，可在 HomeController.Index 依條件 return View("Maintenance")。
+-->
+
+<div id="maintenance-root" class="gs-maint">
+    <div class="gs-bg-grid" aria-hidden="true"></div>
+
+    <header class="gs-header">
+        <div class="brand">GameSpace</div>
+        <div class="eta">
+            <span class="label">預估剩餘：</span>
+            <span id="eta-timer">01:30</span>
+        </div>
+        <button id="theme-toggle" class="gs-btn" type="button" aria-label="切換主題">切換主題</button>
+    </header>
+
+    <main class="gs-main">
+        <section class="gs-hero" aria-live="polite">
+            <h1 class="glitch" data-text="維修施工中">維修施工中</h1>
+            <p class="subtitle">工程喵正在拯救世界… 你也可以幫忙抓 bug！</p>
+
+            <div class="gs-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="bar" id="progress-bar"></div>
+                <div class="percent" id="progress-percent">0%</div>
+            </div>
+
+            <div class="gs-stage" id="bug-stage" aria-label="可互動的除錯遊戲區">
+                <!-- JS 會動態產生 bug -->
+                <svg class="gear gear-1" viewBox="0 0 100 100" aria-hidden="true">
+                    <g transform="translate(50,50)">
+                        <circle r="34" fill="none" stroke="currentColor" stroke-width="10" />
+                        <g class="teeth">
+                            <rect x="-5" y="-50" width="10" height="16" rx="2" />
+                            <rect x="-5" y="34" width="10" height="16" rx="2" />
+                            <rect x="-50" y="-5" width="16" height="10" rx="2" />
+                            <rect x="34" y="-5" width="16" height="10" rx="2" />
+                        </g>
+                        <circle r="8" />
+                    </g>
+                </svg>
+                <svg class="gear gear-2" viewBox="0 0 100 100" aria-hidden="true">
+                    <g transform="translate(50,50)">
+                        <circle r="28" fill="none" stroke="currentColor" stroke-width="8" />
+                        <g class="teeth">
+                            <rect x="-4" y="-45" width="8" height="14" rx="2" />
+                            <rect x="-4" y="31" width="8" height="14" rx="2" />
+                            <rect x="-45" y="-4" width="14" height="8" rx="2" />
+                            <rect x="31" y="-4" width="14" height="8" rx="2" />
+                        </g>
+                        <circle r="6" />
+                    </g>
+                </svg>
+            </div>
+
+            <div class="gs-legend">
+                <span class="pill">點擊 <strong>🐞 bug</strong> 來修復</span>
+                <span class="pill">進度達 100% 自動慶祝</span>
+                <span class="pill">鍵盤：按 <kbd>R</kbd> 重新產生 bug</span>
+            </div>
+
+            <div class="gs-actions">
+                <a class="gs-btn" href="/">回到首頁</a>
+                <button class="gs-btn ghost" id="spawn-bugs" type="button">多生幾隻 bug</button>
+            </div>
+        </section>
+
+        <section class="gs-terminal" aria-label="維修日誌">
+            <div class="term-header">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="title">maintenance.log</span>
+            </div>
+            <pre id="terminal" class="term-body" tabindex="0" aria-live="polite"></pre>
+        </section>
+    </main>
+
+    <canvas id="confetti" class="gs-confetti" aria-hidden="true"></canvas>
+
+    <footer class="gs-footer">
+        <small>© @DateTime.Now.Year GameSpace • 施工中（Beta）</small>
+    </footer>
+</div>
+
+<style>
+    :root {
+        --bg: #0b0f17;
+        --fg: #e0e6f0;
+        --muted: #8aa0b5;
+        --brand: #68d4ff;
+        --accent: #94ffa7;
+        --danger: #ff5c7a;
+        --grid: rgba(104,212,255,0.12);
+    }
+
+        :root.theme-light {
+            --bg: #f7fbff;
+            --fg: #0f172a;
+            --muted: #4b5563;
+            --brand: #2563eb;
+            --accent: #059669;
+            --danger: #dc2626;
+            --grid: rgba(37,99,235,0.08);
+        }
+
+    /* Reset-ish */
+    #maintenance-root {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        color: var(--fg);
+    }
+
+        #maintenance-root * {
+            box-sizing: border-box
+        }
+
+        #maintenance-root a {
+            color: var(--brand);
+            text-decoration: none
+        }
+
+    .gs-maint {
+        position: relative;
+        min-height: calc(100vh - 0px);
+        background: var(--bg);
+        overflow: hidden
+    }
+
+    .gs-bg-grid {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(transparent 0 23px, var(--grid) 24px), linear-gradient(90deg, transparent 0 23px, var(--grid) 24px);
+        background-size: 24px 24px, 24px 24px;
+        filter: saturate(1.1);
+        animation: pan 30s linear infinite;
+    }
+
+    @@keyframes pan {
+        to {
+            background-position: 0 600px, 600px 0
+        }
+    }
+
+    .gs-header {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 16px clamp(16px,4vw,40px)
+    }
+
+    .brand {
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        font-size: clamp(18px, 2.4vw, 24px)
+    }
+
+    .eta {
+        opacity: .9;
+        font-size: 14px
+    }
+
+        .eta .label {
+            color: var(--muted)
+        }
+
+    .gs-btn {
+        background: var(--brand);
+        color: #06111c;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(104,212,255,.2)
+    }
+
+        .gs-btn.ghost {
+            background: transparent;
+            color: var(--fg);
+            border: 1px solid color-mix(in hsl, var(--brand) 60%, transparent);
+            box-shadow: none
+        }
+
+        .gs-btn:hover {
+            transform: translateY(-1px)
+        }
+
+        .gs-btn:active {
+            transform: translateY(0)
+        }
+
+    .gs-main {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) minmax(280px, 480px);
+        gap: clamp(16px, 2vw, 24px);
+        align-items: start;
+        padding: clamp(16px,4vw,40px)
+    }
+
+    @@media (max-width: 980px) {
+        .gs-main {
+            grid-template-columns: 1fr
+        }
+    }
+
+    .gs-hero {
+        padding: clamp(12px,2vw,16px)
+    }
+
+    .glitch {
+        font-size: clamp(28px,5.5vw,56px);
+        line-height: 1.05;
+        margin: 4px 0 10px;
+        position: relative;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-shadow: 0 0 12px rgba(104,212,255,.35)
+    }
+
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            overflow: hidden
+        }
+
+        .glitch::before {
+            color: var(--brand);
+            transform: translate(2px,-2px);
+            clip-path: inset(0 0 60% 0);
+            filter: blur(.5px)
+        }
+
+        .glitch::after {
+            color: var(--accent);
+            transform: translate(-2px,2px);
+            clip-path: inset(40% 0 0 0);
+            filter: blur(.5px)
+        }
+
+    .subtitle {
+        color: var(--muted);
+        margin: 0 0 16px
+    }
+
+    .gs-progress {
+        position: relative;
+        height: 18px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.06);
+        overflow: hidden;
+        margin: 12px 0 18px
+    }
+
+        .gs-progress .bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--brand), var(--accent));
+            box-shadow: 0 6px 18px rgba(104,212,255,.3) inset;
+            transition: width .3s ease
+        }
+
+        .gs-progress .percent {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 12px;
+            color: #031018
+        }
+
+    .gs-stage {
+        position: relative;
+        height: clamp(220px, 36vw, 340px);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.08);
+        background: radial-gradient(1200px 400px at 20% -20%, rgba(104,212,255,.2), transparent), linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+        overflow: hidden
+    }
+
+    .gear {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        color: var(--brand);
+        opacity: .85
+    }
+
+    .gear-1 {
+        left: -12px;
+        bottom: -22px;
+        animation: spin 12s linear infinite
+    }
+
+    .gear-2 {
+        right: -18px;
+        top: -14px;
+        animation: spin 9s linear infinite reverse
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(1turn)
+        }
+    }
+
+    /* Bug game */
+    .bug {
+        position: absolute;
+        font-size: 28px;
+        user-select: none;
+        cursor: crosshair;
+        filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
+        transition: transform .15s ease, opacity .15s ease
+    }
+
+        .bug:hover {
+            transform: translateY(-4px) scale(1.08)
+        }
+
+        .bug.squashed {
+            transform: scale(0.2) rotate(20deg);
+            opacity: 0
+        }
+
+    .gs-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px
+    }
+
+    .pill {
+        border: 1px solid rgba(255,255,255,.15);
+        color: var(--muted);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px
+    }
+
+    .gs-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px
+    }
+
+    .gs-terminal {
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(2,8,16,.6);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.04)
+    }
+
+    .term-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: rgba(255,255,255,.04);
+        border-bottom: 1px solid rgba(255,255,255,.06)
+    }
+
+        .term-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-block
+        }
+
+        .term-header .red {
+            background: #ff5f56
+        }
+
+    .yellow {
+        background: #ffbd2e
+    }
+
+    .green {
+        background: #27c93f
+    }
+
+    .term-header .title {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 12px
+    }
+
+    .term-body {
+        margin: 0;
+        padding: 14px;
+        min-height: 280px;
+        max-height: 440px;
+        overflow: auto;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        line-height: 1.5
+    }
+
+        .term-body .ok {
+            color: var(--accent)
+        }
+
+        .term-body .warn {
+            color: #f59e0b
+        }
+
+        .term-body .err {
+            color: var(--danger)
+        }
+
+    .gs-confetti {
+        position: fixed;
+        inset: 0;
+        pointer-events: none
+    }
+
+    .gs-footer {
+        text-align: center;
+        color: var(--muted);
+        padding: 16px
+    }
+</style>
+
+<script>
+    (function(){
+      const root = document.documentElement;
+      const stage = document.getElementById('bug-stage');
+      const term = document.getElementById('terminal');
+      const bar = document.getElementById('progress-bar');
+      const percent = document.getElementById('progress-percent');
+      const eta = document.getElementById('eta-timer');
+      const confetti = document.getElementById('confetti');
+      const ctx = confetti.getContext('2d');
+      const themeBtn = document.getElementById('theme-toggle');
+      const spawnBtn = document.getElementById('spawn-bugs');
+
+      // --- Settings ---
+      const MAX_BUGS = 8;
+      const ETA_SECONDS = 90;
+
+      let progress = 0;
+      let fixed = 0;
+      let total = 0;
+      let countdown = ETA_SECONDS;
+      let confettiPieces = [];
+
+      // Responsive canvas
+      function resizeCanvas(){
+        confetti.width = innerWidth; confetti.height = innerHeight;
+      }
+      addEventListener('resize', resizeCanvas); resizeCanvas();
+
+      // Terminal helper
+      const stamp = () => new Date().toLocaleTimeString();
+      function log(msg, cls){
+        const line = document.createElement('div');
+        if(cls) line.className = cls;
+        line.textContent = `[${stamp()}] ${msg}`;
+        term.appendChild(line);
+        term.scrollTop = term.scrollHeight;
+      }
+
+      // Countdown ETA
+      function tick(){
+        if(countdown <= 0) return;
+        countdown--; updateEta();
+      }
+      function updateEta(){
+        const m = String(Math.floor(countdown/60)).padStart(2,'0');
+        const s = String(countdown%60).padStart(2,'0');
+        eta.textContent = `${m}:${s}`;
+      }
+      updateEta();
+      setInterval(tick, 1000);
+
+      // Progress control
+      function setProgress(p){
+        progress = Math.max(0, Math.min(100, p));
+        bar.style.width = progress + '%';
+        bar.parentElement.setAttribute('aria-valuenow', progress);
+        percent.textContent = Math.round(progress) + '%';
+        if(progress >= 100){
+          celebrate();
+          log('所有子系統恢復運作，等待服務釋出…', 'ok');
+        }
+      }
+
+      // Bug spawner
+      function spawnBug(){
+        const el = document.createElement('div');
+        el.className = 'bug';
+        el.textContent = Math.random() > .7 ? '⚠' : '🐞';
+        const {width, height} = stage.getBoundingClientRect();
+        const px = Math.random() * (width - 40) + 10;
+        const py = Math.random() * (height - 60) + 20;
+        el.style.left = px + 'px';
+        el.style.top = py + 'px';
+
+        el.addEventListener('click', () => {
+          if(el.classList.contains('squashed')) return;
+          el.classList.add('squashed');
+          setTimeout(()=> el.remove(), 160);
+          fixed++;
+          const step = 100 / (total||1);
+          setProgress(progress + step);
+          log(`已修復 ${fixed}/${total}：移除 ${el.textContent === '🐞' ? 'bug' : '警告'} 節點`, 'ok');
+        });
+
+        stage.appendChild(el);
+      }
+
+      function spawnWave(n){
+        const canSpawn = Math.max(0, MAX_BUGS - (stage.querySelectorAll('.bug').length));
+        const count = Math.min(n, canSpawn);
+        for(let i=0;i<count;i++) spawnBug();
+        total += count; updateHint();
+      }
+
+      function updateHint(){
+        if(total>0) return;
+        log('等待重現問題… 監聽例外與警告中。');
+      }
+
+      // Theme toggle
+      themeBtn.addEventListener('click', ()=>{
+        const light = root.classList.toggle('theme-light');
+        log(`切換主題：${light ? '淺色' : '深色'}`);
+      });
+
+      // Keyboard: R = respawn
+      addEventListener('keydown', (e)=>{
+        if(e.key.toLowerCase() === 'r') { respawn(); }
+      });
+
+      spawnBtn.addEventListener('click', ()=> spawnWave(5));
+
+      function respawn(){
+        stage.querySelectorAll('.bug').forEach(b=>b.remove());
+        fixed = 0; total = 0; setProgress(0);
+        log('重新產生測試用 bug。', 'warn');
+        spawnWave(6);
+      }
+
+      // Confetti celebration (simple)
+      function celebrate(){
+        // spawn confetti once
+        if(confettiPieces.length) return;
+        for(let i=0;i<220;i++){
+          confettiPieces.push({
+            x: Math.random()*confetti.width,
+            y: -20 - Math.random()*innerHeight*0.6,
+            r: 2 + Math.random()*4,
+            vx: -1 + Math.random()*2,
+            vy: 2 + Math.random()*3,
+            a: Math.random()*Math.PI*2,
+            va: -0.1 + Math.random()*0.2
+          });
+        }
+        animateConfetti();
+      }
+
+      function animateConfetti(){
+        ctx.clearRect(0,0,confetti.width, confetti.height);
+        for(const p of confettiPieces){
+          p.x += p.vx; p.y += p.vy; p.a += p.va;
+          if(p.y > confetti.height + 10) { p.y = -10; }
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.a);
+          ctx.fillStyle = Math.random()>.5 ? getComputedStyle(root).getPropertyValue('--brand') : getComputedStyle(root).getPropertyValue('--accent');
+          ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2);
+          ctx.restore();
+        }
+        if(confettiPieces.length) requestAnimationFrame(animateConfetti);
+      }
+
+      // Boot
+      log('初始化維修流程…');
+      setTimeout(()=>log('連線資料庫… OK', 'ok'), 400);
+      setTimeout(()=>log('載入組態… OK', 'ok'), 900);
+      setTimeout(()=>log('建立回滾點… OK', 'ok'), 1400);
+      setTimeout(()=>log('啟動整合測試…', 'warn'), 1800);
+      setTimeout(()=>log('找到待修項目，請協助點擊移除 🐞', 'warn'), 2200);
+
+      spawnWave(6);
+    })();
+</script>

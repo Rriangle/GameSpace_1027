@@ -1,0 +1,75 @@
+﻿@* Views/Shared/_Sidebar.cshtml *@
+<nav class="sidebar-nav">
+    <div class="sidebar-header d-none d-lg-flex align-items-center border-bottom">
+        <button class="btn btn-outline-secondary sidebar-toggle js-sidebar-toggle"
+                type="button" aria-label="切換側欄" data-bs-toggle="tooltip">
+            <i class="bi bi-list"></i>
+        </button>
+        <span class="sidebar-title text-muted small ms-2">主選單</span>
+    </div>
+
+    <div class="p-2">
+        <div class="text-muted small mb-2 sidebar-section">主連結</div>
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-speedometer2"></i>
+                <span class="label">
+                    總覽
+                </span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+               asp-area="OnlineStore" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-collection"></i>
+                <span class="label">
+                    商城
+                </span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+               asp-area="MiniGame" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-grid"></i>
+                <span class="label">
+                    小遊戲
+                </span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+               asp-area="social_hub" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-diagram-3"></i>
+                <span class="label">
+                    交友
+                </span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+               asp-area="Forum" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-grid"></i>
+                <span class="label">
+                    論壇
+                </span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+               asp-area="MemberManagement" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-grid"></i>
+                <span class="label">
+                    使用者
+                </span>
+            </a>
+        </div>
+
+        <hr class="my-3">
+
+        <div class="text-muted small mb-2 sidebar-section">其他</div>
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-gear"></i>
+                <span class="label">
+                    設定
+                </span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-question-circle"></i>
+                <span class="label">
+                    說明
+                </span>
+            </a>
+        </div>
+    </div>
+</nav>

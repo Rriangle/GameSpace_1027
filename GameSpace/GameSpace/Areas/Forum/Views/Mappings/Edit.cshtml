@@ -1,0 +1,50 @@
+﻿@model GameSpace.Areas.Forum.Models.Mapping.MappingEditVm
+@{
+    ViewData["Title"] = "編輯外部對應";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+@if (!string.IsNullOrEmpty(Model.GameName))
+{
+    <div class="alert alert-info">目前遊戲：<strong>@Model.GameName</strong> (ID: @Model.GameId)</div>
+}
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+
+    <!-- 複合鍵的一半：GameId 不給改 -->
+    <input type="hidden" asp-for="GameId" />
+
+    <div class="mb-3">
+        <label asp-for="SourceId" class="form-label">來源</label>
+        <select asp-for="SourceId" class="form-select"
+                asp-items="@(ViewBag.Sources as Microsoft.AspNetCore.Mvc.Rendering.SelectList)">
+            <option value="">請選擇來源</option>
+        </select>
+        <span asp-validation-for="SourceId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for=" ExternalKey" class="form-label">外部平台遊戲ID</label>
+        <input asp-for=" ExternalKey" class="form-control" />
+        <span asp-validation-for=" ExternalKey" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Note" class="form-label">備註</label>
+        <textarea asp-for="Note" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Note" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">儲存</button>
+        <a asp-action="Index" class="btn btn-secondary">返回</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

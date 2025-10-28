@@ -1,0 +1,61 @@
+﻿@* Views/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- 基底套件 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- 全站共用樣式（用 Layout 載入，partial 不要宣告 section） -->
+    <link href="~/css/layout-shell.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/topbar1.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/sidebar.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/topbar2.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/right-rail.css" rel="stylesheet" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false) @* 頁面額外樣式才用這個 *@
+</head>
+<body>
+    @await Component.InvokeAsync("TopbarLevel1")
+
+    <div class="layout-wrap">
+        <aside class="layout-sidebar d-none d-lg-block">
+            @await Html.PartialAsync("_Sidebar")
+        </aside>
+
+        <main class="layout-main">
+            @await Html.PartialAsync("_TopbarLevel2")
+
+            <div class="container-fluid py-3">
+                <div class="row g-4">
+                    <div class="col-12 col-xxl-9">
+                        @RenderBody()
+                    </div>
+                    <aside class="col-xl-3 d-none d-xl-block">
+                        <div class="right-rail">
+                            @await Html.PartialAsync("_RightRailAds")
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="layout-footer border-top">
+        @await Html.PartialAsync("_Footer")
+    </footer>
+
+    @await Html.PartialAsync("_QuickFab")
+    @await Html.PartialAsync("_FriendDock")
+    @await Html.PartialAsync("_FloatingDock")
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 全站共用腳本 -->
+    <script src="~/js/sidebar.js" asp-append-version="true"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

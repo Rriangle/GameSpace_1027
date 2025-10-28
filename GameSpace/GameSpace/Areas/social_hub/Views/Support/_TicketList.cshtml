@@ -1,0 +1,224 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.PagedResult<GameSpace.Areas.social_hub.Models.ViewModels.TicketListItemVM>
+@{
+    var action = (ViewData["action"] as string) ?? "";
+    var q = ViewBag.Query as string ?? "";
+    var canAssignToOthers = (bool)(ViewBag.CanAssignToOthers ?? false);
+    var meId = ViewBag.MeManagerId as int?;
+    var isAdmin = (bool)(ViewBag.IsAdmin ?? false);
+
+    string actionName = action switch
+    {
+        "assigned" => nameof(GameSpace.Areas.social_hub.Controllers.SupportController.ListAssigned),
+        "unassigned" => nameof(GameSpace.Areas.social_hub.Controllers.SupportController.ListUnassigned),
+        "inprogress" => nameof(GameSpace.Areas.social_hub.Controllers.SupportController.ListInProgress),
+        "closed" => nameof(GameSpace.Areas.social_hub.Controllers.SupportController.ListClosed),
+        _ => action.Length > 0 ? action : nameof(GameSpace.Areas.social_hub.Controllers.SupportController.ListAssigned)
+    };
+
+    bool isInProgressTab = action == "inprogress" || actionName == nameof(GameSpace.Areas.social_hub.Controllers.SupportController.ListInProgress);
+    bool isClosedTab = action == "closed" || actionName == nameof(GameSpace.Areas.social_hub.Controllers.SupportController.ListClosed);
+
+    string tabForReturn = action switch
+    {
+        "assigned" => "assigned",
+        "unassigned" => "unassigned",
+        "inprogress" => "inprogress",
+        "closed" => "closed",
+        _ => "assigned"
+    };
+    var indexUrlForReturn = Url.Action(
+        nameof(GameSpace.Areas.social_hub.Controllers.SupportController.Index),
+        "Support",
+        new { area = "social_hub", tab = tabForReturn }
+    );
+}
+
+@if ((Model?.Items?.Count ?? 0) == 0)
+{
+    <div class="text-muted">沒有符合的工單。</div>
+}
+else
+{
+    <div class="table-zone">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:96px;">工單ID</th>
+                        <th>主旨</th>
+                        <th class="text-center text-nowrap" style="width:120px;">指派對象</th>
+                        <th class="text-center text-nowrap" style="width:160px;">建立/最新</th>
+                        @if (!isInProgressTab)
+                        {
+                            <th class="text-center text-nowrap" style="width:80px;">未讀</th>
+                        }
+                        <th class="text-end text-nowrap" style="width:520px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Items!)
+                    {
+                        DateTime? createdAt = (DateTime?)t.CreatedAt;                       // UTC
+                        DateTime? lastAt = t.LastMessageAt ?? (DateTime?)t.CreatedAt;   // UTC
+
+                        bool isUnassigned = t.AssignedManagerId == null;
+                        bool isMine = meId.HasValue && t.AssignedManagerId == meId.Value;
+                        bool isClosedRow = t.IsClosed;
+
+                        bool blockAssign = isClosedTab || isClosedRow;
+                        bool enableEnterChat = !isUnassigned;
+                        bool enableAssignMe = !blockAssign && isUnassigned;
+                        bool enableAssignOther = !blockAssign && (
+                        isUnassigned
+                        ? (isAdmin || canAssignToOthers)
+                        : (isMine || isAdmin || canAssignToOthers)
+                        );
+
+                        var ticketUrl = Url.Action(
+                        nameof(GameSpace.Areas.social_hub.Controllers.SupportController.Ticket),
+                        "Support", new { area = "social_hub", id = t.TicketId });
+
+                        var reassignUrl = Url.Action(
+                        nameof(GameSpace.Areas.social_hub.Controllers.SupportController.Reassign),
+                        "Support",
+                        new { area = "social_hub", id = t.TicketId, modal = true, returnUrl = indexUrlForReturn }
+                        );
+
+                        var detailUrl = Url.Action(
+                        "TicketInfo", "Support",
+                        new { area = "social_hub", id = t.TicketId, modal = true }
+                        );
+
+                        // 樣式
+                        var clsEnterChat = enableEnterChat ? "btn btn-primary" : "btn btn-outline-primary disabled";
+                        var clsAssignMe = enableAssignMe ? "btn btn-success" : "btn btn-outline-success disabled";
+                        var clsAssignOtherNorm = enableAssignOther ? "btn btn-info text-white" : "btn btn-outline-info disabled";
+                        var clsAssignOtherMine = enableAssignOther ? "btn btn-warning text-white" : "btn btn-outline-warning disabled";
+                        var clsAssignOther = isMine ? clsAssignOtherMine : clsAssignOtherNorm;
+                        var assignOtherText = isMine ? "轉單指派" : "指派他人";
+                        var clsDetail = "btn btn-dark";
+
+                        <tr>
+                            <td class="text-nowrap">
+                                <span class="fw-semibold">#@t.TicketId</span><br />
+                                <small class="text-muted">User: @t.UserId</small>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width:36rem;">@t.Subject</div>
+                            </td>
+                            <td class="text-center">
+                                @if (isUnassigned)
+                                {
+                                    <span class="badge bg-secondary">未指派</span>
+                                }
+                                else if (isMine)
+                                {
+
+                                    <span class="badge bg-primary">我</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge bg-light text-dark border">@t.AssignedManagerId</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div>
+                                    <small class="text-muted">建</small>
+                                    @(createdAt.HasValue? Html.AppTime(createdAt, "MM/dd HH:mm") : Html.Raw("-"))
+                                </div>
+                                <div>
+                                    <small class="text-muted">新</small>
+                                    @(lastAt.HasValue? Html.AppTime(lastAt, "MM/dd HH:mm") : Html.Raw("-"))
+                                </div>
+                            </td>
+
+                            @if (!isInProgressTab)
+                            {
+                                <td class="text-center">
+                                    @if (t.UnreadForMe > 0)
+                                    {
+                                        <span class="badge bg-danger">@t.UnreadForMe</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted">0</span>
+                                    }
+                                </td>
+                            }
+
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group" aria-label="ticket-actions">
+                                    <!-- 指派給我 -->
+                                    <button class="@clsAssignMe btn-assign-me"
+                                            data-id="@t.TicketId"
+                                            @(enableAssignMe ? null : @Html.Raw("disabled aria-disabled=\"true\" tabindex=\"-1\""))>
+                                        指派給我
+                                    </button>
+
+                                    <!-- 指派他人 / 轉單 -->
+                                    @if (enableAssignOther)
+                                    {
+                                        <a class="@clsAssignOther js-modal-open"
+                                           href="#"
+                                           data-url="@reassignUrl"
+                                           data-title="指派他人 / 轉單"
+                                           data-size="lg">
+                                            @assignOtherText
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a class="@clsAssignOther" href="#" role="button" aria-disabled="true" tabindex="-1">
+                                            @assignOtherText
+                                        </a>
+                                    }
+
+                                    <!-- 詳細資料 -->
+                                    <a class="@clsDetail js-modal-open"
+                                       href="#"
+                                       data-title="工單 #@t.TicketId 詳細"
+                                       data-size="md"
+                                       data-url="@detailUrl">
+                                        詳細資料
+                                    </a>
+
+                                    <!-- 進入對話 -->
+                                    <a class="@clsEnterChat"
+                                       href="@(enableEnterChat? ticketUrl : "#")"
+                                       role="button"
+                                       aria-disabled="@(enableEnterChat ? "false" : "true")"
+                                       tabindex="@(enableEnterChat ? "0" : "-1")">
+                                        進入對話
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination-wrap">
+        <ul class="pagination pagination-sm justify-content-end">
+            <li class="page-item @(Model.HasPrev ? "" : "disabled")">
+                <a class="page-link" href="@Url.Action(actionName, new { page = Model.Page - 1, q })">上一頁</a>
+            </li>
+            @{
+                var start = Math.Max(1, Model.Page - 2);
+                var end = Math.Min(Model.TotalPages, Model.Page + 2);
+                for (var p = start; p <= end; p++)
+                {
+                    <li class="page-item @(p == Model.Page ? "active" : "")">
+                        <a class="page-link" href="@Url.Action(actionName, new { page = p, q })">@p</a>
+                    </li>
+                }
+            }
+            <li class="page-item @(Model.HasNext ? "" : "disabled")">
+                <a class="page-link" href="@Url.Action(actionName, new { page = Model.Page + 1, q })">下一頁</a>
+            </li>
+        </ul>
+    </div>
+}

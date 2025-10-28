@@ -1,0 +1,96 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.TicketInfoVM
+
+<style>
+    /* === 僅限本 partial 的樣式 === */
+    .ticket-info .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem 1rem;
+        margin-bottom: .25rem;
+    }
+    @@media (max-width:576px) {
+        .ticket-info .meta-grid
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    }
+
+    .ticket-info .meta-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: .5rem;
+        padding: .5rem .75rem;
+    }
+
+    .ticket-info .meta-label {
+        font-size: .8rem;
+        color: #6c757d;
+        margin-bottom: .15rem;
+    }
+
+    .ticket-info .meta-value {
+        font-weight: 600;
+    }
+
+    .ticket-info .note-card .meta-value {
+        font-weight: 400;
+        white-space: pre-wrap;
+    }
+</style>
+
+<div class="ticket-info">
+    <h5 class="mb-3">工單資訊</h5>
+
+    <div class="meta-grid">
+        <div class="meta-card">
+            <div class="meta-label">工單 ID</div>
+            <div class="meta-value">#@Model.TicketId</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">使用者 ID</div>
+            <div class="meta-value">@Model.UserId</div>
+        </div>
+
+        <div class="meta-card" style="grid-column:1 / -1;">
+            <div class="meta-label">主旨</div>
+            <div class="meta-value text-truncate">@Model.Subject</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">指派客服</div>
+            <div class="meta-value">@(@Model.AssignedManagerId?.ToString() ?? "未指派")</div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">建立時間</div>
+            <div class="meta-value">
+                @Html.AppTime(Model.CreatedAt, "yyyy/MM/dd HH:mm")
+            </div>
+        </div>
+
+        <div class="meta-card">
+            <div class="meta-label">最後訊息</div>
+            <div class="meta-value">
+                @Html.AppTime(Model.LastMessageAt ?? Model.CreatedAt, "yyyy/MM/dd HH:mm")
+            </div>
+        </div>
+
+        @if (Model.IsClosed)
+        {
+            <div class="meta-card">
+                <div class="meta-label">結單時間</div>
+                <div class="meta-value">
+                    @Html.AppTime(Model.ClosedAt, "yyyy/MM/dd HH:mm")
+                </div>
+            </div>
+
+            <div class="meta-card note-card" style="grid-column:1 / -1;">
+                <div class="meta-label">結單備註</div>
+                <div class="meta-value">@Model.CloseNote</div>
+            </div>
+        }
+    </div>
+</div>

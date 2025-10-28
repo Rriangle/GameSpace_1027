@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "匯入每日數據";
+}
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+@if (TempData["msg"] != null)
+{
+    <div class="alert alert-info">@Html.Raw(TempData["msg"])</div>
+}
+@if (TempData["detail"] != null)
+{
+    <div class="alert alert-warning small">@Html.Raw(TempData["detail"])</div>
+}
+
+<div class="row g-4">
+
+    <!-- Excel 上傳 -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Excel 上傳（.xlsx）</h5>
+                <p class="text-muted small mb-3">
+                    工作表欄位：<code>date, game_name, source, metric, value</code>
+                    <a href="/Forum/Imports/DailyTemplate" class="ms-2">下載範本</a>
+                </p>
+                <form asp-area="Forum" asp-controller="Imports" asp-action="DailyExcel"
+                      method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="file" name="file" accept=".xlsx" class="form-control" />
+                    <button type="submit" class="btn btn-primary">上傳 Excel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON 貼上 -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">直接貼 JSON</h5>
+                <form asp-area="Forum" asp-controller="Imports" asp-action="DailyJson" method="post">
+                    @Html.AntiForgeryToken()
+                    <textarea name="rows" rows="12" class="form-control mb-2" placeholder='[
+  { "date":"2025-09-07", "game_name":"Elden Ring", "source":"steam", "metric":"ccu", "value":123456 },
+  { "date":"2025-09-07", "game_name":"Elden Ring", "source":"steam", "metric":"reviews_total", "value":987654 }
+]'></textarea>
+                    <button type="submit" class="btn btn-success">匯入 JSON</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>

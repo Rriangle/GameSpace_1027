@@ -1,0 +1,150 @@
+﻿@model GameSpace.Areas.social_hub.Models.ViewModels.AssignmentConversationVM
+@inject GameSpace.Infrastructure.Time.IAppClock Clock
+
+@{
+    // Title 也用 App 時區
+    var assignedText = Clock.ToAppTime(Model.AssignedAt).ToString("yyyy/MM/dd HH:mm");
+    ViewData["Title"] = $"對話（指派於 {assignedText}） - 工單 #{Model.TicketId}";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/social_hub/css/support-bubbles.css" asp-append-version="true" />
+    <style>
+        /* 本頁獨有的滾動區高度（右側歷史對話） */
+        #ac-host {
+            min-height: 50vh;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+    </style>
+}
+
+<a class="btn btn-link mb-2" href="@Url.Action("AssignmentHistoryPage", new { id = Model.TicketId })">← 返回指派歷史</a>
+
+<div class="row g-3">
+    <!-- 左：詳細記錄 -->
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <strong>詳細記錄</strong>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">工單ID</dt>
+                    <dd class="col-7">@Model.TicketId</dd>
+
+                    <dt class="col-5">當初的客服</dt>
+                    <dd class="col-7">@Model.ToManagerId</dd>
+
+                    <dt class="col-5">元客服</dt>
+                    <dd class="col-7">@((Model.FromManagerId?.ToString()) ?? "未指派")</dd>
+
+                    <dt class="col-5">由誰轉單</dt>
+                    <dd class="col-7">@((Model.AssignedByManagerId?.ToString()) ?? "—")</dd>
+
+                    <dt class="col-5">轉單時間</dt>
+                    <dd class="col-7">@Html.AppTime(Model.AssignedAt, "yyyy/MM/dd HH:mm")</dd>
+
+                    <dt class="col-5">結束時間</dt>
+                    <dd class="col-7">@Html.AppTime(Model.NextAssignedAt, "yyyy/MM/dd HH:mm", empty: "—")</dd>
+
+                    <!-- 備註 -->
+                    <dt class="col-5">備註</dt>
+                    <dd class="col-7 text-break">@(!string.IsNullOrWhiteSpace(Model.Note) ? Model.Note : "—")</dd>
+                </dl>
+
+                <hr />
+                <div class="d-flex gap-2 flex-wrap">
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="@Url.Action("Ticket", "Support", new { area = "social_hub", id = Model.TicketId })">
+                        返回工單
+                    </a>
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="@Url.Action("AssignmentHistoryPage", "Support", new { area = "social_hub", id = Model.TicketId })">
+                        查看完整歷史
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右：純歷史對話 -->
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <strong>對話紀錄</strong>
+                <div class="small text-muted">
+                    指派時間：@Html.AppTime(Model.AssignedAt, "yyyy/MM/dd HH:mm")
+                    @if (Model.NextAssignedAt != null)
+                    {
+                        <text> ～ @Html.AppTime(Model.NextAssignedAt, "yyyy/MM/dd HH:mm")</text>
+                    }
+                    ，指派至：@Model.ToManagerId
+                </div>
+            </div>
+
+            <div class="card-body" id="ac-host">
+                <div class="support-chat">
+                    @if (Model.Messages == null || Model.Messages.Count == 0)
+                    {
+                        <div class="text-muted">此期間沒有訊息。</div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column">
+                            @foreach (var m in Model.Messages)
+                            {
+                                var mine = (m.SenderManagerId != null && m.SenderManagerId.Value == Model.ToManagerId);
+                                <div class="msg-row @(mine ? "mine" : "other")">
+                                    <div class="msg-col">
+                                        <div class="msg-meta">
+                                            @if (m.SenderUserId != null)
+                                            {
+                                                <span class="badge bg-secondary">使用者</span>
+                                            }
+                                            else if (m.SenderManagerId != null)
+                                            {
+                                                <span class="badge bg-warning text-dark">客服@(mine ? "(指派者)" : "")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-dark">系統</span>
+                                            }
+                                            <span>@Html.AppTime(m.SentAt, "yyyy/MM/dd HH:mm")</span>
+                                        </div>
+                                        <div class="msg-bubble">@m.MessageText</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav aria-label="Pagination">
+                        <ul class="pagination mb-0">
+                            <li class="page-item @(Model.Page > 1 ? "" : "disabled")">
+                                <a class="page-link" href="@Url.Action("AssignmentConversation", new { id = Model.TicketId, aid = Model.AssignmentId, page = Model.Page - 1 })">上一頁</a>
+                            </li>
+                            <li class="page-item @(Model.Page < Model.TotalPages ? "" : "disabled")">
+                                <a class="page-link" href="@Url.Action("AssignmentConversation", new { id = Model.TicketId, aid = Model.AssignmentId, page = Model.Page + 1 })">下一頁</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const host = document.getElementById('ac-host');
+            if (host) host.scrollTop = host.scrollHeight;
+        });
+    </script>
+}

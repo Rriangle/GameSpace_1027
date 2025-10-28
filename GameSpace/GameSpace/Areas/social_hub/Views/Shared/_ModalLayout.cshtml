@@ -1,0 +1,83 @@
+﻿@{
+    Layout = null;
+    var title = (ViewData["Title"] as string) ?? "處理中";
+}
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@title</title>
+
+    <!-- 一律載入 Bootstrap 與站內樣式，避免 partial 忘記載入 -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false)
+
+    <style>
+        /* 讓 iframe 內頁背景透明一點，看起來像一個浮動卡片 */
+        html, body {
+            background: transparent;
+        }
+        /* 統一 modal 內距，避免貼邊；partial 不用自己再加 p-3 */
+        .modal-page {
+            padding: 14px 18px;
+        }
+            /* 字重與行距微調，讓資訊卡更清楚 */
+            .modal-page dt {
+                font-weight: 600;
+            }
+
+            .modal-page dd {
+                margin-bottom: .5rem;
+            }
+    </style>
+</head>
+<body>
+    <main class="modal-page">
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+
+    @section Scripts {
+        <script>
+            (function(){
+              // 以 document 的實際內容高度為準（不受 iframe 外高影響）
+              function contentHeight(){
+                const d=document, b=d.body, e=d.documentElement;
+                return Math.max(
+                  e?.scrollHeight||0, b?.scrollHeight||0,
+                  e?.offsetHeight||0, b?.offsetHeight||0
+                );
+              }
+              function post(){ parent?.postMessage({ type:'modal:height', height: contentHeight() }, '*'); }
+
+              // 初次
+              if(document.readyState === 'complete'){ post(); }
+              else window.addEventListener('load', post);
+
+              // DOM 變動 & 尺寸改變都回報（去抖）
+              let t=null;
+              const deb=()=>{ if(t) cancelAnimationFrame(t); t=requestAnimationFrame(post); };
+
+              const ro = new ResizeObserver(deb);
+              ro.observe(document.documentElement);
+              ro.observe(document.body);
+
+              const mo = new MutationObserver(deb);
+              mo.observe(document.documentElement, { childList:true, subtree:true, attributes:true, characterData:true });
+
+              // 字型載入完成也回報（避免字型替換撐高）
+              if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(deb).catch(()=>{});
+              }
+            })();
+        </script>
+    }
+
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,120 @@
+﻿@using System.Text.Json
+@{
+    // --- 讀了就消耗（不再用 Peek）---
+    string? success = TempData["Toast.Success"] as string;
+    string? info = TempData["Toast.Info"] as string;
+    string? warn = TempData["Toast.Warn"] as string;
+    string? error = TempData["Toast.Error"] as string;
+    string? legacy = TempData["Msg"] as string;
+
+    var autoStr = TempData["Toast.AutoHideMs"]?.ToString();
+    int autoMs = 4000;
+    if (!string.IsNullOrWhiteSpace(autoStr) && int.TryParse(autoStr, out var _ms)) autoMs = _ms;
+
+    string TitleOf(string lvl) => lvl switch
+    {
+        "success" => "成功",
+        "info" => "訊息",
+        "warning" => "提醒",
+        "danger" => "錯誤",
+        _ => "通知"
+    };
+
+    var items = new List<object>();
+    if (!string.IsNullOrWhiteSpace(success)) items.Add(new { level = "success", title = TitleOf("success"), text = success });
+    if (!string.IsNullOrWhiteSpace(info)) items.Add(new { level = "info", title = TitleOf("info"), text = info });
+    if (!string.IsNullOrWhiteSpace(warn)) items.Add(new { level = "warning", title = TitleOf("warning"), text = warn });
+    if (!string.IsNullOrWhiteSpace(error)) items.Add(new { level = "danger", title = TitleOf("danger"), text = error });
+    if (items.Count == 0 && !string.IsNullOrWhiteSpace(legacy))
+        items.Add(new { level = "success", title = TitleOf("success"), text = legacy });
+
+    // 保險起見：若用過舊版 Peek 進來，這裡也一併清掉可能殘留的鍵
+    if (items.Count > 0)
+    {
+        TempData.Remove("Toast.Success");
+        TempData.Remove("Toast.Info");
+        TempData.Remove("Toast.Warn");
+        TempData.Remove("Toast.Error");
+        TempData.Remove("Msg");
+        TempData.Remove("Toast.AutoHideMs");
+    }
+
+    var presetJson = JsonSerializer.Serialize(items);
+}
+<style>
+    .toast-container {
+        z-index: 1086;
+    }
+
+    .toast .toast-progress {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        background: rgba(255,255,255,.7);
+        width: 100%;
+        transform-origin: left;
+        animation: toast-progress linear forwards;
+    }
+    /* Razor 要用 @@ 逃脫 */
+    @@keyframes toast-progress {
+        from {
+            transform: scaleX(1)
+        }
+
+        to {
+            transform: scaleX(0)
+        }
+    }
+</style>
+
+<script>
+    (function(){
+      function ensureContainer(){
+        var el=document.getElementById('appToastContainer');
+        if(!el){ el=document.createElement('div'); el.id='appToastContainer';
+          el.className='toast-container position-fixed top-0 end-0 p-3'; document.body.appendChild(el); }
+        return el;
+      }
+      var headerClass={success:'bg-success text-white',info:'bg-info text-dark',warning:'bg-warning text-dark',danger:'bg-danger text-white',default:'bg-secondary text-white'};
+      var iconClass  ={success:'fa-check-circle',info:'fa-info-circle',warning:'fa-exclamation-triangle',danger:'fa-times-circle',default:'fa-bell'};
+
+      function buildToast(o){
+        var lvl=(o.level||'info').toLowerCase(), delay=(typeof o.delay==='number'?o.delay:4000), autohide=o.autohide!==false;
+        var w=document.createElement('div'); w.className='toast shadow'; w.role='status'; w.ariaLive='polite'; w.ariaAtomic='true';
+        w.dataset.bsAutohide=autohide?'true':'false'; w.dataset.bsDelay=String(delay);
+        var h=document.createElement('div'); h.className='toast-header '+(headerClass[lvl]||headerClass.default);
+        var i=document.createElement('i'); i.className='fas '+(iconClass[lvl]||iconClass.default)+' me-2'; i.setAttribute('aria-hidden','true');
+        var s=document.createElement('strong'); s.className='me-auto'; s.textContent=o.title||({success:'成功',info:'訊息',warning:'提醒',danger:'錯誤'}[lvl]||'通知');
+        var sm=document.createElement('small'); sm.className='text-muted'; sm.textContent='剛剛';
+        var b=document.createElement('button'); b.type='button'; b.className='btn-close btn-close-white ms-2'; b.setAttribute('data-bs-dismiss','toast'); b.setAttribute('aria-label','關閉');
+        h.append(i,s,sm,b);
+        var body=document.createElement('div'); body.className='toast-body position-relative'; body.textContent=o.text||'';
+        if(autohide&&delay>0){ var bar=document.createElement('div'); bar.className='toast-progress'; bar.style.animationDuration=delay+'ms'; body.appendChild(bar); }
+        w.append(h,body); return w;
+      }
+
+      function show(o){
+        var c=ensureContainer(), el=buildToast(o||{}); c.appendChild(el);
+        function init(){ if(!window.bootstrap||!window.bootstrap.Toast) return setTimeout(init,30);
+          var t=window.bootstrap.Toast.getOrCreateInstance(el,{autohide:(el.dataset.bsAutohide==='true'),delay:parseInt(el.dataset.bsDelay||'0',10)});
+          el.addEventListener('hidden.bs.toast',function(){ el.remove(); if(!c.children.length) c.remove();});
+          t.show();
+        } init(); return el;
+      }
+
+      window.AppToast={ show:show,
+        success:(txt,o)=>show(Object.assign({level:'success',text:txt},(o||{}))),
+        info:(txt,o)=>show(Object.assign({level:'info',text:txt},(o||{}))),
+        warn:(txt,o)=>show(Object.assign({level:'warning',text:txt},(o||{}))),
+        error:(txt,o)=>show(Object.assign({level:'danger',text:txt},(o||{}))),
+        clear:()=>{var c=document.getElementById('appToastContainer'); if(c) c.remove();}
+      };
+
+      // 伺服器端 TempData 的預設訊息（只會顯示一次）
+      var presets=@Html.Raw(presetJson), autoMs=@autoMs;
+      if(Array.isArray(presets)&&presets.length){
+        presets.forEach((p,idx)=>setTimeout(()=>AppToast.show({level:p.level,title:p.title,text:p.text,autohide:(autoMs>0),delay:autoMs}), idx*150));
+      }
+    })();
+</script>

@@ -1,0 +1,121 @@
+﻿/* right-rail.css */
+
+/* 基本樣式 */
+.ad-box {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: .5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+
+/* 尺寸 */
+.ad-300x250 {
+    height: 250px;
+    max-width: 300px;
+}
+
+.ad-300x600 {
+    height: 600px;
+    max-width: 300px;
+}
+
+/* ≥1400px 右欄吸頂 */
+@media (min-width:1400px) {
+    .right-rail {
+        position: sticky;
+        top: calc(var(--topbar-h,56px) + var(--topbar-gap,8px));
+    }
+}
+
+/* 卡片抬升基底 */
+.right-rail-ads .ad-box {
+    position: relative;
+    overflow: hidden;
+    border-radius: .5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+    .right-rail-ads .ad-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(0,0,0,.10);
+    }
+
+    /* 讓偽元素一定蓋在內容上，但不擋點擊 */
+    .right-rail-ads .ad-box::before,
+    .right-rail-ads .ad-box::after {
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .right-rail-ads .ad-box > * {
+        position: relative;
+        z-index: 0;
+    }
+
+    /* === 掃光（白底可見 → 不用混色模式，改用亮/暗帶） === */
+    .right-rail-ads .ad-box.ad-hover-sheen::before,
+    .right-rail-ads .ad-box.ad-shine::before {
+        content: "";
+        position: absolute;
+        inset: -20%;
+        /* 中間亮、兩側淡淡暗，白底也看得出流動 */
+        background: linear-gradient( 105deg, rgba(0,0,0,0) 42%, rgba(0,0,0,.06) 48%, rgba(255,255,255,.75) 50%, rgba(0,0,0,.06) 52%, rgba(0,0,0,0) 58% );
+        filter: blur(.3px); /* 邊緣更柔一點 */
+        transform: translateX(-120%);
+        opacity: 0;
+    }
+
+    /* 滑過才掃一次 */
+    .right-rail-ads .ad-box.ad-hover-sheen:hover::before {
+        animation: adShine 900ms ease forwards;
+        opacity: 1;
+    }
+
+    /* 常駐掃光（來回） */
+    .right-rail-ads .ad-box.ad-shine::before {
+        animation: adShine 2.1s ease-in-out infinite;
+        opacity: 1;
+    }
+
+@keyframes adShine {
+    0% {
+        transform: translateX(-120%) rotate(.001deg);
+    }
+
+    100% {
+        transform: translateX( 120%) rotate(.001deg);
+    }
+}
+
+/* 內部柔光呼吸（淡藍光暈） */
+.right-rail-ads .ad-box.ad-breathe::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.14), rgba(59,130,246,0) 60%);
+    animation: adBreathe 3.6s ease-in-out infinite;
+}
+
+@keyframes adBreathe {
+    0%,100% {
+        opacity: .18;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: .36;
+        transform: scale(1.05);
+    }
+}
+
+/* 無障礙：減少動畫時停用 */
+@media (prefers-reduced-motion:reduce) {
+    .right-rail-ads .ad-box,
+    .right-rail-ads .ad-box::before,
+    .right-rail-ads .ad-box::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

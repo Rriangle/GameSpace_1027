@@ -1,0 +1,32 @@
+﻿@* 同你上個版本，確保外層 header 有 class="topbar1" *@
+<header class="topbar1 navbar navbar-expand-lg navbar-light bg-light border-bottom sticky-top">
+    <div class="container-fluid">
+        <button class="navbar-toggler d-lg-none me-2" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#mainOffcanvas"
+                aria-controls="mainOffcanvas" aria-label="Open menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="~/">
+            <img src="~/picture/Gamiport.png" alt="Logo" height="24" />
+            GamiPort
+        </a>
+               
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item d-none d-md-block"><a class="nav-link" href="#">連結 A</a></li>
+            <li class="nav-item d-none d-md-block"><a class="nav-link" href="#">連結 B</a></li>
+            <li class="nav-item ms-2"><a class="btn btn-primary" href="#">登入</a></li>
+        </ul>
+    </div>
+</header>
+
+<!-- Offcanvas：手機／平板共用側欄 -->
+<div class="offcanvas offcanvas-start offcanvas-main" tabindex="-1" id="mainOffcanvas" aria-labelledby="mainOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h6 class="offcanvas-title" id="mainOffcanvasLabel">主選單</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        @await Html.PartialAsync("_Sidebar")
+    </div>
+</div>
