@@ -40,11 +40,15 @@ dotnet run --project GamiPort/GamiPort/GamiPort.csproj
 
 Both projects require SQL Server with these databases:
 - **GameSpacedatabase** - Business logic database
-  - Connection: `Data Source=(local)\SQLEXPRESS;Initial Catalog=GameSpacedatabase`
+  - Server: `DESKTOP-8HQIS1S\SQLEXPRESS`
+  - Connection: `Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpacedatabase;Trusted_Connection=True;TrustServerCertificate=True;`
 - **aspnet-GameSpace-[GUID]** - ASP.NET Identity database
   - Connection: `Server=(localdb)\mssqllocaldb`
 
-**Important:** Verify SQL Server is running before starting the application.
+**Important:**
+- Verify SQL Server is running before starting the application
+- Database name: `GameSpacedatabase` (lowercase 'd' in database)
+- Last verified: 2025-10-28
 
 ## Critical Architecture Decisions
 
@@ -415,33 +419,38 @@ These tables have FK relationships with MiniGame Area tables:
 
 2. **`schema/MiniGameArea相關sql_server_DB相關表格.md`**
    - **Total: 20 tables** (16 main MiniGame tables + 4 user/permission related tables)
-   - Last verified: 2025-10-27
+   - Last verified: 2025-10-28
    - Database server: DESKTOP-8HQIS1S\SQLEXPRESS
+   - All tables confirmed present and operational
 
-3. **`schema/MiniGame_Area_資料庫完整結構文件_2025-10-27.md`** ✨ **(Updated 2025-10-27)**
+3. **`schema/MiniGame_Area_資料庫完整結構文件_2025-10-27.md`** ✨ **(Updated & Verified 2025-10-28)**
    - Complete database structure with field definitions (285+ fields)
    - All PK/FK/CHECK Constraints/Indexes/Defaults verified
    - Entity Relationship Diagram (ERD)
    - Field constraints and relationships
    - **Major updates**: Pet table fields, SystemSettings table, new setting tables
+   - **Status**: All database structures stable and operational
 
-4. **`schema/專案規格敘述1.txt` & `schema/專案規格敘述2.txt`** ✨ **(Updated 2025-10-27)**
+4. **`schema/專案規格敘述1.txt` & `schema/專案規格敘述2.txt`** ✨ **(Verified 2025-10-28)**
    - Business requirements (90% of specifications)
    - Technical specifications
    - Performance and security requirements
-   - Database field definitions updated to match actual DB
+   - Database field definitions confirmed matching actual DB
+   - All business rules aligned with database implementation
 
-5. **`schema/管理者權限相關描述.txt`** ✨ **(Updated 2025-10-27)**
+5. **`schema/管理者權限相關描述.txt`** ✨ **(Verified 2025-10-28)**
    - 10 test admin accounts with credentials
    - 8 role definitions with full permissions matrix
    - Complete ManagerData/ManagerRole/ManagerRolePermission table structures
    - Constraint details
+   - Admin authentication system confirmed operational
 
-6. **`schema/db_schema_summary.md`** ✨ **(New 2025-10-27)**
+6. **`schema/db_schema_summary.md`** ✨ **(Verified 2025-10-28)**
    - **Authoritative reference** - Queried directly from SQL Server
    - All 20 tables with complete technical details
    - PK/FK/CHECK Constraints/Indexes/Defaults
    - Design patterns (soft delete, audit trail, timestamps)
+   - Continuously maintained as single source of truth for database structure
 
 7. **`schema/資料庫更新總結_2025-10-27.md`** ✨ **(New 2025-10-27)**
    - Complete update report of schema documentation
@@ -449,10 +458,15 @@ These tables have FK relationships with MiniGame Area tables:
    - Database structure 100% complete and verified
 
 ### Audit Reports
-- `schema/Services修復完成報告_2025-10-21.md` - Service layer fixes (Verified 2025-10-27)
-- `schema/SERVICES_AUDIT_FINAL_2025-10-21.md` - Final service audit (Verified 2025-10-27)
-- `schema/商業規則差異報告與修正建議.md` - Business rule discrepancies (Verified 2025-10-27)
-- `schema/報告驗證更新記錄_2025-10-27.md` - Verification update record ✨ **(New 2025-10-27)**
+- `schema/Services修復完成報告_2025-10-21.md` - Service layer fixes (Verified 2025-10-28)
+- `schema/SERVICES_AUDIT_FINAL_2025-10-21.md` - Final service audit (Verified 2025-10-28)
+- `schema/商業規則差異報告與修正建議.md` - Business rule discrepancies (Verified 2025-10-28)
+  - Business rule adjustability: 95% (41/43 rules configurable)
+  - All suggested database improvements completed
+- `schema/報告驗證更新記錄_2025-10-27.md` - Verification update record ✨ **(Verified 2025-10-28)**
+- `schema/SQL_Server_連線操作完整手冊_AI適用.md` - SQL Server connection guide (Verified 2025-10-28)
+- `schema/Area註冊架構說明.md` - Area registration architecture (Verified 2025-10-28)
+- `schema/README_合併版.md` - Integrated specification document (Verified 2025-10-28)
 
 **Always consult these documents when:**
 - Adding new features (understand business rules first)
@@ -468,7 +482,7 @@ These tables have FK relationships with MiniGame Area tables:
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=aspnet-GameSpace-[GUID]",
-    "GameSpace": "Data Source=(local)\\SQLEXPRESS;Initial Catalog=GameSpacedatabase;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True"
+    "GameSpace": "Server=DESKTOP-8HQIS1S\\SQLEXPRESS;Database=GameSpacedatabase;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True"
   }
 }
 ```

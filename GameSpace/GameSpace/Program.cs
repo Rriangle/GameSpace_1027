@@ -176,7 +176,7 @@ namespace GameSpace
 			// ========== 12) 授權政策（需要就用） ==========
 			builder.Services.AddAuthorization(options =>
 			{
-				// MiniGame Area Admin policy (required for all Admin controllers)
+				// MiniGame Area 管理員政策（所有管理控制器必備）
 				options.AddPolicy("AdminOnly", p => p.RequireClaim("IsManager", "true"));
 
 				// Granular permission policies

@@ -1,6 +1,7 @@
 ﻿# GameSpace – MiniGame Area（Admin 專注）整合規格（README\_合併版）
 
-> **最後更新日期：2025-10-27**
+> **最後更新日期：2025-10-28**
+> **驗證狀態：資料庫結構完整，功能實作持續進行中**
 > 說明語言：**zh-TW**（程式識別符、檔名、路徑、SQL/CLI 關鍵字不可翻譯）
 > 編碼：**UTF-8 with BOM**
 > 本檔為你提供：**單一文件就能讓 AI/開發者理解整個 MiniGame Area 的後台規格、資料庫覆蓋清單、權限/登入整合、檔案落點與驗收清單**。
@@ -262,7 +263,7 @@
 本機步驟（摘要）：
 
 1. 安裝 VS 2022+ 與 SQL Server 2019/2022。
-2. 在 SSMS 執行 SQL（建立 **GameSpaceDatabase**）。
+2. 在 SSMS 執行 SQL（建立 **GameSpacedatabase**）。
 3. 執行 seed（含 **MiniGame Area** 展示用假資料；**不得違反 schema**）。
 4. 開啟 ASP.NET Core MVC 解決方案；設定 `appsettings.json` 的 `DefaultConnection`。
 5. 建置並執行（Admin 站台）；以 **AdminCookie** 登入後進入 MiniGame 後台。

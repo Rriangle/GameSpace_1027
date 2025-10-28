@@ -2,7 +2,7 @@
 
 **生成日期：** 2025-10-27
 **更新說明：** 根據實際資料庫查詢結果大幅度更新（所有技術細節已與實際資料庫結構100%同步）
-**資料庫名稱：** GameSpaceDatabase
+**資料庫名稱：** GameSpacedatabase
 **資料庫伺服器：** DESKTOP-8HQIS1S\SQLEXPRESS
 **SQL Server 版本：** Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 Express Edition
 **文件編碼：** UTF-8 with BOM
@@ -1435,17 +1435,17 @@ ORDER BY SignTime DESC;
 
 **連線字串（sqlcmd）：**
 ```bash
-sqlcmd -S "DESKTOP-8HQIS1S\SQLEXPRESS" -d GameSpaceDatabase -E
+sqlcmd -S "DESKTOP-8HQIS1S\SQLEXPRESS" -d GameSpacedatabase -E
 ```
 
 **連線字串（C# ADO.NET）：**
 ```
-Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpaceDatabase;Trusted_Connection=True;TrustServerCertificate=True;
+Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpacedatabase;Trusted_Connection=True;TrustServerCertificate=True;
 ```
 
 **連線字串（Entity Framework）：**
 ```
-Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpaceDatabase;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true;
+Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpacedatabase;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true;
 ```
 
 ---

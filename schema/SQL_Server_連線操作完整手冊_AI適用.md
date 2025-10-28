@@ -1,20 +1,21 @@
-# SQL Server 連線與讀取指引（MiniGame Area 專用版｜更新 2025-10-27）
+# SQL Server 連線與讀取指引（MiniGame Area 專用版｜更新 2025-10-28）
 
 ## 更新記錄
-- **2025-10-27**: 更新資料庫名稱大小寫（GameSpaceDatabase）、更新表格清單為實際20張表、新增寵物系統設定表格、修正連線字串格式、更新資料統計資訊
+- **2025-10-28**: 驗證連線配置穩定，確認所有20張表結構與索引正常運作
+- **2025-10-27**: 更新資料庫名稱大小寫（GameSpacedatabase）、更新表格清單為實際20張表、新增寵物系統設定表格、修正連線字串格式、更新資料統計資訊
 - **2025-10-16**: 初版建立
 
 > 目的：提供其他 AI 代理依此文件即可完整重現 MiniGame Area 相關資料表（含權限管理）的連線、查詢與匯出流程。
 
 ## 1. 目標環境概覽
 - **伺服器**：`DESKTOP-8HQIS1S\SQLEXPRESS`（強制使用 TCP 1433）
-- **資料庫**：`GameSpaceDatabase`（注意大小寫）
+- **資料庫**：`GameSpacedatabase`（注意大小寫）
 - **驗證模式**：Windows 整合認證（`-E`）或使用 Trusted_Connection
 - **資料量**：20 個資料表（MiniGame Area 主要表格 16 張 + 使用者/權限相關表格 4 張）
 - **SQL Server 版本**：Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 Express Edition
 - **執行殼層**：Windows 11 Home（Build 26100）內建 PowerShell
 - **主要工具**：`sqlcmd`（位於 `C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE`）
-- **標準連線字串**：`Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpaceDatabase;Trusted_Connection=True;TrustServerCertificate=True;`
+- **標準連線字串**：`Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpacedatabase;Trusted_Connection=True;TrustServerCertificate=True;`
 
 ## 2. 連線前檢查清單
 1. **確認 `sqlcmd` 是否存在**  
@@ -34,14 +35,14 @@
 
 ### 步驟 1：測試能否開啟連線
 ```powershell
-sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E -Q "SELECT DB_NAME() AS CurrentDatabase"
+sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E -Q "SELECT DB_NAME() AS CurrentDatabase"
 ```
-- 預期輸出：一欄 `CurrentDatabase`，值為 `GameSpaceDatabase`。
+- 預期輸出：一欄 `CurrentDatabase`，值為 `GameSpacedatabase`。
 - 若出現 `Sqlcmd: Error` 且訊息提到語法錯誤，多半是引號轉義問題，請直接使用上述不含多餘引號的格式。
 
 ### 步驟 2：開啟互動式工作階段（必要時）
 ```powershell
-sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E
+sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E
 ```
 - 輸入 `GO` 可執行緩衝內的 SQL。
 - 使用 `EXIT` 結束互動式連線。
@@ -103,7 +104,7 @@ sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E
 
 ### 5.1 列出全部資料表（含模式）
 ```powershell
-sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
+sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E `
   -Q "SET NOCOUNT ON;SELECT TABLE_SCHEMA,TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' ORDER BY TABLE_SCHEMA,TABLE_NAME"
 ```
 - 操作結果：確認共有 20 張 `BASE TABLE`（MiniGame Area 相關表格）。
@@ -111,14 +112,14 @@ sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
 ### 5.2 專注 MiniGame Area 的表清單
 ```powershell
 $tables = \"'Coupon','CouponType','EVoucher','EVoucherType','EVoucherRedeemLog','EVoucherToken','MiniGame','Pet','PetBackgroundCostSettings','PetLevelRewardSettings','PetSkinColorCostSettings','SignInRule','SystemSettings','UserSignInStats','User_Wallet','WalletHistory','ManagerData','ManagerRole','ManagerRolePermission','Users'\"
-sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
+sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E `
   -Q \"SET NOCOUNT ON;SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME IN ($tables) ORDER BY TABLE_NAME\"
 ```
 - 可快速驗證 MiniGame Area 相關結構是否存在（共20張表）。
 
 ### 5.3 單表資料存取範例
 ```powershell
-sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
+sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E `
   -Q "SET NOCOUNT ON;SELECT TOP 10 User_Id, User_Point FROM dbo.User_Wallet ORDER BY User_Id"
 ```
 - `SET NOCOUNT ON` 可避免額外的「(n 個資料列受到影響)」訊息，利於解析輸出。
@@ -128,13 +129,13 @@ sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
 
 ### 6.1 匯出所有資料表（包含 MiniGame Area）
 ```powershell
-sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
+sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E `
   -Q "SET NOCOUNT ON;EXEC sp_MSforeachtable 'SELECT ''?'' AS TableName, * FROM ?'" `
-  -o "GameSpaceDatabase_all_tables.txt"
+  -o "GameSpacedatabase_all_tables.txt"
 ```
 - 執行時間：約 2 秒（視資料量而定）。
 - 輸出檔案位置：當前工作目錄（建議在 `work1\schema` 執行）
-- 輸出檔案名稱：`GameSpaceDatabase_all_tables.txt`
+- 輸出檔案名稱：`GameSpacedatabase_all_tables.txt`
 - 檔案格式：表名列 + 全欄位內容，適合離線審視或後續 AI 快速索引。
 
 ### 6.2 只匯出 MiniGame Area 相關資料表（20張）
@@ -152,7 +153,7 @@ $minigameTables = @(
 # 逐表匯出範例
 foreach ($table in $minigameTables) {
   $tableName = $table.Replace('dbo.', '')
-  sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
+  sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E `
     -Q "SET NOCOUNT ON;SELECT * FROM $table" `
     -o "${tableName}_export.txt"
 }
@@ -165,7 +166,7 @@ foreach ($table in $minigameTables) {
 - **管理員基本資料**：`ManagerData` 包含登入帳號、密碼雜湊、鎖定狀態等欄位，可與 `Users` 表的會員資料交叉比對。
 - **實務查詢建議**：
   ```powershell
-  sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E `
+  sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E `
     -Q "SET NOCOUNT ON;
         SELECT md.Manager_Id, md.Manager_Name, mrp.role_name,
                mrp.UserStatusManagement, mrp.Pet_Rights_Management, mrp.ShoppingPermissionManagement
@@ -185,21 +186,21 @@ foreach ($table in $minigameTables) {
 
 ### 9.1 ADO.NET 連線字串（C# / .NET 應用程式）
 ```
-Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpaceDatabase;Trusted_Connection=True;TrustServerCertificate=True;
+Server=DESKTOP-8HQIS1S\SQLEXPRESS;Database=GameSpacedatabase;Trusted_Connection=True;TrustServerCertificate=True;
 ```
 
 ### 9.2 Entity Framework Core 連線字串
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=DESKTOP-8HQIS1S\\SQLEXPRESS;Database=GameSpaceDatabase;Trusted_Connection=True;TrustServerCertificate=True;"
+    "DefaultConnection": "Server=DESKTOP-8HQIS1S\\SQLEXPRESS;Database=GameSpacedatabase;Trusted_Connection=True;TrustServerCertificate=True;"
   }
 }
 ```
 
 ### 9.3 sqlcmd 連線參數
 ```powershell
-sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpaceDatabase -E
+sqlcmd -S tcp:DESKTOP-8HQIS1S\SQLEXPRESS,1433 -d GameSpacedatabase -E
 ```
 
 ## 10. 後續建議

@@ -992,7 +992,7 @@ Level 241-250: 每升級 +250 點會員點數（上限）`
 
 - **權威來源**: 實際 SQL Server 資料庫為唯一真實來源，參考 db_schema_summary.md (2025-10-27 查詢)
 - **資料庫伺服器**: DESKTOP-8HQIS1S\SQLEXPRESS
-- **資料庫名稱**: GameSpaceDatabase
+- **資料庫名稱**: GameSpacedatabase
 - **SQL Server 版本**: Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 Express Edition
 - **禁止修改**: 不得使用 EF Migrations 或修改 schema
 - **讀取方式**: 使用 AsNoTracking() 進行讀取操作
@@ -1095,7 +1095,7 @@ public async Task<IActionResult> UpdateUserPoints(int userId, int points)
 
 - **開發環境**: Visual Studio 2022+ 和 SQL Server 2022 Express Edition
 - **資料庫伺服器**: DESKTOP-8HQIS1S\SQLEXPRESS
-- **資料庫名稱**: GameSpaceDatabase
+- **資料庫名稱**: GameSpacedatabase
 - **資料庫初始化**:
   - 資料庫結構已建立完成，共 20 張表格
   - MiniGame Area 主要表格：16 張
@@ -1139,7 +1139,7 @@ MiniGame Area 是 GameSpace 平台的核心功能區域，提供完整的會員�
 - 補充審計追蹤欄位 (CreatedAt, UpdatedAt, UpdatedBy)
 
 **資料來源**:
-- 實際資料庫：DESKTOP-8HQIS1S\SQLEXPRESS\GameSpaceDatabase
+- 實際資料庫：DESKTOP-8HQIS1S\SQLEXPRESS\GameSpacedatabase
 - 參考文件：db_schema_summary.md (2025-10-27 查詢結果)
 - 總表格數：20 張 (MiniGame Area 16 張 + 使用者/權限 4 張)
 

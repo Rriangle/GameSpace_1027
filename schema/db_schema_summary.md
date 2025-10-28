@@ -1,7 +1,7 @@
 # 資料庫結構完整摘要（實際查詢結果）
 **查詢日期**: 2025-10-27
 **資料庫伺服器**: DESKTOP-8HQIS1S\SQLEXPRESS
-**資料庫**: GameSpaceDatabase
+**資料庫**: GameSpacedatabase
 **SQL Server版本**: Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 Express Edition
 
 ## 所有表格清單（20張）
