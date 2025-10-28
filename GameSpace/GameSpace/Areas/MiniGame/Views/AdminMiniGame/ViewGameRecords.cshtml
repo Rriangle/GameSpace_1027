@@ -1,0 +1,439 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.GameRecordsListViewModel
+@{
+    ViewData["Title"] = "查看會員遊戲紀錄";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+    var stats = ViewBag.Statistics as GameSpace.Areas.MiniGame.Models.ViewModels.GameStatisticsViewModel;
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-gamepad text-primary me-2"></i>查看會員遊戲紀錄
+        </h1>
+    </div>
+
+    <!-- 統計卡片 -->
+    @if (stats != null)
+    {
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow-sm border-start border-primary border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs fw-bold text-primary text-uppercase mb-1">記錄總數</div>
+                                <div class="h5 mb-0 fw-bold text-gray-800">@stats.TotalGames.ToString("N0")</div>
+                            </div>
+                            <div class="text-primary opacity-50">
+                                <i class="fas fa-database fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow-sm border-start border-success border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs fw-bold text-success text-uppercase mb-1">勝利局數 (@stats.WinRate.ToString("0.0")%)</div>
+                                <div class="h5 mb-0 fw-bold text-gray-800">@stats.WinGames.ToString("N0")</div>
+                            </div>
+                            <div class="text-success opacity-50">
+                                <i class="fas fa-trophy fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow-sm border-start border-danger border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs fw-bold text-danger text-uppercase mb-1">失敗局數</div>
+                                <div class="h5 mb-0 fw-bold text-gray-800">@stats.LoseGames.ToString("N0")</div>
+                            </div>
+                            <div class="text-danger opacity-50">
+                                <i class="fas fa-times fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow-sm border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs fw-bold text-warning text-uppercase mb-1">總獎勵點數</div>
+                                <div class="h5 mb-0 fw-bold text-gray-800">@stats.TotalPointsAwarded.ToString("N0")</div>
+                            </div>
+                            <div class="text-warning opacity-50">
+                                <i class="fas fa-coins fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- 搜尋表單 -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-gradient-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-filter me-2"></i>搜尋條件</h4>
+        </div>
+        <div class="card-body p-4">
+            <form method="get" id="searchForm">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control rounded" id="UserId" name="UserId"
+                                   value="@Model.Query.UserId" placeholder="輸入用戶ID">
+                            <label for="UserId"><i class="fas fa-user me-1"></i>用戶ID</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control rounded" id="UserName" name="UserName"
+                                   value="@Model.Query.UserName" placeholder="輸入用戶名稱">
+                            <label for="UserName"><i class="fas fa-user-tag me-1"></i>用戶名稱</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-3">
+                            <select class="form-control rounded" id="Level" name="Level">
+                                <option value="">全部關卡</option>
+                                @if (ViewBag.LevelOptions != null)
+                                {
+                                    foreach (var level in ViewBag.LevelOptions as List<int>)
+                                    {
+                                        <option value="@level" selected="@(Model.Query.Level == level)">第 @level 關</option>
+                                    }
+                                }
+                            </select>
+                            <label for="Level"><i class="fas fa-layer-group me-1"></i>關卡等級</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-3">
+                            <select class="form-control rounded" id="Result" name="Result">
+                                <option value="">全部結果</option>
+                                @if (ViewBag.ResultOptions != null)
+                                {
+                                    foreach (var result in ViewBag.ResultOptions as List<string>)
+                                    {
+                                        <option value="@result" selected="@(Model.Query.Result == result)">
+                                            @switch (result)
+                                            {
+                                                case "Win": @("勝利"); break;
+                                                case "Lose": @("失敗"); break;
+                                                case "Abort": @("中止"); break;
+                                                default: @result; break;
+                                            }
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <label for="Result"><i class="fas fa-flag-checkered me-1"></i>遊戲結果</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-floating mb-3">
+                            <input type="date" class="form-control rounded" id="StartDate" name="StartDate"
+                                   value="@(Model.Query.StartDate?.ToString("yyyy-MM-dd"))">
+                            <label for="StartDate"><i class="fas fa-calendar me-1"></i>開始日期</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-3">
+                            <input type="date" class="form-control rounded" id="EndDate" name="EndDate"
+                                   value="@(Model.Query.EndDate?.ToString("yyyy-MM-dd"))">
+                            <label for="EndDate"><i class="fas fa-calendar-alt me-1"></i>結束日期</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating mb-3">
+                            <select class="form-control rounded" id="SortBy" name="SortBy">
+                                <option value="StartTime" selected="@(Model.Query.SortBy == "StartTime")">遊戲時間</option>
+                                <option value="ExpGained" selected="@(Model.Query.SortBy == "ExpGained")">獲得經驗值</option>
+                                <option value="PointsGained" selected="@(Model.Query.SortBy == "PointsGained")">獲得點數</option>
+                            </select>
+                            <label for="SortBy"><i class="fas fa-sort me-1"></i>排序方式</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill w-100 mb-2">
+                            <i class="fas fa-search me-2"></i>搜尋
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 text-end">
+                        <button type="button" class="btn btn-secondary rounded-pill" onclick="resetForm()">
+                            <i class="fas fa-undo me-2"></i>重置
+                        </button>
+                        <button type="button" class="btn btn-success rounded-pill" onclick="exportRecords()">
+                            <i class="fas fa-download me-2"></i>匯出
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 遊戲記錄 -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>遊戲記錄</h5>
+            <span class="badge bg-primary rounded-pill">共 @Model.TotalCount 筆記錄 (第 @Model.PageNumber / @Model.TotalPages 頁)</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-clock me-1"></i>遊戲時間</th>
+                            <th><i class="fas fa-user me-1"></i>用戶</th>
+                            <th><i class="fas fa-layer-group me-1"></i>關卡</th>
+                            <th><i class="fas fa-flag-checkered me-1"></i>遊戲結果</th>
+                            <th><i class="fas fa-star me-1"></i>獲得經驗值</th>
+                            <th><i class="fas fa-coins me-1"></i>獲得點數</th>
+                            <th><i class="fas fa-ticket-alt me-1"></i>優惠券</th>
+                            <th><i class="fas fa-hourglass-half me-1"></i>遊戲時長</th>
+                            <th class="text-center pe-4"><i class="fas fa-cog me-1"></i>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Records != null && Model.Records.Any())
+                        {
+                            foreach (var record in Model.Records)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <small>@record.StartTime.ToString("yyyy-MM-dd")</small><br>
+                                        <strong>@record.StartTime.ToString("HH:mm:ss")</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">ID:@record.UserId</span><br>
+                                        <small>@record.UserName</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary rounded-pill">第 @record.Level 關</span><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-dragon me-1"></i>@record.MonsterCount 怪<br>
+                                            <i class="fas fa-tachometer-alt me-1"></i>@record.SpeedMultiplier.ToString("0.0")x
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var resultValue = record.Result?.ToString();
+                                            var isWin = resultValue == "Win" || resultValue == "勝利" || (int.TryParse(resultValue, out int resultNum) && resultNum >= 60);
+                                            var isLose = resultValue == "Lose" || resultValue == "失敗" || (int.TryParse(resultValue, out int resultNum2) && resultNum2 < 60);
+                                        }
+
+                                        @if (isWin)
+                                        {
+                                            <span class="badge bg-success rounded-pill"><i class="fas fa-trophy me-1"></i>勝利</span>
+                                            @if (int.TryParse(resultValue, out int score))
+                                            {
+                                                <br><small class="text-muted">分數: @score</small>
+                                            }
+                                        }
+                                        else if (isLose)
+                                        {
+                                            <span class="badge bg-danger rounded-pill"><i class="fas fa-times me-1"></i>失敗</span>
+                                            @if (int.TryParse(resultValue, out int score))
+                                            {
+                                                <br><small class="text-muted">分數: @score</small>
+                                            }
+                                        }
+                                        else if (resultValue == "Abort" || resultValue == "中止")
+                                        {
+                                            <span class="badge bg-warning rounded-pill text-dark"><i class="fas fa-ban me-1"></i>中止</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary rounded-pill">@record.Result</span>
+                                        }
+
+                                        @if (record.Aborted)
+                                        {
+                                            <br><span class="badge bg-dark rounded-pill mt-1">已中止</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (record.ExpGained > 0)
+                                        {
+                                            <span class="badge bg-success rounded-pill">
+                                                <i class="fas fa-star me-1"></i>+@record.ExpGained
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (record.PointsGained > 0)
+                                        {
+                                            <span class="badge bg-warning rounded-pill text-dark">
+                                                <i class="fas fa-coins me-1"></i>+@record.PointsGained
+                                            </span>
+                                        }
+                                        else if (record.PointsGained < 0)
+                                        {
+                                            <span class="badge bg-danger rounded-pill">
+                                                <i class="fas fa-coins me-1"></i>@record.PointsGained
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(record.CouponGained))
+                                        {
+                                            <span class="badge bg-info rounded-pill">
+                                                <i class="fas fa-ticket-alt me-1"></i>@record.CouponGained
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (record.Duration.HasValue)
+                                        {
+                                            <span class="badge bg-secondary">@record.Duration.Value 秒</span>
+                                        }
+                                        else if (record.EndTime.HasValue)
+                                        {
+                                            var duration = (int)(record.EndTime.Value - record.StartTime).TotalSeconds;
+                                            <span class="badge bg-secondary">@duration 秒</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">進行中</span>
+                                        }
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <button class="btn btn-sm btn-info" onclick="viewGameDetails(@record.PlayId)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center p-5">
+                                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                    @if (Model.Query.UserId.HasValue || !string.IsNullOrWhiteSpace(Model.Query.UserName))
+                                    {
+                                        <h5 class="text-muted">查無符合條件的記錄</h5>
+                                    }
+                                    else
+                                    {
+                                        <h5 class="text-muted">請輸入搜尋條件進行查詢</h5>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer bg-white">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ViewGameRecords", new {
+                                    UserId = Model.Query.UserId,
+                                    UserName = Model.Query.UserName,
+                                    PetId = Model.Query.PetId,
+                                    Level = Model.Query.Level,
+                                    Result = Model.Query.Result,
+                                    StartDate = Model.Query.StartDate?.ToString("yyyy-MM-dd"),
+                                    EndDate = Model.Query.EndDate?.ToString("yyyy-MM-dd"),
+                                    SortBy = Model.Query.SortBy,
+                                    SortOrder = Model.Query.SortOrder,
+                                    PageNumber = Model.PageNumber - 1,
+                                    PageSize = Model.PageSize
+                                })">上一頁</a>
+                            </li>
+
+                            @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("ViewGameRecords", new {
+                                        UserId = Model.Query.UserId,
+                                        UserName = Model.Query.UserName,
+                                        PetId = Model.Query.PetId,
+                                        Level = Model.Query.Level,
+                                        Result = Model.Query.Result,
+                                        StartDate = Model.Query.StartDate?.ToString("yyyy-MM-dd"),
+                                        EndDate = Model.Query.EndDate?.ToString("yyyy-MM-dd"),
+                                        SortBy = Model.Query.SortBy,
+                                        SortOrder = Model.Query.SortOrder,
+                                        PageNumber = i,
+                                        PageSize = Model.PageSize
+                                    })">@i</a>
+                                </li>
+                            }
+
+                            <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("ViewGameRecords", new {
+                                    UserId = Model.Query.UserId,
+                                    UserName = Model.Query.UserName,
+                                    PetId = Model.Query.PetId,
+                                    Level = Model.Query.Level,
+                                    Result = Model.Query.Result,
+                                    StartDate = Model.Query.StartDate?.ToString("yyyy-MM-dd"),
+                                    EndDate = Model.Query.EndDate?.ToString("yyyy-MM-dd"),
+                                    SortBy = Model.Query.SortBy,
+                                    SortOrder = Model.Query.SortOrder,
+                                    PageNumber = Model.PageNumber + 1,
+                                    PageSize = Model.PageSize
+                                })">下一頁</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+function resetForm() {
+    document.getElementById("searchForm").reset();
+    window.location.href = '@Url.Action("ViewGameRecords")';
+}
+
+function exportRecords() {
+    alert("匯出功能開發中...");
+}
+
+function viewGameDetails(playId) {
+    window.location.href = '@Url.Action("GameRecordDetail", "AdminMiniGame")' + '?playId=' + playId;
+}
+</script>

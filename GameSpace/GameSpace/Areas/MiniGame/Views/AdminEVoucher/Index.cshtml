@@ -1,0 +1,294 @@
+﻿@{
+    ViewData["Title"] = "電子禮券管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">電子禮券管理</h1>
+        <div>
+            <a href="@Url.Action("Create", "AdminEVoucher")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50"></i> 新增電子禮券
+            </a>
+            <a href="@Url.Action("CreateType", "AdminEVoucher")" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm">
+                <i class="fas fa-tag fa-sm text-white-50"></i> 新增禮券類型
+            </a>
+        </div>
+    </div>
+
+    <!-- 統計卡片 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                總電子禮券數
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.TotalEVouchers ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gift fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                已使用禮券
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.UsedEVouchers ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                未使用禮券
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.UnusedEVouchers ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                禮券類型數
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.EVoucherTypes ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜尋和篩選 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">搜尋和篩選</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" action="@Url.Action("Index", "AdminEVoucher")">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="searchTerm">搜尋關鍵字</label>
+                            <input type="text" class="form-control" id="searchTerm" name="searchTerm" value="@ViewBag.SearchTerm" placeholder="禮券代碼或類型">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="status">狀態</label>
+                            <select class="form-control" id="status" name="status">
+                                <option value="">全部</option>
+                                <option value="unused" selected="@(ViewBag.Status == "unused" ? "selected" : "")">未使用</option>
+                                <option value="used" selected="@(ViewBag.Status == "used" ? "selected" : "")">已使用</option>
+                                <option value="expired" selected="@(ViewBag.Status == "expired" ? "selected" : "")">已過期</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="evoucherType">禮券類型</label>
+                            <select class="form-control" id="evoucherType" name="evoucherType">
+                                <option value="">全部</option>
+                                @if (ViewBag.EVoucherTypeList != null)
+                                {
+                                    @foreach (var type in ViewBag.EVoucherTypeList)
+                                    {
+                                        <option value="@type.EvoucherTypeId" selected="@(ViewBag.EVoucherType == type.EvoucherTypeId.ToString() ? "selected" : null)">@type.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="sortBy">排序方式</label>
+                            <select class="form-control" id="sortBy" name="sortBy">
+                                <option value="code" selected="@(ViewBag.SortBy == "code" ? "selected" : null)">禮券代碼</option>
+                                <option value="type" selected="@(ViewBag.SortBy == "type" ? "selected" : null)">類型</option>
+                                <option value="acquired" selected="@(ViewBag.SortBy == "acquired" ? "selected" : null)">獲得時間</option>
+                                <option value="used" selected="@(ViewBag.SortBy == "used" ? "selected" : null)">使用時間</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> 搜尋
+                                </button>
+                                <a href="@Url.Action("Index", "AdminEVoucher")" class="btn btn-secondary">
+                                    <i class="fas fa-undo"></i> 重置
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 電子禮券列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">電子禮券列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="evoucherTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>禮券ID</th>
+                            <th>禮券代碼</th>
+                            <th>類型</th>
+                            <th>面額</th>
+                            <th>用戶</th>
+                            <th>狀態</th>
+                            <th>獲得時間</th>
+                            <th>使用時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && (Model.Evouchers.Items as IEnumerable<dynamic>)?.Any() == true)
+                        {
+                            @foreach (var evoucher in Model.Evouchers.Items)
+                            {
+                                <tr>
+                                    <td>@evoucher.EvoucherId</td>
+                                    <td>@evoucher.EvoucherCode</td>
+                                    <td>@evoucher.EvoucherType?.Name</td>
+                                    <td>@evoucher.EvoucherType?.ValueAmount.ToString("C")</td>
+                                    <td>@evoucher.User?.UserName</td>
+                                    <td>
+                                        @if (evoucher.IsUsed)
+                                        {
+                                            <span class="badge badge-success">已使用</span>
+                                        }
+                                        else if (evoucher.EvoucherType?.ValidTo < DateTime.Now)
+                                        {
+                                            <span class="badge badge-danger">已過期</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-warning">未使用</span>
+                                        }
+                                    </td>
+                                    <td>@evoucher.AcquiredTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@(evoucher.UsedTime?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="@Url.Action("Details", "AdminEVoucher", new { id = evoucher.EvoucherId })" class="btn btn-info btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="@Url.Action("Edit", "AdminEVoucher", new { id = evoucher.EvoucherId })" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="@Url.Action("Delete", "AdminEVoucher", new { id = evoucher.EvoucherId })" class="btn btn-danger btn-sm" onclick="return confirm('確定要刪除這個電子禮券嗎？')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center">沒有找到電子禮券資料</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分頁 -->
+            @if (Model != null && Model.TotalCount > 0)
+            {
+                <nav aria-label="電子禮券分頁">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.Evouchers.PageNumber > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", "AdminEVoucher", new { page = Model.Evouchers.PageNumber - 1, searchTerm = ViewBag.SearchTerm, status = ViewBag.Status, evoucherType = ViewBag.EVoucherType, sortBy = ViewBag.SortBy })">上一頁</a>
+                            </li>
+                        }
+                        
+                        @for (int i = Math.Max(1, Model.Evouchers.PageNumber - 2); i <= Math.Min(Model.Evouchers.TotalPages, Model.Evouchers.PageNumber + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.Evouchers.PageNumber ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", "AdminEVoucher", new { page = i, searchTerm = ViewBag.SearchTerm, status = ViewBag.Status, evoucherType = ViewBag.EVoucherType, sortBy = ViewBag.SortBy })">@i</a>
+                            </li>
+                        }
+                        
+                        @if (Model.Evouchers.PageNumber < Model.Evouchers.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", "AdminEVoucher", new { page = Model.Evouchers.PageNumber + 1, searchTerm = ViewBag.SearchTerm, status = ViewBag.Status, evoucherType = ViewBag.EVoucherType, sortBy = ViewBag.SortBy })">下一頁</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#evoucherTable').DataTable({
+                "paging": false,
+                "searching": false,
+                "info": false,
+                "ordering": true,
+                "columnDefs": [
+                    { "orderable": false, "targets": 8 }
+                ]
+            });
+        });
+    </script>
+}
+
+

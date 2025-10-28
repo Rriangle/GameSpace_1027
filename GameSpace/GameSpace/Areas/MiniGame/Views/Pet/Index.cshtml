@@ -1,0 +1,278 @@
+﻿@{
+    ViewData["Title"] = "寵物管理";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">寵物管理</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="搜尋寵物...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-primary" id="addPetBtn">
+                                <i class="fas fa-plus"></i> 新增寵物
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="petTable">
+                            <thead>
+                                <tr>
+                                    <th>寵物ID</th>
+                                    <th>用戶ID</th>
+                                    <th>寵物名稱</th>
+                                    <th>寵物類型</th>
+                                    <th>等級</th>
+                                    <th>經驗值</th>
+                                    <th>狀態</th>
+                                    <th>創建時間</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 寵物數據將動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/編輯寵物模態框 -->
+<div class="modal fade" id="petModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="petModalTitle">新增寵物</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="petForm">
+                    <input type="hidden" id="petId" name="Id">
+                    <div class="form-group">
+                        <label for="userId">用戶ID</label>
+                        <input type="text" class="form-control" id="userId" name="UserId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="petName">寵物名稱</label>
+                        <input type="text" class="form-control" id="petName" name="PetName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="petType">寵物類型</label>
+                        <select class="form-control" id="petType" name="PetType" required>
+                            <option value="">請選擇寵物類型</option>
+                            <option value="1">小貓</option>
+                            <option value="2">小狗</option>
+                            <option value="3">小鳥</option>
+                            <option value="4">小魚</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="level">等級</label>
+                        <input type="number" class="form-control" id="level" name="Level" min="1" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="experience">經驗值</label>
+                        <input type="number" class="form-control" id="experience" name="Experience" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">狀態</label>
+                        <select class="form-control" id="status" name="Status" required>
+                            <option value="1">活躍</option>
+                            <option value="2">休息</option>
+                            <option value="3">生病</option>
+                            <option value="0">死亡</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="savePetBtn">儲存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadPets();
+            
+            $('#addPetBtn').click(function() {
+                $('#petModalTitle').text('新增寵物');
+                $('#petForm')[0].reset();
+                $('#petId').val('');
+                $('#level').val(1);
+                $('#experience').val(0);
+                $('#petModal').modal('show');
+            });
+            
+            $('#savePetBtn').click(function() {
+                savePet();
+            });
+            
+            $('#searchBtn').click(function() {
+                loadPets();
+            });
+            
+            $('#searchInput').keypress(function(e) {
+                if (e.which == 13) {
+                    loadPets();
+                }
+            });
+        });
+        
+        function loadPets() {
+            var searchTerm = $('#searchInput').val();
+            $.ajax({
+                url: '/MiniGame/Pet/GetPets',
+                type: 'GET',
+                data: { search: searchTerm },
+                success: function(data) {
+                    var tbody = $('#petTable tbody');
+                    tbody.empty();
+                    
+                    if (data && data.length > 0) {
+                        $.each(data, function(index, pet) {
+                            var row = '<tr>' +
+                                '<td>' + pet.id + '</td>' +
+                                '<td>' + pet.userId + '</td>' +
+                                '<td>' + pet.petName + '</td>' +
+                                '<td>' + getPetTypeName(pet.petType) + '</td>' +
+                                '<td>' + pet.level + '</td>' +
+                                '<td>' + pet.experience + '</td>' +
+                                '<td>' + getStatusName(pet.status) + '</td>' +
+                                '<td>' + formatDate(pet.createdAt) + '</td>' +
+                                '<td>' +
+                                    '<button class="btn btn-sm btn-primary edit-pet" data-id="' + pet.id + '">編輯</button> ' +
+                                    '<button class="btn btn-sm btn-danger delete-pet" data-id="' + pet.id + '">刪除</button>' +
+                                '</td>' +
+                            '</tr>';
+                            tbody.append(row);
+                        });
+                    } else {
+                        tbody.append('<tr><td colspan="9" class="text-center">無數據</td></tr>');
+                    }
+                },
+                error: function() {
+                    alert('載入寵物數據失敗');
+                }
+            });
+        }
+        
+        function savePet() {
+            var formData = $('#petForm').serialize();
+            var isEdit = $('#petId').val() !== '';
+            var url = isEdit ? '/MiniGame/Pet/Update' : '/MiniGame/Pet/Create';
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        $('#petModal').modal('hide');
+                        loadPets();
+                        alert(isEdit ? '寵物更新成功' : '寵物新增成功');
+                    } else {
+                        alert('操作失敗: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('操作失敗');
+                }
+            });
+        }
+        
+        function getPetTypeName(type) {
+            switch(type) {
+                case 1: return '小貓';
+                case 2: return '小狗';
+                case 3: return '小鳥';
+                case 4: return '小魚';
+                default: return '未知';
+            }
+        }
+        
+        function getStatusName(status) {
+            switch(status) {
+                case 1: return '活躍';
+                case 2: return '休息';
+                case 3: return '生病';
+                case 0: return '死亡';
+                default: return '未知';
+            }
+        }
+        
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            return date.toLocaleDateString('zh-TW');
+        }
+        
+        // 編輯寵物
+        $(document).on('click', '.edit-pet', function() {
+            var petId = $(this).data('id');
+            $.ajax({
+                url: '/MiniGame/Pet/Get/' + petId,
+                type: 'GET',
+                success: function(pet) {
+                    $('#petModalTitle').text('編輯寵物');
+                    $('#petId').val(pet.id);
+                    $('#userId').val(pet.userId);
+                    $('#petName').val(pet.petName);
+                    $('#petType').val(pet.petType);
+                    $('#level').val(pet.level);
+                    $('#experience').val(pet.experience);
+                    $('#status').val(pet.status);
+                    $('#petModal').modal('show');
+                },
+                error: function() {
+                    alert('載入寵物資料失敗');
+                }
+            });
+        });
+        
+        // 刪除寵物
+        $(document).on('click', '.delete-pet', function() {
+            if (confirm('確定要刪除這個寵物嗎？')) {
+                var petId = $(this).data('id');
+                $.ajax({
+                    url: '/MiniGame/Pet/Delete/' + petId,
+                    type: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            loadPets();
+                            alert('寵物刪除成功');
+                        } else {
+                            alert('刪除失敗: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('刪除失敗');
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+

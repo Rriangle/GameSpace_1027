@@ -1,0 +1,78 @@
+﻿@{
+    ViewData["Title"] = "商城優惠券管理";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">商城優惠券管理</h1>
+        <a href="@Url.Action("Create")" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>新增優惠券
+        </a>
+    </div>
+
+    <!-- 查詢表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">查詢條件</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="couponCode" class="form-label">優惠券序號</label>
+                    <input type="text" class="form-control" id="couponCode" name="couponCode" placeholder="CPN-YYYYMM-XXXXXX">
+                </div>
+                <div class="col-md-3">
+                    <label for="userId" class="form-label">會員ID</label>
+                    <input type="number" class="form-control" id="userId" name="userId" placeholder="輸入會員ID">
+                </div>
+                <div class="col-md-3">
+                    <label for="isUsed" class="form-label">使用狀態</label>
+                    <select class="form-select" id="isUsed" name="isUsed">
+                        <option value="">全部</option>
+                        <option value="0">未使用</option>
+                        <option value="1">已使用</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i>查詢
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>清除
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 優惠券列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">優惠券列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>優惠券ID</th>
+                            <th>序號</th>
+                            <th>類型</th>
+                            <th>會員ID</th>
+                            <th>使用狀態</th>
+                            <th>獲得時間</th>
+                            <th>使用時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">暫無資料</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

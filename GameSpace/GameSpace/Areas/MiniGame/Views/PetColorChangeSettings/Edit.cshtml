@@ -1,0 +1,65 @@
+﻿@model GameSpace.Areas.MiniGame.Models.Settings.PetColorChangeSettingsViewModel
+@{
+    ViewData["Title"] = "編輯寵物換色點數設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">編輯寵物換色點數設定</h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">設定資訊</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input asp-for="SettingId" type="hidden" />
+                
+                <div class="form-group">
+                    <label asp-for="SettingName" class="control-label"></label>
+                    <input asp-for="SettingName" class="form-control" placeholder="請輸入設定名稱" />
+                    <span asp-validation-for="SettingName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="PointsRequired" class="control-label"></label>
+                    <input asp-for="PointsRequired" class="form-control" placeholder="請輸入換色所需點數" />
+                    <span asp-validation-for="PointsRequired" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Remarks" class="control-label"></label>
+                    <textarea asp-for="Remarks" class="form-control" rows="3" placeholder="請輸入備註（選填）"></textarea>
+                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 更新
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

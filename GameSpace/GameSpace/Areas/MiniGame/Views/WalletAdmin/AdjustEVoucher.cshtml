@@ -1,0 +1,164 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.WalletAdjustEVoucherViewModel
+@{
+    ViewData["Title"] = "調整會員之電子禮券";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>成功！</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>錯誤！</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- 調整電子禮券表單卡片 -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-gradient-danger text-white">
+        <h4 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>調整電子禮券（發放 / 撤銷）</h4>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" asp-action="AdjustEVoucher">
+            @Html.AntiForgeryToken()
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="number" class="form-control rounded" id="userId" name="userId" required min="0" placeholder="會員 ID" />
+                        <label for="userId"><i class="fas fa-user me-1"></i>會員 ID <span class="text-danger">*</span></label>
+                    </div>
+                    <small class="text-muted ms-2">輸入要調整的會員編號</small>
+                </div>
+                <div class="col-md-5">
+                    <div class="form-floating">
+                        <select class="form-select rounded" id="evoucherTypeId" name="evoucherTypeId" required>
+                            <option value="">請選擇禮券類型</option>
+                            @foreach (var et in Model.EVoucherTypes)
+                            {
+                                <option value="@et.EVoucherTypeId">
+                                    @et.TypeName - @et.MerchantName (NT$@et.VoucherValue.ToString("N0"))
+                                </option>
+                            }
+                        </select>
+                        <label for="evoucherTypeId"><i class="fas fa-gift me-1"></i>電子禮券類型 <span class="text-danger">*</span></label>
+                    </div>
+                    <small class="text-muted ms-2">
+                        找不到需要的類型？
+                        <a asp-area="MiniGame" asp-controller="AdminEVoucher" asp-action="CreateType" class="text-danger text-decoration-underline">
+                            <i class="fas fa-plus-circle me-1"></i>新增禮券類型
+                        </a>
+                    </small>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select class="form-select rounded" id="action" name="action" required>
+                            <option value="">請選擇操作</option>
+                            <option value="grant">發放禮券 (+)</option>
+                            <option value="revoke">撤銷禮券 (-)</option>
+                        </select>
+                        <label for="action"><i class="fas fa-cogs me-1"></i>操作類型 <span class="text-danger">*</span></label>
+                    </div>
+                    <small class="text-muted ms-2">發放或撤銷禮券</small>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-danger btn-lg px-5 rounded-pill">
+                        <i class="fas fa-check-circle me-2"></i>確認執行調整
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card-footer bg-light">
+        <div class="d-flex align-items-start text-muted small">
+            <i class="fas fa-info-circle me-2 text-info mt-1"></i>
+            <div>
+                <strong>發放：</strong>會產生新的電子禮券序號，並記錄於錢包異動歷史中。<br />
+                <strong>撤銷：</strong>會刪除該會員最近一張未使用的同類型禮券（先進先出原則）。
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 電子禮券類型概況 -->
+<div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list me-2 text-danger"></i>電子禮券類型概況</h5>
+        @if (Model.EVoucherTypes.Count > 0)
+        {
+            <span class="badge bg-danger rounded-pill">@Model.EVoucherTypes.Count 種類型</span>
+        }
+    </div>
+    <div class="card-body p-0">
+        @if (Model.EVoucherTypes.Count == 0)
+        {
+            <div class="p-5 text-center">
+                <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">尚未建立電子禮券類型</h5>
+                <p class="text-muted">請先建立電子禮券類型才能調整</p>
+                <a asp-area="MiniGame" asp-controller="AdminEVoucher" asp-action="CreateType" class="btn btn-danger rounded-pill">
+                    <i class="fas fa-plus-circle me-2"></i>立即新增類型
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-hashtag me-1"></i>類型ID</th>
+                            <th><i class="fas fa-tag me-1"></i>類型名稱</th>
+                            <th><i class="fas fa-store me-1"></i>商家名稱</th>
+                            <th class="text-end"><i class="fas fa-dollar-sign me-1"></i>面額</th>
+                            <th class="text-end"><i class="fas fa-paper-plane me-1"></i>已發放</th>
+                            <th class="text-end pe-4"><i class="fas fa-check-circle me-1"></i>未使用</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var summary in Model.EVoucherTypes)
+                        {
+                            var usageRate = summary.TotalIssued > 0
+                                ? ((double)(summary.TotalIssued - summary.UnusedCount) / summary.TotalIssued * 100)
+                                : 0;
+                            <tr>
+                                <td class="ps-4"><span class="badge bg-secondary">@summary.EVoucherTypeId</span></td>
+                                <td><strong>@summary.TypeName</strong></td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-store me-1"></i>@summary.MerchantName
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-success">NT$ @summary.VoucherValue.ToString("N0")</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-info">@summary.TotalIssued</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <span class="badge bg-warning text-dark">@summary.UnusedCount</span>
+                                    @if (summary.TotalIssued > 0)
+                                    {
+                                        <br />
+                                        <small class="text-muted">使用率: @usageRate.ToString("F1")%</small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

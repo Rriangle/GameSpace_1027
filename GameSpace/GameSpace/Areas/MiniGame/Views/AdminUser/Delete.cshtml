@@ -1,0 +1,135 @@
+﻿@model GameSpace.Models.User
+@{
+    ViewData["Title"] = "刪除用戶";
+    Layout = "~/Areas/MiniGame/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">刪除用戶</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminUser")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">確認刪除用戶</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>警告：</strong>您確定要刪除此用戶嗎？此操作將停用用戶帳號，但不會刪除相關數據。
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>用戶資訊</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>用戶ID:</strong></td>
+                                    <td>@Model.UserId</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>用戶名稱:</strong></td>
+                                    <td>@Model.UserName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>帳號:</strong></td>
+                                    <td>@Model.UserAccount</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>電子郵件:</strong></td>
+                                    <td>@(Model.UserIntroduce?.Email ?? "未設定")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>註冊日期:</strong></td>
+                                    <td>@(Model.UserIntroduce?.CreateAccount.ToString("yyyy-MM-dd HH:mm") ?? "未設定")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>狀態:</strong></td>
+                                    <td>
+                                        <span class="badge @(Model.UserRight?.UserStatus == true ? "badge-success" : "badge-danger")">
+                                            @(Model.UserRight?.UserStatus == true ? "啟用" : "停用")
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>相關數據統計</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>錢包記錄:</strong></td>
+                                    <td>@(Model.WalletHistories?.Count ?? 0) 筆</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>簽到記錄:</strong></td>
+                                    <td>@(Model.UserSignInStats?.Count ?? 0) 筆</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>寵物數量:</strong></td>
+                                    <td>@(Model.Pets?.Count ?? 0) 隻</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" method="post" class="mt-4">
+                        <input asp-for="UserId" type="hidden" />
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 確認刪除
+                            </button>
+                            <a href="@Url.Action("Index", "AdminUser")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">刪除須知</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                        <h5>刪除用戶注意事項</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            此操作為軟刪除，不會真正刪除數據
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            用戶帳號將被停用，無法登入
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            相關數據（錢包、簽到等）將保留
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            可以隨時重新啟用用戶
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-info"></i>
+                            建議先備份重要數據
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

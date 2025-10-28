@@ -1,0 +1,100 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.PetLevelRewardSettingCreateViewModel
+@{
+    ViewData["Title"] = "新增寵物升級獎勵設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">新增寵物升級獎勵設定</h1>
+        <a asp-action="Index" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+        </a>
+    </div>
+
+    <!-- 表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">獎勵設定資訊</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="LevelRangeStart" class="control-label">等級範圍起始 *</label>
+                            <input asp-for="LevelRangeStart" class="form-control" placeholder="請輸入起始等級 (例如: 1)" />
+                            <span asp-validation-for="LevelRangeStart" class="text-danger"></span>
+                            <small class="form-text text-muted">設定適用的起始等級</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="LevelRangeEnd" class="control-label">等級範圍結束 *</label>
+                            <input asp-for="LevelRangeEnd" class="form-control" placeholder="請輸入結束等級 (例如: 10)" />
+                            <span asp-validation-for="LevelRangeEnd" class="text-danger"></span>
+                            <small class="form-text text-muted">設定適用的結束等級</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="PointsReward" class="control-label">獎勵點數 *</label>
+                            <input asp-for="PointsReward" class="form-control" placeholder="請輸入獎勵點數 (例如: 10)" />
+                            <span asp-validation-for="PointsReward" class="text-danger"></span>
+                            <small class="form-text text-muted">寵物升級時獲得的點數獎勵</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="DisplayOrder" class="control-label">顯示順序</label>
+                            <input asp-for="DisplayOrder" class="form-control" placeholder="請輸入顯示順序 (例如: 0)" />
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                            <small class="form-text text-muted">數字越小越前面顯示</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">獎勵描述</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="請輸入獎勵描述 (例如: 新手獎勵 Level 1-10)"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="IsActive" class="control-label">啟用狀態</label>
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">啟用此獎勵設定</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 建立獎勵設定
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,153 @@
+﻿@{
+    ViewData["Title"] = "寵物換色/換背景所需點數設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物換色/換背景所需點數設定</h1>
+    </div>
+
+    <div class="row">
+        <!-- 寵物換色所需點數設定 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-palette"></i> 寵物換色所需點數設定
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="colorCostForm">
+                        <div class="form-group">
+                            <label for="colorCost">換色所需點數</label>
+                            <input type="number" class="form-control" id="colorCost" min="0" required>
+                            <small class="form-text text-muted">設定寵物換色所需的點數</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 儲存設定
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 寵物換背景所需點數設定 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-image"></i> 寵物換背景所需點數設定
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="backgroundCostForm">
+                        <div class="form-group">
+                            <label for="backgroundCost">換背景所需點數</label>
+                            <input type="number" class="form-control" id="backgroundCost" min="0" required>
+                            <small class="form-text text-muted">設定寵物換背景所需的點數</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 儲存設定
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 載入現有設定
+    loadColorCost();
+    loadBackgroundCost();
+
+    // 寵物換色所需點數設定
+    $('#colorCostForm').on('submit', function(e) {
+        e.preventDefault();
+        const cost = $('#colorCost').val();
+        
+        $.ajax({
+            url: '/MiniGame/AdminPet/UpdateColorCost',
+            type: 'POST',
+            data: { pointsRequired: cost },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', '寵物換色所需點數設定成功！');
+                } else {
+                    showAlert('error', response.message || '設定失敗');
+                }
+            },
+            error: function() {
+                showAlert('error', '設定失敗，請稍後再試');
+            }
+        });
+    });
+
+    // 寵物換背景所需點數設定
+    $('#backgroundCostForm').on('submit', function(e) {
+        e.preventDefault();
+        const cost = $('#backgroundCost').val();
+        
+        $.ajax({
+            url: '/MiniGame/AdminPet/UpdateBackgroundCost',
+            type: 'POST',
+            data: { pointsRequired: cost },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', '寵物換背景所需點數設定成功！');
+                } else {
+                    showAlert('error', response.message || '設定失敗');
+                }
+            },
+            error: function() {
+                showAlert('error', '設定失敗，請稍後再試');
+            }
+        });
+    });
+
+    function loadColorCost() {
+        $.ajax({
+            url: '/MiniGame/AdminPet/GetColorCost',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#colorCost').val(response.data.pointsRequired);
+                }
+            }
+        });
+    }
+
+    function loadBackgroundCost() {
+        $.ajax({
+            url: '/MiniGame/AdminPet/GetBackgroundCost',
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#backgroundCost').val(response.data.pointsRequired);
+                }
+            }
+        });
+    }
+
+    function showAlert(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        `;
+        $('.container-fluid').prepend(alertHtml);
+        
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 3000);
+    }
+});
+</script>
+

@@ -1,0 +1,196 @@
+﻿@{
+    ViewData["Title"] = "寵物升級規則設定";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物升級規則設定</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-level-up-alt"></i> 寵物升級規則管理
+                    </h6>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="levelUpRulesTable">
+                            <thead>
+                                <tr>
+                                    <th>等級</th>
+                                    <th>所需經驗值</th>
+                                    <th>點數獎勵</th>
+                                    <th>經驗獎勵</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-primary" id="addRuleBtn">
+                            <i class="fas fa-plus"></i> 新增規則
+                        </button>
+                        <button class="btn btn-success" id="saveAllBtn">
+                            <i class="fas fa-save"></i> 儲存所有規則
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/編輯規則 Modal -->
+<div class="modal fade" id="ruleModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">寵物升級規則</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="ruleForm">
+                    <div class="form-group">
+                        <label for="level">等級</label>
+                        <input type="number" class="form-control" id="level" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="experienceRequired">所需經驗值</label>
+                        <input type="number" class="form-control" id="experienceRequired" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pointsReward">點數獎勵</label>
+                        <input type="number" class="form-control" id="pointsReward" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expReward">經驗獎勵</label>
+                        <input type="number" class="form-control" id="expReward" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveRuleBtn">儲存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    loadLevelUpRules();
+
+    
+
+    // 載入升級規則
+    function loadLevelUpRules() {
+        $.get("/MiniGame/AdminPet/GetPetLevelUpRules", function(response) {
+            if (response.success) {
+                var tbody = $("#levelUpRulesTable tbody");
+                tbody.empty();
+                
+                response.data.forEach(function(rule) {
+                    var row = `
+                        <tr data-id="${rule.id}">
+                            <td>${rule.level}</td>
+                            <td>${rule.experienceRequired}</td>
+                            <td>${rule.pointsReward}</td>
+                            <td>${rule.expReward}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary edit-rule" data-id="${rule.id}">
+                                    <i class="fas fa-edit"></i> 編輯
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-rule" data-id="${rule.id}">
+                                    <i class="fas fa-trash"></i> 刪除
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            }
+        });
+    }
+    
+    // 新增規則
+    $("#addRuleBtn").click(function() {
+        $("#ruleForm")[0].reset();
+        $("#ruleModal").modal("show");
+    });
+    
+    // 編輯規則
+    $(document).on("click", ".edit-rule", function() {
+        var id = $(this).data("id");
+        var row = $(this).closest("tr");
+        
+        $("#level").val(row.find("td:eq(0)").text());
+        $("#experienceRequired").val(row.find("td:eq(1)").text());
+        $("#pointsReward").val(row.find("td:eq(2)").text());
+        $("#expReward").val(row.find("td:eq(3)").text());
+        
+        $("#ruleModal").modal("show");
+    });
+    
+    // 儲存規則
+    $("#saveRuleBtn").click(function() {
+        var rule = {
+            level: parseInt($("#level").val()),
+            experienceRequired: parseInt($("#experienceRequired").val()),
+            pointsReward: parseInt($("#pointsReward").val()),
+            expReward: parseInt($("#expReward").val())
+        };
+        
+        // 這裡可以實作新增或更新邏輯
+        $("#ruleModal").modal("hide");
+        loadLevelUpRules();
+    });
+    
+    // 刪除規則
+    $(document).on("click", ".delete-rule", function() {
+        if (confirm("確定要刪除這個升級規則嗎？")) {
+            // 這裡可以實作刪除邏輯
+            loadLevelUpRules();
+        }
+    });
+    
+    // 儲存所有規則
+    $("#saveAllBtn").click(function() {
+        var rules = [];
+        $("#levelUpRulesTable tbody tr").each(function() {
+            var row = $(this);
+            rules.push({
+                level: parseInt(row.find("td:eq(0)").text()),
+                experienceRequired: parseInt(row.find("td:eq(1)").text()),
+                pointsReward: parseInt(row.find("td:eq(2)").text()),
+                expReward: parseInt(row.find("td:eq(3)").text())
+            });
+        });
+        
+        $.ajax({
+            url: "/MiniGame/AdminPet/UpdatePetLevelUpRules",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(rules),
+            success: function(response) {
+                if (response.success) {
+                    alert("升級規則儲存成功！");
+                } else {
+                    alert("儲存失敗：" + response.message);
+                }
+            }
+        });
+    });
+});
+</script>
+

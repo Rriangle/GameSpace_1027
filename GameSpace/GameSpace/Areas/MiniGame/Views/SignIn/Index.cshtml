@@ -1,0 +1,293 @@
+﻿@{
+    ViewData["Title"] = "每日簽到";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-calendar-check mr-2 text-primary"></i>每日簽到
+        </h1>
+        <div class="d-flex">
+            <span class="badge badge-info mr-2 shadow-sm">
+                <i class="fas fa-clock"></i> @DateTime.Now.ToString("yyyy-MM-dd")
+            </span>
+            <button class="btn btn-outline-primary btn-sm" onclick="refreshSignIn()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 簽到狀態 -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-calendar-alt"></i> 簽到狀態
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <div class="sign-in-icon">
+                            <i class="fas fa-calendar-check fa-5x text-success mb-3"></i>
+                        </div>
+                        <h4 class="text-success mb-3">今日已簽到</h4>
+                        <p class="text-muted mb-4">恭喜您完成今日簽到！獲得 <span class="text-success font-weight-bold">10 點數</span></p>
+                        
+                        <!-- 簽到按鈕 -->
+                        <button class="btn btn-success btn-lg mb-4" disabled>
+                            <i class="fas fa-check"></i> 已簽到
+                        </button>
+                        
+                        <!-- 下次簽到倒數 -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-clock"></i> 下次簽到時間：<span id="nextSignInTime">23:59:59</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 統計卡片 -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-left-primary hover-card">
+                                <div class="card-body">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">連續簽到</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="consecutiveDays">載入中...</div>
+                                    <div class="text-xs text-muted">最高記錄 30 天</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-left-success hover-card">
+                                <div class="card-body">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">今日獲得</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="todayPoints">載入中...</div>
+                                    <div class="text-xs text-muted">包含獎勵點數</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-left-info hover-card">
+                                <div class="card-body">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">總簽到</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalDays">載入中...</div>
+                                    <div class="text-xs text-muted">本月 15 天</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 簽到獎勵 -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-gift"></i> 簽到獎勵
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calendar-day text-primary mr-2"></i>
+                                每日簽到
+                            </div>
+                            <span class="badge badge-primary">10 點數</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-fire text-success mr-2"></i>
+                                連續3天
+                            </div>
+                            <span class="badge badge-success">50 點數</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-star text-info mr-2"></i>
+                                連續7天
+                            </div>
+                            <span class="badge badge-info">100 點數</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-trophy text-warning mr-2"></i>
+                                連續15天
+                            </div>
+                            <span class="badge badge-warning">200 點數</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-crown text-danger mr-2"></i>
+                                連續30天
+                            </div>
+                            <span class="badge badge-danger">500 點數</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 連續簽到進度 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-chart-line"></i> 連續簽到進度
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>當前進度</span>
+                            <span class="font-weight-bold">7/30 天</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-warning" style="width: 23%"></div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted">再簽到 23 天即可獲得 500 點數獎勵！</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 簽到記錄 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-history"></i> 簽到記錄
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="signInTable">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>狀態</th>
+                                    <th>獲得點數</th>
+                                    <th>連續天數</th>
+                                    <th>備註</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2024-01-15</td>
+                                    <td><span class="badge badge-success">已簽到</span></td>
+                                    <td class="text-success font-weight-bold">+110</td>
+                                    <td><span class="badge badge-info">7</span></td>
+                                    <td>連續7天獎勵 +100</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-14</td>
+                                    <td><span class="badge badge-success">已簽到</span></td>
+                                    <td class="text-success font-weight-bold">+10</td>
+                                    <td><span class="badge badge-info">6</span></td>
+                                    <td>每日簽到</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-13</td>
+                                    <td><span class="badge badge-success">已簽到</span></td>
+                                    <td class="text-success font-weight-bold">+10</td>
+                                    <td><span class="badge badge-info">5</span></td>
+                                    <td>每日簽到</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-12</td>
+                                    <td><span class="badge badge-success">已簽到</span></td>
+                                    <td class="text-success font-weight-bold">+10</td>
+                                    <td><span class="badge badge-info">4</span></td>
+                                    <td>每日簽到</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-11</td>
+                                    <td><span class="badge badge-success">已簽到</span></td>
+                                    <td class="text-success font-weight-bold">+10</td>
+                                    <td><span class="badge badge-info">3</span></td>
+                                    <td>每日簽到</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    $(document).ready(function() {
+        // 模擬載入數據
+        setTimeout(function() {
+            $("#consecutiveDays").text("7");
+            $("#todayPoints").text("110");
+            $("#totalDays").text("45");
+        }, 1000);
+        
+        // 初始化 DataTable
+        $("#signInTable").DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+            },
+            "pageLength": 10,
+            "order": [[0, "desc"]],
+            "columnDefs": [
+                { "orderable": false, "targets": 4 }
+            ]
+        });
+        
+        // 倒數計時器
+        function updateCountdown() {
+            var now = new Date();
+            var tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            
+            var timeLeft = tomorrow - now;
+            var hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+            $("#nextSignInTime").text(
+                String(hours).padStart(2, "0") + ":" +
+                String(minutes).padStart(2, "0") + ":" +
+                String(seconds).padStart(2, "0")
+            );
+        }
+        
+        // 每秒更新倒數計時器
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+        
+        // 添加載入動畫
+        $(".card").each(function(index) {
+            $(this).css("animation-delay", (index * 0.1) + "s");
+            $(this).addClass("fade-in");
+        });
+    });
+    
+    function refreshSignIn() {
+        // 顯示載入動畫
+        $("#loadingSpinner").addClass("show");
+        
+        // 模擬刷新數據
+        setTimeout(function() {
+            $("#loadingSpinner").removeClass("show");
+            // 重新載入簽到數據
+            loadSignInData();
+            console.log("簽到數據已刷新");
+        }, 1000);
+    }
+</script>
+
+
+
+

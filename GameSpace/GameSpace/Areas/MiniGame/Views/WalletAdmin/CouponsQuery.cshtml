@@ -1,0 +1,236 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.WalletCouponsQueryViewModel
+@{
+    ViewData["Title"] = "查詢會員優惠券";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<!-- 統計卡片區 -->
+@if (Model.Results.TotalCount > 0)
+{
+    var unusedCount = Model.Results.Items.Count(x => x.Status == "未使用");
+    var usedCount = Model.Results.Items.Count(x => x.Status == "已使用");
+    var expiredCount = Model.Results.Items.Count(x => x.Status == "已過期");
+
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">查詢結果</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.Results.TotalCount 筆</div>
+                        </div>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-ticket-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">未使用</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@unusedCount</div>
+                        </div>
+                        <div class="text-info opacity-50">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">已使用</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@usedCount</div>
+                        </div>
+                        <div class="text-primary opacity-50">
+                            <i class="fas fa-shopping-cart fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-danger border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-danger text-uppercase mb-1">已過期</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@expiredCount</div>
+                        </div>
+                        <div class="text-danger opacity-50">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 搜尋表單卡片 -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-gradient-success text-white">
+        <h4 class="mb-0"><i class="fas fa-search me-2"></i>會員優惠券查詢</h4>
+    </div>
+    <div class="card-body p-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input class="form-control rounded" id="Query_UserId" name="UserId" type="number" min="0" value="@(Model.Query.UserId ?? null)" placeholder="會員 ID" />
+                    <label for="Query_UserId"><i class="fas fa-user me-1"></i>會員 ID</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input class="form-control rounded" id="Query_CouponTypeId" name="CouponTypeId" type="number" min="0" value="@(Model.Query.CouponTypeId ?? null)" placeholder="類型 ID" />
+                    <label for="Query_CouponTypeId"><i class="fas fa-tag me-1"></i>優惠券類型 ID</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <select class="form-select rounded" id="Query_Status" name="Status">
+                        <option value="">全部</option>
+                        <option value="unused" selected="@(Model.Query.Status?.Equals("unused", StringComparison.OrdinalIgnoreCase) == true)">未使用</option>
+                        <option value="used" selected="@(Model.Query.Status?.Equals("used", StringComparison.OrdinalIgnoreCase) == true)">已使用</option>
+                        <option value="expired" selected="@(Model.Query.Status?.Equals("expired", StringComparison.OrdinalIgnoreCase) == true)">已過期</option>
+                    </select>
+                    <label for="Query_Status"><i class="fas fa-filter me-1"></i>狀態篩選</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <select class="form-select rounded" id="Query_SortBy" name="SortBy">
+                        <option value="AcquiredTime" selected="@(Model.Query.SortBy?.Equals("AcquiredTime", StringComparison.OrdinalIgnoreCase) == true)">取得時間</option>
+                        <option value="UseTime" selected="@(Model.Query.SortBy?.Equals("UseTime", StringComparison.OrdinalIgnoreCase) == true)">使用時間</option>
+                    </select>
+                    <label for="Query_SortBy"><i class="fas fa-sort me-1"></i>排序方式</label>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="form-floating">
+                    <input class="form-control rounded" id="Query_SearchTerm" name="SearchTerm" value="@(Model.Query.SearchTerm ?? string.Empty)" placeholder="搜尋關鍵字" />
+                    <label for="Query_SearchTerm"><i class="fas fa-search me-1"></i>搜尋關鍵字（會員名稱 / 優惠券代碼）</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill">
+                    <i class="fas fa-search me-2"></i>開始搜尋
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 查詢結果卡片 -->
+<div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-table me-2 text-success"></i>查詢結果</h5>
+        @if (Model.Results.TotalCount > 0)
+        {
+            <span class="badge bg-success rounded-pill">共 @Model.Results.TotalCount 筆</span>
+        }
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Results.TotalCount == 0)
+        {
+            <div class="p-5 text-center">
+                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">查無優惠券資料</h5>
+                <p class="text-muted">請嘗試調整搜尋條件</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-hashtag me-1"></i>優惠券ID</th>
+                            <th><i class="fas fa-user me-1"></i>會員ID</th>
+                            <th><i class="fas fa-id-card me-1"></i>會員名稱</th>
+                            <th><i class="fas fa-tag me-1"></i>類型</th>
+                            <th><i class="fas fa-calendar-plus me-1"></i>取得時間</th>
+                            <th><i class="fas fa-calendar-check me-1"></i>使用時間</th>
+                            <th class="pe-4"><i class="fas fa-info-circle me-1"></i>狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in Model.Results.Items)
+                        {
+                            var statusBadge = record.Status switch
+                            {
+                                "未使用" => "badge bg-success",
+                                "已使用" => "badge bg-primary",
+                                "已過期" => "badge bg-danger",
+                                _ => "badge bg-secondary"
+                            };
+                            <tr>
+                                <td class="ps-4"><span class="badge bg-secondary">@record.CouponId</span></td>
+                                <td><span class="badge bg-info">@record.UserId</span></td>
+                                <td><strong>@record.UserName</strong></td>
+                                <td><span class="badge bg-light text-dark">@record.CouponTypeName</span></td>
+                                <td><small class="text-muted">@record.AcquiredTime.ToString("yyyy/MM/dd HH:mm")</small></td>
+                                <td>
+                                    @if (record.UsedTime.HasValue)
+                                    {
+                                        <small class="text-muted">@record.UsedTime.Value.ToString("yyyy/MM/dd HH:mm")</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="pe-4"><span class="@statusBadge">@record.Status</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        顯示第 @((Model.Results.CurrentPage - 1) * Model.Query.PageSize + 1) - @(Math.Min(Model.Results.CurrentPage * Model.Query.PageSize, Model.Results.TotalCount)) 筆，共 @Model.Results.TotalCount 筆資料
+                        <span class="ms-2">|</span>
+                        <span class="ms-2">頁次 @Model.Results.CurrentPage / @Model.Results.TotalPages</span>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <a class="btn btn-outline-success @(Model.Results.HasPreviousPage ? string.Empty : "disabled")"
+                           asp-action="CouponsQuery"
+                           asp-route-UserId="@(Model.Query.UserId)"
+                           asp-route-CouponTypeId="@(Model.Query.CouponTypeId)"
+                           asp-route-Status="@(Model.Query.Status)"
+                           asp-route-SearchTerm="@(Model.Query.SearchTerm)"
+                           asp-route-SortBy="@(Model.Query.SortBy)"
+                           asp-route-Descending="@(Model.Query.Descending)"
+                           asp-route-PageNumber="@(Model.Results.CurrentPage - 1)"
+                           asp-route-PageSize="@(Model.Query.PageSize)">
+                            <i class="fas fa-chevron-left me-1"></i>上一頁
+                        </a>
+                        <a class="btn btn-outline-success @(Model.Results.HasNextPage ? string.Empty : "disabled")"
+                           asp-action="CouponsQuery"
+                           asp-route-UserId="@(Model.Query.UserId)"
+                           asp-route-CouponTypeId="@(Model.Query.CouponTypeId)"
+                           asp-route-Status="@(Model.Query.Status)"
+                           asp-route-SearchTerm="@(Model.Query.SearchTerm)"
+                           asp-route-SortBy="@(Model.Query.SortBy)"
+                           asp-route-Descending="@(Model.Query.Descending)"
+                           asp-route-PageNumber="@(Model.Results.CurrentPage + 1)"
+                           asp-route-PageSize="@(Model.Query.PageSize)">
+                            下一頁<i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,129 @@
+﻿@{
+    ViewData["Title"] = "管理首頁";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">管理首頁</h1>
+    </div>
+
+    <!-- 統計卡片 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                今日簽到數
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.SignInSummary?.TodayCount ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                今日遊戲次數
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.GameSummary?.TodayCount ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gamepad fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                總簽到數
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.SignInSummary?.TotalCount ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                總遊戲次數
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.GameSummary?.TotalCount ?? 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-trophy fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">快速操作</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a class="btn btn-outline-primary w-100" asp-area="MiniGame" asp-controller="WalletAdmin" asp-action="PointsQuery">
+                                <i class="fas fa-wallet"></i> 會員點數管理
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a class="btn btn-outline-success w-100" asp-area="MiniGame" asp-controller="SignInAdmin" asp-action="Records">
+                                <i class="fas fa-calendar-check"></i> 簽到紀錄查詢
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a class="btn btn-outline-info w-100" asp-area="MiniGame" asp-controller="AdminPet" asp-action="QueryPets">
+                                <i class="fas fa-paw"></i> 寵物清單查詢
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a class="btn btn-outline-danger w-100" asp-area="MiniGame" asp-controller="GameRecords" asp-action="Records">
+                                <i class="fas fa-gamepad"></i> 小遊戲紀錄
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

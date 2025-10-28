@@ -1,0 +1,25 @@
+﻿<!-- 統計卡片組件 -->
+<div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        @ViewBag.StatTitle
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="@ViewBag.StatId">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">載入中...</span>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500" id="@ViewBag.StatChangeId">
+                        <!-- 變化百分比將在這裡顯示 -->
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <i class="@ViewBag.StatIcon fa-2x text-gray-300"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

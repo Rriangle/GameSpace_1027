@@ -1,0 +1,170 @@
+@model GameSpace.Models.CouponType
+@{
+    ViewData["Title"] = "編輯優惠券類型";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">編輯優惠券類型</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">優惠券類型資訊</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EditCouponType" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <input type="hidden" asp-for="CouponTypeId" />
+
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">名稱</label>
+                            <input asp-for="Name" class="form-control" placeholder="請輸入優惠券類型名稱" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label">描述</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="請輸入優惠券類型描述"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="DiscountType" class="control-label">折扣類型</label>
+                                    <select asp-for="DiscountType" class="form-control" id="discountType">
+                                        <option value="PERCENT">百分比折扣</option>
+                                        <option value="AMOUNT">固定金額折扣</option>
+                                    </select>
+                                    <span asp-validation-for="DiscountType" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="DiscountValue" class="control-label">
+                                        折扣值 <span id="discountHint" class="text-muted">(%)</span>
+                                    </label>
+                                    <input asp-for="DiscountValue" class="form-control" type="number" step="0.01" min="0" placeholder="請輸入折扣值" />
+                                    <span asp-validation-for="DiscountValue" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="MinSpend" class="control-label">最低消費金額</label>
+                                    <input asp-for="MinSpend" class="form-control" type="number" step="0.01" min="0" placeholder="請輸入最低消費金額" />
+                                    <span asp-validation-for="MinSpend" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="PointsCost" class="control-label">所需點數</label>
+                                    <input asp-for="PointsCost" class="form-control" type="number" min="0" placeholder="請輸入所需點數" />
+                                    <span asp-validation-for="PointsCost" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="ValidFrom" class="control-label">有效期開始</label>
+                                    <input asp-for="ValidFrom" class="form-control" type="datetime-local" />
+                                    <span asp-validation-for="ValidFrom" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="ValidTo" class="control-label">有效期結束</label>
+                                    <input asp-for="ValidTo" class="form-control" type="datetime-local" />
+                                    <span asp-validation-for="ValidTo" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 儲存變更
+                            </button>
+                            <a asp-action="CouponTypes" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> 返回列表
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">快速設定</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="setQuickSettings('PERCENT', 10, 100, 50)">
+                            <i class="fas fa-percentage"></i> 10% 折扣
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="setQuickSettings('PERCENT', 20, 200, 100)">
+                            <i class="fas fa-percentage"></i> 20% 折扣
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm mb-2" onclick="setQuickSettings('AMOUNT', 50, 300, 150)">
+                            <i class="fas fa-dollar-sign"></i> 50元折扣
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm mb-2" onclick="setQuickSettings('AMOUNT', 100, 500, 250)">
+                            <i class="fas fa-dollar-sign"></i> 100元折扣
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function setQuickSettings(type, value, minSpend, pointsCost) {
+            document.getElementById('discountType').value = type;
+            document.getElementById('DiscountValue').value = value;
+            document.getElementById('MinSpend').value = minSpend;
+            document.getElementById('PointsCost').value = pointsCost;
+            updateDiscountHint();
+        }
+
+        function updateDiscountHint() {
+            const discountType = document.getElementById('discountType').value;
+            const hint = document.getElementById('discountHint');
+            hint.textContent = discountType === 'PERCENT' ? '(%)' : '(元)';
+        }
+
+        // 初始化折扣類型提示
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDiscountHint();
+            
+            // 監聽折扣類型變化
+            document.getElementById('discountType').addEventListener('change', updateDiscountHint);
+            
+            // 設定預設日期（如果沒有值）
+            const now = new Date();
+            const validFromInput = document.getElementById('ValidFrom');
+            const validToInput = document.getElementById('ValidTo');
+            
+            if (!validFromInput.value) {
+                validFromInput.value = now.toISOString().slice(0, 16);
+            }
+            
+            if (!validToInput.value) {
+                const nextMonth = new Date(now);
+                nextMonth.setMonth(nextMonth.getMonth() + 1);
+                validToInput.value = nextMonth.toISOString().slice(0, 16);
+            }
+        });
+    </script>
+}

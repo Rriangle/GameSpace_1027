@@ -1,0 +1,256 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminMiniGameCreateViewModel
+@{
+    ViewData["Title"] = "新增遊戲";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">新增遊戲</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminMiniGame")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">遊戲資料</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group">
+                            <label asp-for="GameName" class="control-label">遊戲名稱 *</label>
+                            <input asp-for="GameName" class="form-control" placeholder="請輸入遊戲名稱" />
+                            <span asp-validation-for="GameName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="GameDescription" class="control-label">遊戲說明 *</label>
+                            <textarea asp-for="GameDescription" class="form-control" rows="4" placeholder="請輸入遊戲描述"></textarea>
+                            <span asp-validation-for="GameDescription" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="GameType" class="control-label">遊戲類型 *</label>
+                                    <select asp-for="GameType" class="form-control">
+                                        <option value="">請選擇遊戲類型</option>
+                                        <option value="冒險">冒險</option>
+                                        <option value="益智">益智</option>
+                                        <option value="策略">策略</option>
+                                        <option value="動作">動作</option>
+                                        <option value="角色扮演">角色扮演</option>
+                                        <option value="競速">競速</option>
+                                        <option value="多人對戰">多人對戰</option>
+                                        <option value="模擬經營">模擬經營</option>
+                                    </select>
+                                    <span asp-validation-for="GameType" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="IsActive" class="control-label">狀態</label>
+                                    <div class="form-check">
+                                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                        <label class="form-check-label" for="IsActive">
+                                            啟用
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="CostPoints" class="control-label">消耗點數*</label>
+                                    <input asp-for="CostPoints" type="number" class="form-control" placeholder="請輸入消耗點數" min="0" />
+                                    <span asp-validation-for="CostPoints" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="RewardPoints" class="control-label">獎勵點數 *</label>
+                                    <input asp-for="RewardPoints" type="number" class="form-control" placeholder="請輸入獎勵點數" min="0" />
+                                    <span asp-validation-for="RewardPoints" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="MaxPlayCount" class="control-label">每日最大遊玩次數*</label>
+                                    <input asp-for="MaxPlayCount" type="number" class="form-control" placeholder="請輸入每日最大遊玩次數" min="1" />
+                                    <span asp-validation-for="MaxPlayCount" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="GameImageUrl" class="control-label">遊戲圖片網址</label>
+                            <input asp-for="GameImageUrl" type="url" class="form-control" placeholder="請輸入遊戲圖片網址" />
+                            <span asp-validation-for="GameImageUrl" class="text-danger"></span>
+                            <small class="form-text text-muted">若未輸入則使用預設圖片</small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 儲存遊戲
+                            </button>
+                            <a href="@Url.Action("Index", "AdminMiniGame")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">儲存提示</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <i class="fas fa-gamepad fa-3x text-primary mb-3"></i>
+                        <h5>遊戲儲存前請注意</h5>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            遊戲名稱請簡潔明瞭
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            說明請勿過於冗長
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            獎勵設定請合理配置
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            每日最大遊玩次數需合理設定
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            可選擇上傳圖片
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">遊戲類型說明</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge badge-info">冒險</span>
+                        <small class="text-muted">須選擇關卡進行冒險</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-danger">益智</span>
+                        <small class="text-muted">須選擇邏輯類遊戲</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-warning">策略</span>
+                        <small class="text-muted">須選擇戰術性遊戲</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-success">動作</span>
+                        <small class="text-muted">動作類型遊戲</small>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge badge-primary">角色扮演</span>
+                        <small class="text-muted">角色扮演類遊戲</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">快速設定範例</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-info" onclick="setQuickSettings('冒險', '猜數字', '簡單猜數字遊戲，考驗你的推理能力', 10, 50, 5)">
+                            <i class="fas fa-puzzle-piece"></i> 猜數字
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" onclick="setQuickSettings('益智', '找不同', '快速找出圖片差異，訓練觀察力', 20, 100, 3)">
+                            <i class="fas fa-running"></i> 找不同
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" onclick="setQuickSettings('策略', '棋類', '策略棋類遊戲，鬥智鬥勇', 30, 150, 2)">
+                            <i class="fas fa-chess"></i> 棋類遊戲
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="setQuickSettings('動作', '太空冒險', '太空冒險動作遊戲，刺激有趣', 25, 120, 4)">
+                            <i class="fas fa-rocket"></i> 動作遊戲
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function setQuickSettings(type, name, description, cost, reward, maxPlay) {
+            document.getElementById('GameType').value = type;
+            document.getElementById('GameName').value = name;
+            document.getElementById('GameDescription').value = description;
+            document.getElementById('CostPoints').value = cost;
+            document.getElementById('RewardPoints').value = reward;
+            document.getElementById('MaxPlayCount').value = maxPlay;
+        }
+
+        // 點數驗證
+        document.getElementById('CostPoints').addEventListener('input', function() {
+            const cost = parseInt(this.value);
+            const reward = parseInt(document.getElementById('RewardPoints').value);
+
+            if (cost < 0) {
+                this.setCustomValidity('消耗點數不能為負值');
+            } else if (reward > 0 && cost > reward) {
+                this.setCustomValidity('消耗點數不能大於獎勵點數');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        document.getElementById('RewardPoints').addEventListener('input', function() {
+            const reward = parseInt(this.value);
+            const cost = parseInt(document.getElementById('CostPoints').value);
+
+            if (reward < 0) {
+                this.setCustomValidity('獎勵點數不能為負值');
+            } else if (cost > 0 && reward < cost) {
+                this.setCustomValidity('獎勵點數不能小於消耗點數');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // 每日最大遊玩次數驗證
+        document.getElementById('MaxPlayCount').addEventListener('input', function() {
+            const maxPlay = parseInt(this.value);
+
+            if (maxPlay < 1) {
+                this.setCustomValidity('每日最大遊玩次數必須大於等於1');
+            } else if (maxPlay > 1000) {
+                this.setCustomValidity('每日最大遊玩次數不能超過1000');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+}

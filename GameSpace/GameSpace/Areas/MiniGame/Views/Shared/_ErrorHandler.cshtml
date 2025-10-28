@@ -1,0 +1,16 @@
+﻿<!-- 錯誤處理組件 -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+    <!-- Toast 通知將在這裡動態插入 -->
+</div>
+
+<!-- 錯誤重試按鈕 -->
+<div id="errorRetry" class="error-retry" style="display: none;">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">載入失敗</h4>
+        <p>無法載入數據，請檢查網路連接或稍後再試。</p>
+        <hr>
+        <button class="btn btn-outline-danger" onclick="retryLoad()">
+            <i class="fas fa-redo"></i> 重新載入
+        </button>
+    </div>
+</div> 

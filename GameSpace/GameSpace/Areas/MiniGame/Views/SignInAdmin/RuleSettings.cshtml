@@ -1,0 +1,301 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.SignInRuleSettingsViewModel
+@{
+    ViewData["Title"] = "簽到規則設定";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>成功！</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <strong>錯誤！</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- 統計卡片區 -->
+<div class="row mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-start border-success border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-xs fw-bold text-success text-uppercase mb-1">簽到規則總數</div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">@Model.Rules.Count 個</div>
+                    </div>
+                    <div class="text-success opacity-50">
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-start border-primary border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">啟用中規則</div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">@Model.ActiveRuleCount 個</div>
+                    </div>
+                    <div class="text-primary opacity-50">
+                        <i class="fas fa-toggle-on fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-start border-warning border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-xs fw-bold text-warning text-uppercase mb-1">停用中規則</div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">@(Model.Rules.Count - Model.ActiveRuleCount) 個</div>
+                    </div>
+                    <div class="text-warning opacity-50">
+                        <i class="fas fa-toggle-off fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 規則管理卡片 -->
+<div class="card shadow-sm">
+    <div class="card-header bg-gradient-success text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="fas fa-cogs me-2"></i>簽到規則設定</h4>
+        <span class="badge bg-light text-success rounded-pill">共 @Model.Rules.Count 個規則</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Rules.Count == 0)
+        {
+            <div class="p-5 text-center">
+                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">尚未建立簽到規則</h5>
+                <p class="text-muted">請建立簽到規則以啟用簽到功能</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-calendar-day me-1"></i>連續天數</th>
+                            <th class="text-end"><i class="fas fa-coins me-1"></i>點數</th>
+                            <th class="text-end"><i class="fas fa-star me-1"></i>經驗值</th>
+                            <th><i class="fas fa-ticket-alt me-1"></i>優惠券</th>
+                            <th><i class="fas fa-code me-1"></i>代碼</th>
+                            <th><i class="fas fa-align-left me-1"></i>描述</th>
+                            <th><i class="fas fa-toggle-on me-1"></i>狀態</th>
+                            <th class="text-center pe-4"><i class="fas fa-cog me-1"></i>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rule in Model.Rules)
+                        {
+                            var dayBadgeClass = rule.DayNumber switch
+                            {
+                                7 => "badge bg-warning text-dark",
+                                30 => "badge bg-danger",
+                                _ => "badge bg-info"
+                            };
+                            <tr class="@(rule.IsActive ? "" : "table-secondary")">
+                                <td class="ps-4">
+                                    <span class="@dayBadgeClass fs-6">
+                                        <i class="fas fa-calendar me-1"></i>第 @rule.DayNumber 天
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-primary">+@rule.Points 點</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-success">+@rule.Experience EXP</span>
+                                </td>
+                                <td>
+                                    @if (rule.HasCoupon)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-check-circle me-1"></i>贈送
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-times me-1"></i>不贈送
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(rule.CouponTypeCode))
+                                    {
+                                        <code class="text-primary">@rule.CouponTypeCode</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td><small class="text-muted">@(rule.Description ?? "無說明")</small></td>
+                                <td>
+                                    @if (rule.IsActive)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>啟用
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-ban me-1"></i>停用
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center pe-4">
+                                    <div class="btn-group" role="group">
+                                        <!-- 啟用/停用快速切換按鈕 -->
+                                        <form asp-action="ToggleActive" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="ruleId" value="@rule.Id" />
+                                            @if (rule.IsActive)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill"
+                                                        onclick="return confirm('確定要停用第 @rule.DayNumber 天的簽到規則嗎？');"
+                                                        title="點擊停用">
+                                                    <i class="fas fa-toggle-on"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill"
+                                                        onclick="return confirm('確定要啟用第 @rule.DayNumber 天的簽到規則嗎？');"
+                                                        title="點擊啟用">
+                                                    <i class="fas fa-toggle-off"></i>
+                                                </button>
+                                            }
+                                        </form>
+
+                                        <!-- 編輯按鈕 -->
+                                        <button type="button" class="btn btn-sm btn-primary rounded-pill ms-1"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editModal"
+                                                onclick="loadRuleData(@rule.Id, @rule.DayNumber, @rule.Points, @rule.Experience, @(rule.HasCoupon ? "true" : "false"), '@(rule.CouponTypeCode ?? "")', @(rule.IsActive ? "true" : "false"), '@(rule.Description?.Replace("'", "\\'") ?? "")')"
+                                                title="編輯規則">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- 編輯規則 Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="editForm" asp-action="UpdateRule" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="ruleId" name="ruleId" />
+                
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="editModalLabel">
+                        <i class="fas fa-edit me-2"></i>編輯簽到規則 - 第 <span id="modalDayNumber"></span> 天
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="points" class="form-label">點數獎勵 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="points" name="points" min="0" max="10000" required placeholder="請輸入點數獎勵" />
+                                <span class="input-group-text">點</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="experience" class="form-label">經驗獎勵 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="experience" name="experience" min="0" max="10000" required placeholder="請輸入經驗值獎勵" />
+                                <span class="input-group-text">EXP</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="couponTypeCode" class="form-label">優惠券代碼</label>
+                        <input type="text" class="form-control" id="couponTypeCode" name="couponTypeCode" maxlength="50" placeholder="選填，例如：WEEK_BONUS" />
+                        <small class="text-muted">若不發放優惠券請留空</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">規則說明</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" maxlength="500" placeholder="請輸入規則說明（選填）"></textarea>
+                    </div>
+                    
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="isActive" name="isActive" value="true" />
+                        <input type="hidden" name="isActive" value="false" />
+                        <label class="form-check-label" for="isActive">
+                            啟用此規則
+                        </label>
+                    </div>
+                    
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" id="hasCoupon" />
+                        <input type="hidden" id="hasCouponHidden" name="hasCoupon" value="false" />
+                        <label class="form-check-label" for="hasCoupon">
+                            贈送優惠券
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>取消
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>儲存變更
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function loadRuleData(id, dayNumber, points, experience, hasCoupon, couponTypeCode, isActive, description) {
+            document.getElementById('ruleId').value = id;
+            document.getElementById('modalDayNumber').textContent = dayNumber;
+            document.getElementById('points').value = points;
+            document.getElementById('experience').value = experience;
+            document.getElementById('couponTypeCode').value = couponTypeCode;
+            document.getElementById('description').value = description;
+            document.getElementById('isActive').checked = isActive;
+            document.getElementById('hasCoupon').checked = hasCoupon;
+            document.getElementById('hasCouponHidden').value = hasCoupon ? 'true' : 'false';
+        }
+        
+        // 同步 checkbox 狀態到 hidden input
+        document.getElementById('hasCoupon').addEventListener('change', function() {
+            document.getElementById('hasCouponHidden').value = this.checked ? 'true' : 'false';
+        });
+    </script>
+}

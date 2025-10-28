@@ -1,0 +1,169 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.WalletGrantPointsViewModel
+@{
+    ViewData["Title"] = "發放會員點數";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>成功！</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>錯誤！</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- 發放點數表單卡片 -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-gradient-warning">
+        <h4 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i>發放 / 調整會員點數</h4>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" asp-action="GrantPoints" id="grantPointsForm">
+            @Html.AntiForgeryToken()
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="number" class="form-control rounded" id="userId" name="userId" required min="0" placeholder="會員 ID" />
+                        <label for="userId"><i class="fas fa-user me-1"></i>會員 ID <span class="text-danger">*</span></label>
+                    </div>
+                    <small class="text-muted ms-2">輸入要調整的會員編號</small>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="number" class="form-control rounded" id="pointsToGrant" name="pointsToGrant" required step="1" placeholder="點數" />
+                        <label for="pointsToGrant"><i class="fas fa-coins me-1"></i>點數變動 <span class="text-danger">*</span></label>
+                    </div>
+                    <small class="text-muted ms-2">
+                        正數=增加，負數=扣除，0=不變
+                    </small>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input type="text" class="form-control rounded" id="reason" name="reason" required maxlength="200" placeholder="發放原因" />
+                        <label for="reason"><i class="fas fa-comment me-1"></i>發放 / 調整原因 <span class="text-danger">*</span></label>
+                    </div>
+                    <small class="text-muted ms-2">
+                        例如：活動獎勵、客訴補償、違規扣點
+                    </small>
+                </div>
+            </div>
+
+            <!-- 快速選擇按鈕 -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <label class="form-label text-muted"><i class="fas fa-magic me-1"></i>快速選擇點數：</label>
+                    <div class="btn-group me-2" role="group">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="document.getElementById('pointsToGrant').value=100">+100</button>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="document.getElementById('pointsToGrant').value=500">+500</button>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="document.getElementById('pointsToGrant').value=1000">+1000</button>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="document.getElementById('pointsToGrant').value=-100">-100</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="document.getElementById('pointsToGrant').value=-500">-500</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="document.getElementById('pointsToGrant').value=-1000">-1000</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-warning btn-lg px-5 rounded-pill">
+                        <i class="fas fa-check-circle me-2"></i>確認送出
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card-footer bg-light">
+        <div class="d-flex align-items-center text-muted small">
+            <i class="fas fa-info-circle me-2 text-info"></i>
+            <div>
+                發放後自動記錄於錢包異動歷史。支援正整數（增加點數）、0（不變動）或負整數（扣除點數）。
+                所有變動都會產生完整的交易記錄。
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 參考資料：點數排行榜 -->
+<div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i>點數排行榜（前 20 名）</h5>
+        <span class="badge bg-warning text-dark rounded-pill">Top 20</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Candidates.Count == 0)
+        {
+            <div class="p-5 text-center">
+                <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">暫無會員資料</h5>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-trophy me-1"></i>排名</th>
+                            <th><i class="fas fa-hashtag me-1"></i>會員ID</th>
+                            <th><i class="fas fa-user me-1"></i>帳號</th>
+                            <th><i class="fas fa-id-card me-1"></i>姓名</th>
+                            <th><i class="fas fa-envelope me-1"></i>Email</th>
+                            <th class="text-end pe-4"><i class="fas fa-coins me-1"></i>點數</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var rank = 1; }
+                        @foreach (var candidate in Model.Candidates)
+                        {
+                            var rankBadge = rank switch
+                            {
+                                1 => "badge bg-warning text-dark",
+                                2 => "badge bg-secondary",
+                                3 => "badge bg-secondary",
+                                _ => "badge bg-light text-dark"
+                            };
+                            var rankIcon = rank switch
+                            {
+                                1 => "fas fa-trophy",
+                                2 => "fas fa-medal",
+                                3 => "fas fa-award",
+                                _ => ""
+                            };
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="@rankBadge">
+                                        @if (!string.IsNullOrEmpty(rankIcon))
+                                        {
+                                            <i class="@rankIcon me-1"></i>
+                                        }
+                                        @rank
+                                    </span>
+                                </td>
+                                <td><span class="badge bg-secondary">@candidate.UserId</span></td>
+                                <td><strong>@candidate.UserAccount</strong></td>
+                                <td>@candidate.UserName</td>
+                                <td><small class="text-muted">@candidate.Email</small></td>
+                                <td class="text-end pe-4">
+                                    <span class="badge bg-warning text-dark fs-6">@candidate.Points.ToString("N0")</span>
+                                </td>
+                            </tr>
+                            rank++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

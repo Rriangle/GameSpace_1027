@@ -1,0 +1,242 @@
+﻿@model GameSpace.Areas.MiniGame.Models.Settings.PointsSettingsIndexViewModel
+
+@{
+    ViewData["Title"] = "點數設定管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">點數設定管理</h1>
+        <div>
+            <a asp-action="Statistics" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm">
+                <i class="fas fa-chart-bar fa-sm text-white-50"></i> 統計資料
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">寵物換色設定</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ColorSettings.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-palette fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">寵物換背景設定</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.BackgroundSettings.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-image fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">啟用設定</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(Model.ColorSettings.Count(s => s.IsActive) + Model.BackgroundSettings.Count(s => s.IsActive))
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">總點數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(Model.ColorSettings.Where(s => s.IsActive).Sum(s => s.PointsRequired) + 
+                                  Model.BackgroundSettings.Where(s => s.IsActive).Sum(s => s.PointsRequired))
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-coins fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pet Color Settings -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">寵物換色點數設定</h6>
+            <a asp-action="ColorSettings" class="btn btn-primary btn-sm">
+                <i class="fas fa-cog"></i> 管理設定
+            </a>
+        </div>
+        <div class="card-body">
+            @if (Model.ColorSettings.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>顏色</th>
+                                <th>所需點數</th>
+                                <th>狀態</th>
+                                <th>建立時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var setting in Model.ColorSettings.Take(5))
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge" style="background-color: @setting.ColorCode; color: white;">
+                                            @setting.ColorCode
+                                        </span>
+                                    </td>
+                                    <td>@setting.PointsRequired</td>
+                                    <td>
+                                        @if (setting.IsActive)
+                                        {
+                                            <span class="badge badge-success">啟用</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-secondary">停用</span>
+                                        }
+                                    </td>
+                                    <td>@setting.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (Model.ColorSettings.Count > 5)
+                {
+                    <div class="text-center">
+                        <small class="text-muted">顯示前 5 筆，共 @Model.ColorSettings.Count 筆資料</small>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted">
+                    <i class="fas fa-palette fa-3x mb-3"></i>
+                    <p>尚未設定寵物換色點數</p>
+                    <a asp-action="ColorSettings" class="btn btn-primary">新增設定</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Pet Background Settings -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-success">寵物換背景點數設定</h6>
+            <a asp-action="BackgroundSettings" class="btn btn-success btn-sm">
+                <i class="fas fa-cog"></i> 管理設定
+            </a>
+        </div>
+        <div class="card-body">
+            @if (Model.BackgroundSettings.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>背景顏色</th>
+                                <th>所需點數</th>
+                                <th>狀態</th>
+                                <th>建立時間</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var setting in Model.BackgroundSettings.Take(5))
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge" style="background-color: @setting.BackgroundColor; color: white;">
+                                            @setting.BackgroundColor
+                                        </span>
+                                    </td>
+                                    <td>@setting.PointsRequired</td>
+                                    <td>
+                                        @if (setting.IsActive)
+                                        {
+                                            <span class="badge badge-success">啟用</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-secondary">停用</span>
+                                        }
+                                    </td>
+                                    <td>@setting.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (Model.BackgroundSettings.Count > 5)
+                {
+                    <div class="text-center">
+                        <small class="text-muted">顯示前 5 筆，共 @Model.BackgroundSettings.Count 筆資料</small>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted">
+                    <i class="fas fa-image fa-3x mb-3"></i>
+                    <p>尚未設定寵物換背景點數</p>
+                    <a asp-action="BackgroundSettings" class="btn btn-success">新增設定</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+

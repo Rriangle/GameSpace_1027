@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "遊戲紀錄";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">遊戲紀錄</h1>
+    </div>
+
+    <!-- 查詢表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">查詢條件</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="userId" class="form-label">會員ID</label>
+                    <input type="number" class="form-control" id="userId" name="userId" placeholder="輸入會員ID">
+                </div>
+                <div class="col-md-3">
+                    <label for="result" class="form-label">遊戲結果</label>
+                    <select class="form-select" id="result" name="result">
+                        <option value="">全部</option>
+                        <option value="Win">勝利</option>
+                        <option value="Lose">失敗</option>
+                        <option value="Abort">中退</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="level" class="form-label">關卡</label>
+                    <select class="form-select" id="level" name="level">
+                        <option value="">全部</option>
+                        <option value="1">第1關</option>
+                        <option value="2">第2關</option>
+                        <option value="3">第3關</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-1"></i>查詢
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>清除
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 遊戲紀錄列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">遊戲紀錄列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>遊戲ID</th>
+                            <th>會員ID</th>
+                            <th>關卡</th>
+                            <th>開始時間</th>
+                            <th>結束時間</th>
+                            <th>結果</th>
+                            <th>獲得獎勵</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">暫無資料</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

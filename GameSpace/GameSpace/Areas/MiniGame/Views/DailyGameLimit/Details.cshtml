@@ -1,0 +1,81 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.DailyGameLimitDetailsViewModel
+@{
+    ViewData["Title"] = "每日遊戲次數限制設定詳細";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-info-circle"></i> 每日遊戲次數限制設定詳細
+        </h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">設定詳細資訊</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold">設定名稱</label>
+                        <p class="form-control-plaintext">@Model.SettingName</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold">每日限制</label>
+                        <p class="form-control-plaintext">@Model.DailyLimit 次/天</p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label font-weight-bold">描述</label>
+                <p class="form-control-plaintext">@(Model.Description ?? "無")</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label font-weight-bold">狀態</label>
+                <p class="form-control-plaintext">
+                    @if (Model.IsEnabled)
+                    {
+                        <span class="badge badge-success">啟用</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">停用</span>
+                    }
+                </p>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold">建立時間</label>
+                        <p class="form-control-plaintext">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label font-weight-bold">更新時間</label>
+                        <p class="form-control-plaintext">@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> 編輯
+                </a>
+                <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> 刪除
+                </a>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> 返回列表
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

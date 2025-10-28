@@ -1,0 +1,56 @@
+﻿@model GameSpace.Models.ViewModels.LoginSuccessVM
+
+@{
+    ViewData["Title"] = "歡迎登入";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">管理者資訊</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">使用者 ID</dt>
+                        <dd class="col-sm-8">@Model.ManagerId</dd>
+
+                        <dt class="col-sm-4">姓名</dt>
+                        <dd class="col-sm-8">@Model.ManagerName</dd>
+
+                        <dt class="col-sm-4">職位</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Positions?.Any() == true)
+                            {
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var role in Model.Positions)
+                                    {
+                                        <li><span class="badge text-bg-secondary">@role</span></li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-muted">未設定</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary">前往首頁</a>
+
+                    <!-- 重要：指到最外層 + 啟用防偽 -->
+                    <form asp-area=""
+                          asp-controller="Login"
+                          asp-action="Logout"
+                          method="post"
+                          asp-antiforgery="true"
+                          class="ms-auto">
+                        <button type="submit" class="btn btn-outline-danger">登出</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,165 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.AdminPetRulesViewModel
+@{
+    ViewData["Title"] = "�d���t�γW�h�]�w";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">�d���t�γW�h�]�w</h1>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- �d���W�h�]�w��� -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">�d���t�γW�h�]�w</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="SetPetRule">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name">�W�h�W��</label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           value="@Model.PetRule.Name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="maxPets">�̤j�d���ƶq</label>
+                                    <input type="number" class="form-control" id="maxPets" name="maxPets" 
+                                           value="@Model.PetRule.MaxPets" min="1" max="10" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="feedingCost">��������</label>
+                                    <input type="number" class="form-control" id="feedingCost" name="feedingCost" 
+                                           value="@Model.PetRule.FeedingCost" min="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="feedingReward">�������y</label>
+                                    <input type="number" class="form-control" id="feedingReward" name="feedingReward" 
+                                           value="@Model.PetRule.FeedingReward" min="1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="isActive">�O�_�ҥ�</label>
+                                    <select class="form-control" id="isActive" name="isActive">
+                                        <option value="true" selected="@(Model.PetRule.IsActive ? "selected" : null)">�ҥ�</option>
+                                        <option value="false" selected="@(!Model.PetRule.IsActive ? "selected" : null)">����</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="description">�W�h�y�z</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3">@Model.PetRule.Description</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> �x�s�]�w
+                            </button>
+                            <a href="@Url.Action("Index", "AdminPet")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> ��^�C��
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- �W�h���� -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">�W�h����</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-paw"></i> �d���t�λ���</h6>
+                        <ul class="mb-0">
+                            <li><strong>�̤j�d���ƶq�G</strong>�C�ӥΤ�̦h�i�֦����d���ƶq</li>
+                            <li><strong>���������G</strong>�C�������d�����Ӫ��I��</li>
+                            <li><strong>�������y�G</strong>�����d������o���I�Ƽ��y</li>
+                            <li><strong>�O�_�ҥΡG</strong>�����d���t�άO�_�}��ϥ�</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ��e�W�h���A -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">��e�W�h���A</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>�W�h�W��</th>
+                                    <th>�̤j�d���ƶq</th>
+                                    <th>��������</th>
+                                    <th>�������y</th>
+                                    <th>���A</th>
+                                    <th>�̫��s�ɶ�</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>@Model.PetRule.Name</td>
+                                    <td class="text-info font-weight-bold">@Model.PetRule.MaxPets</td>
+                                    <td class="text-danger">@Model.PetRule.FeedingCost</td>
+                                    <td class="text-success">@Model.PetRule.FeedingReward</td>
+                                    <td>
+                                        @if (Model.PetRule.IsActive)
+                                        {
+                                            <span class="badge badge-success">�ҥ�</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-danger">����</span>
+                                        }
+                                    </td>
+                                    <td>@DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

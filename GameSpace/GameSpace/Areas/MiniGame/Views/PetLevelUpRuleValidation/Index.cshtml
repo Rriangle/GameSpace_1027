@@ -1,0 +1,264 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ValidationResult
+@{
+    ViewData["Title"] = "升級規則驗證";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">升級規則驗證</h1>
+        <div>
+            <button type="button" class="btn btn-info btn-sm" onclick="refreshValidation()">
+                <i class="fas fa-sync-alt"></i> 重新驗證
+            </button>
+            <a href="@Url.Action("Report", "PetLevelUpRuleValidation")" class="btn btn-primary btn-sm">
+                <i class="fas fa-file-alt"></i> 驗證報告
+            </a>
+        </div>
+    </div>
+
+    <!-- 驗證結果 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-check-circle"></i> 驗證結果
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsValid)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> 升級規則驗證通過
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> 升級規則驗證失敗
+                        </div>
+                    }
+
+                    @if (Model.Warnings.Any())
+                    {
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> 警告</h6>
+                            <ul class="mb-0">
+                                @foreach (var warning in Model.Warnings)
+                                {
+                                    <li>@warning</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (Model.Errors.Any())
+                    {
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-times-circle"></i> 錯誤</h6>
+                            <ul class="mb-0">
+                                @foreach (var error in Model.Errors)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 驗證統計 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">驗證狀態</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(Model.IsValid ? "通過" : "失敗")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">錯誤數量</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Errors.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">警告數量</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Warnings.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">驗證時間</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@DateTime.Now.ToString("HH:mm:ss")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速驗證工具 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-tools"></i> 快速驗證工具
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="quickValidationForm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="level">等級</label>
+                                    <input type="number" class="form-control" id="level" name="level" min="1" max="100" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="experienceRequired">所需經驗值</label>
+                                    <input type="number" class="form-control" id="experienceRequired" name="experienceRequired" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="pointsReward">點數獎勵</label>
+                                    <input type="number" class="form-control" id="pointsReward" name="pointsReward" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="expReward">經驗獎勵</label>
+                                    <input type="number" class="form-control" id="expReward" name="expReward" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> 驗證規則
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="quickValidationResult" class="mt-3" style="display: none;">
+                        <!-- 驗證結果將顯示在這裡 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function refreshValidation() {
+            location.reload();
+        }
+
+        $(document).ready(function() {
+            $('#quickValidationForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = {
+                    level: parseInt($('#level').val()),
+                    experienceRequired: parseInt($('#experienceRequired').val()),
+                    pointsReward: parseInt($('#pointsReward').val()),
+                    expReward: parseInt($('#expReward').val())
+                };
+
+                $.ajax({
+                    url: '@Url.Action("Logic", "PetLevelUpRuleValidation")',
+                    type: 'GET',
+                    data: formData,
+                    success: function(response) {
+                        displayQuickValidationResult(response);
+                    },
+                    error: function() {
+                        displayQuickValidationResult({
+                            success: false,
+                            errors: ['驗證過程中發生錯誤']
+                        });
+                    }
+                });
+            });
+        });
+
+        function displayQuickValidationResult(result) {
+            var html = '<div class="alert alert-' + (result.success ? 'success' : 'danger') + '">';
+
+            if (result.success) {
+                html += '<h6><i class="fas fa-check-circle"></i> 驗證通過</h6>';
+            } else {
+                html += '<h6><i class="fas fa-times-circle"></i> 驗證失敗</h6>';
+            }
+
+            if (result.errors && result.errors.length > 0) {
+                html += '<ul class="mb-0">';
+                result.errors.forEach(function(error) {
+                    html += '<li>' + error + '</li>';
+                });
+                html += '</ul>';
+            }
+
+            if (result.warnings && result.warnings.length > 0) {
+                html += '<div class="alert alert-warning mt-2">';
+                html += '<h6><i class="fas fa-exclamation-triangle"></i> 警告</h6>';
+                html += '<ul class="mb-0">';
+                result.warnings.forEach(function(warning) {
+                    html += '<li>' + warning + '</li>';
+                });
+                html += '</ul>';
+                html += '</div>';
+            }
+
+            html += '</div>';
+
+            $('#quickValidationResult').html(html).show();
+        }
+    </script>
+}
+

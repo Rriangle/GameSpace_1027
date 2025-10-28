@@ -1,0 +1,179 @@
+@model GameSpace.Models.Coupon
+@{
+    ViewData["Title"] = "編輯優惠券";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">編輯優惠券</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminCoupon")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">優惠券資訊</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <input type="hidden" asp-for="CouponId" />
+
+                        <div class="form-group">
+                            <label asp-for="CouponCode" class="control-label">優惠券代碼 *</label>
+                            <input asp-for="CouponCode" class="form-control" placeholder="請輸入優惠券代碼" />
+                            <span asp-validation-for="CouponCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="UserId" class="control-label">使用者 *</label>
+                            <select asp-for="UserId" class="form-control" asp-items="@(ViewData["UserId"] as IEnumerable<SelectListItem>)">
+                                <option value="">請選擇使用者</option>
+                            </select>
+                            <span asp-validation-for="UserId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="CouponTypeId" class="control-label">優惠券類型 *</label>
+                            <select asp-for="CouponTypeId" class="form-control" asp-items="@(ViewData["CouponTypeId"] as IEnumerable<SelectListItem>)">
+                                <option value="">請選擇優惠券類型</option>
+                            </select>
+                            <span asp-validation-for="CouponTypeId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="IsUsed" class="control-label">使用狀態</label>
+                            <div class="form-check">
+                                <input asp-for="IsUsed" class="form-check-input" />
+                                <label asp-for="IsUsed" class="form-check-label">
+                                    已使用
+                                </label>
+                            </div>
+                            <span asp-validation-for="IsUsed" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="AcquiredTime" class="control-label">獲得時間</label>
+                                    <input asp-for="AcquiredTime" class="form-control" type="datetime-local" />
+                                    <span asp-validation-for="AcquiredTime" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="UsedTime" class="control-label">使用時間</label>
+                                    <input asp-for="UsedTime" class="form-control" type="datetime-local" />
+                                    <span asp-validation-for="UsedTime" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="UsedInOrderId" class="control-label">使用訂單ID</label>
+                            <input asp-for="UsedInOrderId" class="form-control" type="number" placeholder="請輸入訂單ID" />
+                            <span asp-validation-for="UsedInOrderId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 儲存變更
+                            </button>
+                            <a href="@Url.Action("Index", "AdminCoupon")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 取消
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-tag"></i> 編輯提示
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            優惠券代碼不可重複
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            請確認使用者身份正確
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            使用時間應晚於獲得時間
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            訂單ID應為有效訂單
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-info-circle"></i> 快速操作
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Details", "AdminCoupon", new { id = Model.CouponId })" class="btn btn-info">
+                            <i class="fas fa-eye"></i> 查看詳情
+                        </a>
+                        <a href="@Url.Action("Delete", "AdminCoupon", new { id = Model.CouponId })" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> 刪除優惠券
+                        </a>
+                        <a href="@Url.Action("Index", "AdminCoupon")" class="btn btn-secondary">
+                            <i class="fas fa-list"></i> 返回列表
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // 自動設定使用時間
+        document.getElementById('IsUsed').addEventListener('change', function() {
+            const usedTimeInput = document.getElementById('UsedTime');
+            if (this.checked && !usedTimeInput.value) {
+                const now = new Date();
+                usedTimeInput.value = now.toISOString().slice(0, 16);
+            } else if (!this.checked) {
+                usedTimeInput.value = '';
+            }
+        });
+
+        // 使用時間驗證
+        document.getElementById('UsedTime').addEventListener('change', function() {
+            const acquiredTime = new Date(document.getElementById('AcquiredTime').value);
+            const usedTime = new Date(this.value);
+            
+            if (usedTime <= acquiredTime) {
+                alert('使用時間必須晚於獲得時間');
+                this.value = '';
+            }
+        });
+    </script>
+}

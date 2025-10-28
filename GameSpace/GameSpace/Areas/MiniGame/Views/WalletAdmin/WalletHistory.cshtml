@@ -1,0 +1,243 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.WalletHistoryViewModel
+@{
+    ViewData["Title"] = "查看會員收支明細";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<!-- 統計卡片區 -->
+@if (Model.Results.TotalCount > 0)
+{
+    var pointChanges = Model.Results.Items.Where(x => x.ChangeType == "Point");
+    var totalPositive = pointChanges.Where(x => x.PointsChanged > 0).Sum(x => x.PointsChanged);
+    var totalNegative = pointChanges.Where(x => x.PointsChanged < 0).Sum(x => Math.Abs(x.PointsChanged));
+
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-secondary border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-secondary text-uppercase mb-1">查詢結果</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.Results.TotalCount 筆</div>
+                        </div>
+                        <div class="text-secondary opacity-50">
+                            <i class="fas fa-history fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">總收入點數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">+@totalPositive.ToString("N0")</div>
+                        </div>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-danger border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-danger text-uppercase mb-1">總支出點數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@totalNegative.ToString("N0")</div>
+                        </div>
+                        <div class="text-danger opacity-50">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">淨變動</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@((totalPositive - totalNegative).ToString("N0"))</div>
+                        </div>
+                        <div class="text-info opacity-50">
+                            <i class="fas fa-balance-scale fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 搜尋表單卡片 -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-gradient-secondary text-white">
+        <h4 class="mb-0"><i class="fas fa-filter me-2"></i>錢包收支明細查詢</h4>
+    </div>
+    <div class="card-body p-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <div class="form-floating">
+                    <input class="form-control rounded" id="Query_UserId" name="UserId" type="number" min="0" placeholder="會員ID" value="@(Model.Query.UserId ?? null)" />
+                    <label for="Query_UserId"><i class="fas fa-user me-1"></i>會員 ID</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-floating">
+                    <select class="form-select rounded" id="Query_ChangeType" name="ChangeType">
+                        <option value="">全部</option>
+                        <option value="Point" selected="@(Model.Query.ChangeType == "Point")">點數 (Point)</option>
+                        <option value="Coupon" selected="@(Model.Query.ChangeType == "Coupon")">優惠券 (Coupon)</option>
+                        <option value="EVoucher" selected="@(Model.Query.ChangeType == "EVoucher")">電子禮券 (EVoucher)</option>
+                    </select>
+                    <label for="Query_ChangeType"><i class="fas fa-exchange-alt me-1"></i>變更類型</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-floating">
+                    <input class="form-control rounded" id="Query_StartDate" name="StartDate" type="date" value="@(Model.Query.StartDate?.ToString("yyyy-MM-dd") ?? string.Empty)" />
+                    <label for="Query_StartDate"><i class="fas fa-calendar me-1"></i>起始日期</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-floating">
+                    <input class="form-control rounded" id="Query_EndDate" name="EndDate" type="date" value="@(Model.Query.EndDate?.ToString("yyyy-MM-dd") ?? string.Empty)" />
+                    <label for="Query_EndDate"><i class="fas fa-calendar me-1"></i>結束日期</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <input class="form-control rounded" id="Query_SearchTerm" name="SearchTerm" placeholder="搜尋關鍵字" value="@(Model.Query.SearchTerm ?? string.Empty)" />
+                    <label for="Query_SearchTerm"><i class="fas fa-search me-1"></i>搜尋關鍵字</label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-secondary btn-lg w-100 h-100">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+        <div class="mt-2">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>可搜尋描述關鍵字、會員名稱或帳號
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- 查詢結果卡片 -->
+<div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-table me-2 text-secondary"></i>收支明細記錄</h5>
+        @if (Model.Results.TotalCount > 0)
+        {
+            <span class="badge bg-secondary rounded-pill">共 @Model.Results.TotalCount 筆</span>
+        }
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Results.TotalCount == 0)
+        {
+            <div class="p-5 text-center">
+                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">查無收支記錄</h5>
+                <p class="text-muted">請嘗試調整搜尋條件</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-hashtag me-1"></i>記錄ID</th>
+                            <th><i class="fas fa-user me-1"></i>會員ID</th>
+                            <th><i class="fas fa-id-card me-1"></i>會員名稱</th>
+                            <th><i class="fas fa-exchange-alt me-1"></i>變更類型</th>
+                            <th class="text-end"><i class="fas fa-coins me-1"></i>點數變動</th>
+                            <th class="text-end"><i class="fas fa-wallet me-1"></i>變動後點數</th>
+                            <th><i class="fas fa-comment me-1"></i>描述</th>
+                            <th class="pe-4"><i class="fas fa-clock me-1"></i>變動時間</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in Model.Results.Items)
+                        {
+                            var changeTypeBadge = record.ChangeType switch
+                            {
+                                "Point" => "badge bg-primary",
+                                "Coupon" => "badge bg-success",
+                                "EVoucher" => "badge bg-info",
+                                _ => "badge bg-secondary"
+                            };
+                            var pointsChangeClass = record.PointsChanged > 0 ? "text-success" : (record.PointsChanged < 0 ? "text-danger" : "text-secondary");
+                            var pointsChangeIcon = record.PointsChanged > 0 ? "fa-arrow-up" : (record.PointsChanged < 0 ? "fa-arrow-down" : "fa-minus");
+
+                            <tr>
+                                <td class="ps-4"><span class="badge bg-secondary">@record.LogId</span></td>
+                                <td><span class="badge bg-info">@record.UserId</span></td>
+                                <td><strong>@record.UserName</strong></td>
+                                <td><span class="@changeTypeBadge">@record.ChangeType</span></td>
+                                <td class="text-end">
+                                    <span class="@pointsChangeClass fw-bold">
+                                        <i class="fas @pointsChangeIcon me-1"></i>
+                                        @(record.PointsChanged > 0 ? "+" + record.PointsChanged : record.PointsChanged)
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-light text-dark">@record.BalanceAfter.ToString("N0")</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@record.Description</small>
+                                </td>
+                                <td class="pe-4">
+                                    <small class="text-muted">@record.ChangeTime.ToString("yyyy/MM/dd HH:mm")</small>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        顯示第 @((Model.Results.CurrentPage - 1) * Model.Query.PageSize + 1) - @(Math.Min(Model.Results.CurrentPage * Model.Query.PageSize, Model.Results.TotalCount)) 筆，共 @Model.Results.TotalCount 筆資料
+                        <span class="ms-2">|</span>
+                        <span class="ms-2">頁次 @Model.Results.CurrentPage / @Model.Results.TotalPages</span>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <a class="btn btn-outline-secondary @(Model.Results.HasPreviousPage ? string.Empty : "disabled")"
+                           asp-action="WalletHistory"
+                           asp-route-UserId="@(Model.Query.UserId)"
+                           asp-route-ChangeType="@(Model.Query.ChangeType)"
+                           asp-route-StartDate="@(Model.Query.StartDate?.ToString("yyyy-MM-dd"))"
+                           asp-route-EndDate="@(Model.Query.EndDate?.ToString("yyyy-MM-dd"))"
+                           asp-route-SearchTerm="@(Model.Query.SearchTerm)"
+                           asp-route-PageNumber="@(Model.Results.CurrentPage - 1)"
+                           asp-route-PageSize="@(Model.Query.PageSize)">
+                            <i class="fas fa-chevron-left me-1"></i>上一頁
+                        </a>
+                        <a class="btn btn-outline-secondary @(Model.Results.HasNextPage ? string.Empty : "disabled")"
+                           asp-action="WalletHistory"
+                           asp-route-UserId="@(Model.Query.UserId)"
+                           asp-route-ChangeType="@(Model.Query.ChangeType)"
+                           asp-route-StartDate="@(Model.Query.StartDate?.ToString("yyyy-MM-dd"))"
+                           asp-route-EndDate="@(Model.Query.EndDate?.ToString("yyyy-MM-dd"))"
+                           asp-route-SearchTerm="@(Model.Query.SearchTerm)"
+                           asp-route-PageNumber="@(Model.Results.CurrentPage + 1)"
+                           asp-route-PageSize="@(Model.Query.PageSize)">
+                            下一頁<i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

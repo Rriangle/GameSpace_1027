@@ -1,0 +1,170 @@
+﻿@model GameSpace.Areas.MiniGame.Models.ViewModels.SignInRecordsViewModel
+@{
+    ViewData["Title"] = "查看會員簽到紀錄";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<!-- 統計卡片區 -->
+@if (Model.Records.TotalCount > 0)
+{
+    var totalPoints = Model.Records.Items.Sum(x => x.PointsGained);
+    var totalExp = Model.Records.Items.Sum(x => x.ExpGained);
+    var withCouponCount = Model.Records.Items.Count(x => !string.IsNullOrEmpty(x.CouponCode));
+
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-secondary border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-secondary text-uppercase mb-1">簽到記錄總數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@Model.Records.TotalCount 筆</div>
+                        </div>
+                        <div class="text-secondary opacity-50">
+                            <i class="fas fa-calendar-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">總獎勵點數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@totalPoints.ToString("N0")</div>
+                        </div>
+                        <div class="text-primary opacity-50">
+                            <i class="fas fa-coins fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">總獎勵經驗</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@totalExp.ToString("N0")</div>
+                        </div>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">獲得優惠券</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">@withCouponCount 筆</div>
+                        </div>
+                        <div class="text-warning opacity-50">
+                            <i class="fas fa-ticket-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 簽到記錄卡片 -->
+<div class="card shadow-sm">
+    <div class="card-header bg-gradient-secondary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="fas fa-history me-2"></i>會員簽到紀錄</h4>
+        @if (Model.Records.TotalCount > 0)
+        {
+            <span class="badge bg-light text-dark rounded-pill">共 @Model.Records.TotalCount 筆</span>
+        }
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Records.TotalCount == 0)
+        {
+            <div class="p-5 text-center">
+                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">查無簽到記錄</h5>
+                <p class="text-muted">目前還沒有會員簽到</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-hashtag me-1"></i>記錄ID</th>
+                            <th><i class="fas fa-user me-1"></i>會員ID</th>
+                            <th><i class="fas fa-id-card me-1"></i>會員帳號</th>
+                            <th><i class="fas fa-clock me-1"></i>簽到時間</th>
+                            <th class="text-end"><i class="fas fa-coins me-1"></i>點數獎勵</th>
+                            <th class="text-end"><i class="fas fa-star me-1"></i>經驗獎勵</th>
+                            <th class="pe-4"><i class="fas fa-ticket-alt me-1"></i>優惠券代碼</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in Model.Records.Items)
+                        {
+                            var hasCoupon = !string.IsNullOrEmpty(record.CouponCode);
+                            <tr>
+                                <td class="ps-4"><span class="badge bg-secondary">@record.LogId</span></td>
+                                <td><span class="badge bg-info">@record.UserId</span></td>
+                                <td><strong>@record.UserAccount</strong></td>
+                                <td><small class="text-muted">@record.SignTime.ToString("yyyy/MM/dd HH:mm")</small></td>
+                                <td class="text-end">
+                                    <span class="badge bg-primary">+@record.PointsGained 點</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-success">+@record.ExpGained EXP</span>
+                                </td>
+                                <td class="pe-4">
+                                    @if (hasCoupon)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-gift me-1"></i>@record.CouponCode
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        顯示第 @((Model.Records.CurrentPage - 1) * Model.Records.PageSize + 1) - @(Math.Min(Model.Records.CurrentPage * Model.Records.PageSize, Model.Records.TotalCount)) 筆，共 @Model.Records.TotalCount 筆資料
+                        <span class="ms-2">|</span>
+                        <span class="ms-2">頁次 @Model.Records.CurrentPage / @Model.Records.TotalPages</span>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <a class="btn btn-outline-secondary @(Model.Records.HasPreviousPage ? string.Empty : "disabled")"
+                           asp-action="Records"
+                           asp-route-page="@(Model.Records.CurrentPage - 1)"
+                           asp-route-pageSize="@(Model.Records.PageSize)">
+                            <i class="fas fa-chevron-left me-1"></i>上一頁
+                        </a>
+                        <a class="btn btn-outline-secondary @(Model.Records.HasNextPage ? string.Empty : "disabled")"
+                           asp-action="Records"
+                           asp-route-page="@(Model.Records.CurrentPage + 1)"
+                           asp-route-pageSize="@(Model.Records.PageSize)">
+                            下一頁<i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,354 @@
+﻿@{
+    ViewData["Title"] = "寵物顏色/背景選項管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物顏色/背景選項管理</h1>
+    </div>
+
+    <div class="row">
+        <!-- 寵物顏色選項管理 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-palette"></i> 寵物顏色選項
+                    </h6>
+                    <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addColorModal">
+                        <i class="fas fa-plus"></i> 新增顏色
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="colorTable">
+                            <thead>
+                                <tr>
+                                    <th>顏色名稱</th>
+                                    <th>顏色值</th>
+                                    <th>排序</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 寵物背景選項管理 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-image"></i> 寵物背景選項
+                    </h6>
+                    <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addBackgroundModal">
+                        <i class="fas fa-plus"></i> 新增背景
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="backgroundTable">
+                            <thead>
+                                <tr>
+                                    <th>背景名稱</th>
+                                    <th>背景值</th>
+                                    <th>排序</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增顏色 Modal -->
+<div class="modal fade" id="addColorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增寵物顏色</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addColorForm">
+                    <div class="form-group">
+                        <label for="colorName">顏色名稱</label>
+                        <input type="text" class="form-control" id="colorName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="colorValue">顏色值</label>
+                        <input type="color" class="form-control" id="colorValue" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="colorOrder">排序</label>
+                        <input type="number" class="form-control" id="colorOrder" min="1" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="addColor()">新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增背景 Modal -->
+<div class="modal fade" id="addBackgroundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增寵物背景</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addBackgroundForm">
+                    <div class="form-group">
+                        <label for="backgroundName">背景名稱</label>
+                        <input type="text" class="form-control" id="backgroundName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="backgroundValue">背景值</label>
+                        <input type="text" class="form-control" id="backgroundValue" placeholder="例如: bg-primary" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="backgroundOrder">排序</label>
+                        <input type="number" class="form-control" id="backgroundOrder" min="1" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="addBackground()">新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    loadColorOptions();
+    loadBackgroundOptions();
+});
+
+function loadColorOptions() {
+    $.ajax({
+        url: '/MiniGame/AdminPet/GetColorOptions',
+        type: 'GET',
+        success: function(response) {
+            if (response.success) {
+                const tbody = $('#colorTable tbody');
+                tbody.empty();
+                
+                response.data.forEach(function(option) {
+                    const row = `
+                        <tr>
+                            <td>${option.colorName}</td>
+                            <td><span class="badge" style="background-color: ${option.colorValue}">${option.colorValue}</span></td>
+                            <td>${option.displayOrder}</td>
+                            <td>${option.isActive ? '<span class="badge badge-success">啟用</span>' : '<span class="badge badge-danger">停用</span>'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="toggleColorStatus(${option.id})">
+                                    ${option.isActive ? '停用' : '啟用'}
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteColor(${option.id})">刪除</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            }
+        }
+    });
+}
+
+function loadBackgroundOptions() {
+    $.ajax({
+        url: '/MiniGame/AdminPet/GetBackgroundOptions',
+        type: 'GET',
+        success: function(response) {
+            if (response.success) {
+                const tbody = $('#backgroundTable tbody');
+                tbody.empty();
+                
+                response.data.forEach(function(option) {
+                    const row = `
+                        <tr>
+                            <td>${option.backgroundName}</td>
+                            <td><span class="badge badge-secondary">${option.backgroundValue}</span></td>
+                            <td>${option.displayOrder}</td>
+                            <td>${option.isActive ? '<span class="badge badge-success">啟用</span>' : '<span class="badge badge-danger">停用</span>'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="toggleBackgroundStatus(${option.id})">
+                                    ${option.isActive ? '停用' : '啟用'}
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteBackground(${option.id})">刪除</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            }
+        }
+    });
+}
+
+function addColor() {
+    const data = {
+        colorName: $('#colorName').val(),
+        colorValue: $('#colorValue').val(),
+        displayOrder: parseInt($('#colorOrder').val())
+    };
+    
+    $.ajax({
+        url: '/MiniGame/AdminPet/AddColorOption',
+        type: 'POST',
+        data: data,
+        success: function(response) {
+            if (response.success) {
+                $('#addColorModal').modal('hide');
+                $('#addColorForm')[0].reset();
+                loadColorOptions();
+                showAlert('success', '顏色選項新增成功！');
+            } else {
+                showAlert('error', response.message || '新增失敗');
+            }
+        },
+        error: function() {
+            showAlert('error', '新增失敗，請稍後再試');
+        }
+    });
+}
+
+function addBackground() {
+    const data = {
+        backgroundName: $('#backgroundName').val(),
+        backgroundValue: $('#backgroundValue').val(),
+        displayOrder: parseInt($('#backgroundOrder').val())
+    };
+    
+    $.ajax({
+        url: '/MiniGame/AdminPet/AddBackgroundOption',
+        type: 'POST',
+        data: data,
+        success: function(response) {
+            if (response.success) {
+                $('#addBackgroundModal').modal('hide');
+                $('#addBackgroundForm')[0].reset();
+                loadBackgroundOptions();
+                showAlert('success', '背景選項新增成功！');
+            } else {
+                showAlert('error', response.message || '新增失敗');
+            }
+        },
+        error: function() {
+            showAlert('error', '新增失敗，請稍後再試');
+        }
+    });
+}
+
+function toggleColorStatus(id) {
+    $.ajax({
+        url: '/MiniGame/AdminPet/ToggleColorStatus',
+        type: 'POST',
+        data: { id: id },
+        success: function(response) {
+            if (response.success) {
+                loadColorOptions();
+                showAlert('success', '顏色狀態更新成功！');
+            } else {
+                showAlert('error', response.message || '更新失敗');
+            }
+        }
+    });
+}
+
+function toggleBackgroundStatus(id) {
+    $.ajax({
+        url: '/MiniGame/AdminPet/ToggleBackgroundStatus',
+        type: 'POST',
+        data: { id: id },
+        success: function(response) {
+            if (response.success) {
+                loadBackgroundOptions();
+                showAlert('success', '背景狀態更新成功！');
+            } else {
+                showAlert('error', response.message || '更新失敗');
+            }
+        }
+    });
+}
+
+function deleteColor(id) {
+    if (confirm('確定要刪除這個顏色選項嗎？')) {
+        $.ajax({
+            url: '/MiniGame/AdminPet/DeleteColorOption',
+            type: 'POST',
+            data: { id: id },
+            success: function(response) {
+                if (response.success) {
+                    loadColorOptions();
+                    showAlert('success', '顏色選項刪除成功！');
+                } else {
+                    showAlert('error', response.message || '刪除失敗');
+                }
+            }
+        });
+    }
+}
+
+function deleteBackground(id) {
+    if (confirm('確定要刪除這個背景選項嗎？')) {
+        $.ajax({
+            url: '/MiniGame/AdminPet/DeleteBackgroundOption',
+            type: 'POST',
+            data: { id: id },
+            success: function(response) {
+                if (response.success) {
+                    loadBackgroundOptions();
+                    showAlert('success', '背景選項刪除成功！');
+                } else {
+                    showAlert('error', response.message || '刪除失敗');
+                }
+            }
+        });
+    }
+}
+
+function showAlert(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+    $('.container-fluid').prepend(alertHtml);
+    
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 3000);
+}
+</script>
+

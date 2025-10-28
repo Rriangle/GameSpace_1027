@@ -1,0 +1,487 @@
+﻿@{
+    ViewData["Title"] = "查詢小遊戲記錄";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-gamepad mr-2"></i>查詢小遊戲記錄
+        </h1>
+        <div class="d-flex">
+            <a href="@Url.Action("Index")" class="btn btn-secondary mr-2">
+                <i class="fas fa-arrow-left"></i> 返回
+            </a>
+        </div>
+    </div>
+
+    <!-- 搜尋區域 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-filter"></i> 搜尋條件
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="searchForm">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="userId" class="form-label">會員ID</label>
+                                <input type="text" class="form-control" id="userId" name="userId" placeholder="輸入會員ID">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="userName" class="form-label">會員名稱</label>
+                                <input type="text" class="form-control" id="userName" name="userName" placeholder="輸入會員名稱">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="gameType" class="form-label">遊戲類型</label>
+                                <select class="form-control" id="gameType" name="gameType">
+                                    <option value="">全部類型</option>
+                                    <option value="adventure">冒險遊戲</option>
+                                    <option value="puzzle">益智遊戲</option>
+                                    <option value="action">動作遊戲</option>
+                                    <option value="strategy">策略遊戲</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="gameName" class="form-label">遊戲名稱</label>
+                                <input type="text" class="form-control" id="gameName" name="gameName" placeholder="輸入遊戲名稱">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="startDate" class="form-label">開始日期</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="endDate" class="form-label">結束日期</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="minScore" class="form-label">最小分數</label>
+                                <input type="number" class="form-control" id="minScore" name="minScore" placeholder="0">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="maxScore" class="form-label">最大分數</label>
+                                <input type="number" class="form-control" id="maxScore" name="maxScore" placeholder="999999">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="status" class="form-label">遊戲狀態</label>
+                                <select class="form-control" id="status" name="status">
+                                    <option value="">全部狀態</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="in_progress">進行中</option>
+                                    <option value="failed">失敗</option>
+                                    <option value="abandoned">放棄</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="difficulty" class="form-label">難度等級</label>
+                                <select class="form-control" id="difficulty" name="difficulty">
+                                    <option value="">全部難度</option>
+                                    <option value="easy">簡單</option>
+                                    <option value="normal">普通</option>
+                                    <option value="hard">困難</option>
+                                    <option value="expert">專家</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="hasReward" class="form-label">獎勵狀態</label>
+                                <select class="form-control" id="hasReward" name="hasReward">
+                                    <option value="">全部</option>
+                                    <option value="yes">有獎勵</option>
+                                    <option value="no">無獎勵</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 text-right">
+                                <button type="button" class="btn btn-primary" id="searchBtn">
+                                    <i class="fas fa-search"></i> 搜尋
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="resetBtn">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                                <button type="button" class="btn btn-success" id="exportBtn">
+                                    <i class="fas fa-download"></i> 匯出
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 統計概覽 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">總遊戲次數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalGames">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gamepad fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">完成遊戲</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="completedGames">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">平均分數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="avgScore">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">最高分數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="maxScore">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-trophy fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 結果區域 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list"></i> 查詢結果
+                    </h6>
+                    <span class="badge badge-info" id="resultCount">共 0 筆資料</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="gamesTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>會員ID</th>
+                                    <th>會員名稱</th>
+                                    <th>遊戲名稱</th>
+                                    <th>遊戲類型</th>
+                                    <th>分數</th>
+                                    <th>狀態</th>
+                                    <th>難度</th>
+                                    <th>遊戲時間</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 遊戲記錄數據將通過 AJAX 動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 詳細資訊 Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">遊戲記錄詳細資訊</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>基本資訊</h6>
+                        <table class="table table-sm">
+                            <tr><td>會員ID:</td><td id="detailUserId"></td></tr>
+                            <tr><td>會員名稱:</td><td id="detailUserName"></td></tr>
+                            <tr><td>遊戲名稱:</td><td id="detailGameName"></td></tr>
+                            <tr><td>遊戲類型:</td><td id="detailGameType"></td></tr>
+                            <tr><td>難度等級:</td><td id="detailDifficulty"></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>遊戲結果</h6>
+                        <table class="table table-sm">
+                            <tr><td>分數:</td><td id="detailScore"></td></tr>
+                            <tr><td>狀態:</td><td id="detailStatus"></td></tr>
+                            <tr><td>遊戲時間:</td><td id="detailGameTime"></td></tr>
+                            <tr><td>獎勵點數:</td><td id="detailRewardPoints"></td></tr>
+                            <tr><td>獎勵物品:</td><td id="detailRewardItems"></td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>時間資訊</h6>
+                        <table class="table table-sm">
+                            <tr><td>開始時間:</td><td id="detailStartTime"></td></tr>
+                            <tr><td>結束時間:</td><td id="detailEndTime"></td></tr>
+                            <tr><td>持續時間:</td><td id="detailDuration"></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>技術資訊</h6>
+                        <table class="table table-sm">
+                            <tr><td>IP地址:</td><td id="detailIpAddress"></td></tr>
+                            <tr><td>設備類型:</td><td id="detailDeviceType"></td></tr>
+                            <tr><td>瀏覽器:</td><td id="detailBrowser"></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+                <button type="button" class="btn btn-warning" id="adjustScoreBtn">調整分數</button>
+                <button type="button" class="btn btn-danger" id="deleteRecordBtn">刪除記錄</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // 初始化 DataTable
+        var table = $("#gamesTable").DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+            },
+            "pageLength": 25,
+            "order": [[ 7, "desc" ]],
+            "columnDefs": [
+                { "orderable": false, "targets": 8 }
+            ]
+        });
+
+        // 搜尋功能
+        $("#searchBtn").click(function() {
+            var formData = $("#searchForm").serialize();
+            $.ajax({
+                url: "@Url.Action("SearchGameRecords", "AdminMiniGame")",
+                type: "POST",
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        loadDataToTable(response.data);
+                        updateStatistics(response.statistics);
+                    } else {
+                        alert("搜尋失敗: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("搜尋請求失敗，請稍後再試");
+                }
+            });
+        });
+
+        // 重置功能
+        $("#resetBtn").click(function() {
+            $("#searchForm")[0].reset();
+            table.clear().draw();
+            $("#resultCount").text("共 0 筆資料");
+            updateStatistics({ totalGames: 0, completedGames: 0, avgScore: 0, maxScore: 0 });
+        });
+
+        // 匯出功能
+        $("#exportBtn").click(function() {
+            var formData = $("#searchForm").serialize();
+            window.open("@Url.Action("ExportGameRecords", "AdminMiniGame")?" + formData, "_blank");
+        });
+
+        // 載入數據到表格
+        function loadDataToTable(data) {
+            table.clear();
+            data.forEach(function(row) {
+                var statusClass = "";
+                switch(row.status) {
+                    case "已完成": statusClass = "badge-success"; break;
+                    case "進行中": statusClass = "badge-info"; break;
+                    case "失敗": statusClass = "badge-danger"; break;
+                    case "放棄": statusClass = "badge-warning"; break;
+                }
+                
+                var actionButtons = "<button class=\"btn btn-sm btn-info\" onclick=\"viewDetail(\
+ + row.recordId + 
+\)\">查看</button> " +
+                                   "<button class=\"btn btn-sm btn-warning\" onclick=\"adjustScore(\ + row.recordId + \)\">調整</button>";
+                
+                table.row.add([
+                    row.userId,
+                    row.userName,
+                    row.gameName,
+                    row.gameType,
+                    row.score.toLocaleString(),
+                    "<span class=\"badge " + statusClass + "\">" + row.status + "</span>",
+                    row.difficulty,
+                    row.gameTime,
+                    actionButtons
+                ]);
+            });
+            table.draw();
+            $("#resultCount").text("共 " + data.length + " 筆資料");
+        }
+
+        // 更新統計資訊
+        function updateStatistics(stats) {
+            $("#totalGames").text(stats.totalGames);
+            $("#completedGames").text(stats.completedGames);
+            $("#avgScore").text(stats.avgScore.toLocaleString());
+            $("#maxScore").text(stats.maxScore.toLocaleString());
+        }
+
+        // 查看詳細資訊
+        window.viewDetail = function(recordId) {
+            $.ajax({
+                url: "@Url.Action("GetGameRecordDetail", "AdminMiniGame")",
+                type: "GET",
+                data: { recordId: recordId },
+                success: function(response) {
+                    if (response.success) {
+                        $("#detailUserId").text(response.data.userId);
+                        $("#detailUserName").text(response.data.userName);
+                        $("#detailGameName").text(response.data.gameName);
+                        $("#detailGameType").text(response.data.gameType);
+                        $("#detailDifficulty").text(response.data.difficulty);
+                        $("#detailScore").text(response.data.score.toLocaleString());
+                        $("#detailStatus").text(response.data.status);
+                        $("#detailGameTime").text(response.data.gameTime);
+                        $("#detailRewardPoints").text(response.data.rewardPoints || "0");
+                        $("#detailRewardItems").text(response.data.rewardItems || "無");
+                        $("#detailStartTime").text(response.data.startTime);
+                        $("#detailEndTime").text(response.data.endTime);
+                        $("#detailDuration").text(response.data.duration);
+                        $("#detailIpAddress").text(response.data.ipAddress);
+                        $("#detailDeviceType").text(response.data.deviceType);
+                        $("#detailBrowser").text(response.data.browser);
+                        $("#detailModal").modal("show");
+                    } else {
+                        alert("獲取詳細資訊失敗: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("獲取詳細資訊失敗，請稍後再試");
+                }
+            });
+        };
+
+        // 調整分數
+        window.adjustScore = function(recordId) {
+            var newScore = prompt("請輸入新的分數:", "");
+            if (newScore !== null && !isNaN(newScore) && newScore >= 0) {
+                $.ajax({
+                    url: "@Url.Action("AdjustScore", "AdminMiniGame")",
+                    type: "POST",
+                    data: { recordId: recordId, newScore: newScore },
+                    success: function(response) {
+                        if (response.success) {
+                            alert("分數調整成功");
+                            $("#searchBtn").click(); // 重新搜尋
+                        } else {
+                            alert("分數調整失敗: " + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert("分數調整失敗，請稍後再試");
+                    }
+                });
+            }
+        };
+
+        // 調整分數按鈕
+        $("#adjustScoreBtn").click(function() {
+            var recordId = $("#detailGameName").text();
+            var currentScore = $("#detailScore").text().replace(/,/g, "");
+            var newScore = prompt("請輸入新的分數:", currentScore);
+            if (newScore !== null && !isNaN(newScore) && newScore >= 0) {
+                $.ajax({
+                    url: "@Url.Action("AdjustScore", "AdminMiniGame")",
+                    type: "POST",
+                    data: { recordId: recordId, newScore: newScore },
+                    success: function(response) {
+                        if (response.success) {
+                            alert("分數調整成功");
+                            $("#detailModal").modal("hide");
+                            $("#searchBtn").click(); // 重新搜尋
+                        } else {
+                            alert("分數調整失敗: " + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert("分數調整失敗，請稍後再試");
+                    }
+                });
+            }
+        });
+
+        // 刪除記錄按鈕
+        $("#deleteRecordBtn").click(function() {
+            var recordId = $("#detailGameName").text();
+            if (confirm("確定要刪除此遊戲記錄嗎？此操作無法撤銷。")) {
+                $.ajax({
+                    url: "@Url.Action("DeleteGameRecord", "AdminMiniGame")",
+                    type: "POST",
+                    data: { recordId: recordId },
+                    success: function(response) {
+                        if (response.success) {
+                            alert("遊戲記錄刪除成功");
+                            $("#detailModal").modal("hide");
+                            $("#searchBtn").click(); // 重新搜尋
+                        } else {
+                            alert("遊戲記錄刪除失敗: " + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert("遊戲記錄刪除失敗，請稍後再試");
+                    }
+                });
+            }
+        });
+    });
+</script>
+

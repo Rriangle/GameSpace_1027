@@ -1,0 +1,47 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.EntityFrameworkCore
+@using GameSpace.Models
+@inject GameSpacedatabaseContext Db
+
+@{
+    var principal = User;
+    bool isAuthed = principal?.Identity?.IsAuthenticated == true;
+    int? userId = null;
+    var idStr = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? principal?.FindFirst("uid")?.Value;
+    if (int.TryParse(idStr, out var parsed)) userId = parsed;
+}
+
+@if (isAuthed) {
+    <div class="sb-sidenav-menu-heading">我的小遊戲</div>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="Index">
+        <div class="sb-nav-link-icon"><i class="fas fa-home"></i></div>首頁
+    </a>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="Wallet">
+        <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>我的點數
+    </a>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="SignIn">
+        <div class="sb-nav-link-icon"><i class="fas fa-calendar-check"></i></div>每日簽到
+    </a>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="Pet">
+        <div class="sb-nav-link-icon"><i class="fas fa-paw"></i></div>我的寵物
+    </a>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="Games">
+        <div class="sb-nav-link-icon"><i class="fas fa-gamepad"></i></div>小遊戲
+    </a>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="Coupons">
+        <div class="sb-nav-link-icon"><i class="fas fa-ticket-alt"></i></div>我的優惠券
+    </a>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="EVouchers">
+        <div class="sb-nav-link-icon"><i class="fas fa-gift"></i></div>我的電子券
+    </a>
+    <a class="nav-link" asp-area="MiniGame" asp-controller="Member" asp-action="History">
+        <div class="sb-nav-link-icon"><i class="fas fa-history"></i></div>歷史記錄
+    </a>
+} else {
+    <div class="sb-sidenav-menu-heading">請先登入</div>
+    <div class="nav-link text-muted">
+        <div class="sb-nav-link-icon"><i class="fas fa-sign-in-alt"></i></div>請先登入以使用小遊戲功能
+    </div>
+}
+

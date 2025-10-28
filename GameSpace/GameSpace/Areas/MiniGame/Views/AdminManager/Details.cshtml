@@ -1,0 +1,209 @@
+﻿@model GameSpace.Models.ManagerDatum
+@{
+    ViewData["Title"] = "管理者詳情";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">管理者詳情</h1>
+        <div>
+            <a href="@Url.Action("Edit", "AdminManager", new { id = Model.ManagerId })" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm">
+                <i class="fas fa-edit fa-sm text-white-50"></i> 編輯管理者
+            </a>
+            <a href="@Url.Action("Index", "AdminManager")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 基本資訊 -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">基本資訊</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user-cog fa-2x text-white"></i>
+                        </div>
+                        <h5 class="mt-3">@Model.ManagerName</h5>
+                        <span class="badge @(Model.ManagerLockoutEnabled && Model.ManagerLockoutEnd.HasValue && Model.ManagerLockoutEnd > DateTime.Now ? "badge-danger" : "badge-success")">
+                            @(Model.ManagerLockoutEnabled && Model.ManagerLockoutEnd.HasValue && Model.ManagerLockoutEnd > DateTime.Now ? "鎖定" : "啟用")
+                        </span>
+                    </div>
+
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>管理者ID:</strong></td>
+                            <td>@Model.ManagerId</td>
+                        </tr>
+                        <tr>
+                            <td><strong>帳號:</strong></td>
+                            <td>@Model.ManagerAccount</td>
+                        </tr>
+                        <tr>
+                            <td><strong>電子郵件:</strong></td>
+                            <td>@Model.ManagerEmail</td>
+                        </tr>
+                        <tr>
+                            <td><strong>註冊日期:</strong></td>
+                            <td>@Model.AdministratorRegistrationDate?.ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>鎖定狀態:</strong></td>
+                            <td>
+                                @if (Model.ManagerLockoutEnabled && Model.ManagerLockoutEnd.HasValue && Model.ManagerLockoutEnd > DateTime.Now)
+                                {
+                                    <span class="text-danger">已鎖定至 @Model.ManagerLockoutEnd.Value.ToString("yyyy-MM-dd HH:mm")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-success">未鎖定</span>
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 詳細資訊 -->
+        <div class="col-lg-8">
+            <!-- 角色資訊 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">角色資訊</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.ManagerRoles != null && Model.ManagerRoles.Any())
+                    {
+                        <div class="row">
+                            @foreach (var role in Model.ManagerRoles)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <span class="badge badge-primary">@role.RoleName</span>
+                                            </h6>
+                                            <p class="card-text text-muted">角色權限</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">暫無角色分配</p>
+                    }
+                </div>
+            </div>
+
+            <!-- 權限資訊 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">權限資訊</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.ManagerRoles != null && Model.ManagerRoles.Any())
+                    {
+                        <div class="row">
+                            @foreach (var role in Model.ManagerRoles)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <h6>@role.RoleName 權限</h6>
+                                    <ul class="list-unstyled">
+                                        @if (role.AdministratorPrivilegesManagement == true)
+                                        {
+                                            <li class="mb-1">
+                                                <i class="fas fa-check text-success"></i> 管理員特權管理
+                                            </li>
+                                        }
+                                        @if (role.UserStatusManagement == true)
+                                        {
+                                            <li class="mb-1">
+                                                <i class="fas fa-check text-success"></i> 用戶狀態管理
+                                            </li>
+                                        }
+                                        @if (role.ShoppingPermissionManagement == true)
+                                        {
+                                            <li class="mb-1">
+                                                <i class="fas fa-check text-success"></i> 購物權限管理
+                                            </li>
+                                        }
+                                        @if (role.MessagePermissionManagement == true)
+                                        {
+                                            <li class="mb-1">
+                                                <i class="fas fa-check text-success"></i> 訊息權限管理
+                                            </li>
+                                        }
+                                        @if (role.PetRightsManagement == true)
+                                        {
+                                            <li class="mb-1">
+                                                <i class="fas fa-check text-success"></i> 寵物權限管理
+                                            </li>
+                                        }
+                                        @if (role.CustomerService == true)
+                                        {
+                                            <li class="mb-1">
+                                                <i class="fas fa-check text-success"></i> 客服
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">暫無權限資訊</p>
+                    }
+                </div>
+            </div>
+
+            <!-- 操作記錄 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">操作記錄</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>操作時間</th>
+                                    <th>操作類型</th>
+                                    <th>操作描述</th>
+                                    <th>IP地址</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>@Model.AdministratorRegistrationDate?.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td><span class="badge badge-success">註冊</span></td>
+                                    <td>管理者帳號建立</td>
+                                    <td>-</td>
+                                </tr>
+                                @if (Model.ManagerLockoutEnabled && Model.ManagerLockoutEnd.HasValue)
+                                {
+                                    <tr>
+                                        <td>@Model.ManagerLockoutEnd.Value.ToString("yyyy-MM-dd HH:mm")</td>
+                                        <td><span class="badge badge-warning">鎖定</span></td>
+                                        <td>帳號被鎖定</td>
+                                        <td>-</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

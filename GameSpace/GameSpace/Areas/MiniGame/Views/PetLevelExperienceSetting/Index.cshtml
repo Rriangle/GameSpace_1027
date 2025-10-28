@@ -1,0 +1,124 @@
+﻿@model GameSpace.Areas.MiniGame.Models.Settings.PetLevelExperienceSettingListViewModel
+
+@{
+    ViewData["Title"] = "寵物等級經驗值設定管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">寵物等級經驗值設定管理</h3>
+                    <div class="card-tools">
+                        <a asp-action="Create" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> 新增設定
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>等級</th>
+                                    <th>所需經驗值</th>
+                                    <th>描述</th>
+                                    <th>建立時間</th>
+                                    <th>更新時間</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Settings.Any())
+                                {
+                                    @foreach (var setting in Model.Settings)
+                                    {
+                                        <tr>
+                                            <td>@setting.Id</td>
+                                            <td>@setting.Level</td>
+                                            <td>@setting.RequiredExperience.ToString("N0")</td>
+                                            <td>@(string.IsNullOrEmpty(setting.Description) ? "-" : setting.Description)</td>
+                                            <td>@setting.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                            <td>@setting.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a asp-action="Details" asp-route-id="@setting.Id" class="btn btn-info btn-sm">
+                                                        <i class="fas fa-eye"></i> 檢視
+                                                    </a>
+                                                    <a asp-action="Edit" asp-route-id="@setting.Id" class="btn btn-warning btn-sm">
+                                                        <i class="fas fa-edit"></i> 編輯
+                                                    </a>
+                                                    <a asp-action="Delete" asp-route-id="@setting.Id" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-trash"></i> 刪除
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center">暫無資料</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @if (Model.TotalPages > 1)
+                    {
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                @if (Model.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)">上一頁</a>
+                                    </li>
+                                }
+                                
+                                @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                                    </li>
+                                }
+                                
+                                @if (Model.CurrentPage < Model.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)">下一頁</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

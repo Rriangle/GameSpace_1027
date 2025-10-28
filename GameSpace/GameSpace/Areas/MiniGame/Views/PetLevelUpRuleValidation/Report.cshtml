@@ -1,0 +1,215 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "升級規則驗證報告";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">升級規則驗證報告</h1>
+        <div>
+            <button type="button" class="btn btn-info btn-sm" onclick="refreshReport()">
+                <i class="fas fa-sync-alt"></i> 重新整理
+            </button>
+            <button type="button" class="btn btn-success btn-sm" onclick="exportReport()">
+                <i class="fas fa-download"></i> 匯出報告
+            </button>
+        </div>
+    </div>
+
+    <!-- 報告摘要 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar"></i> 報告摘要
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 font-weight-bold text-gray-800">@Model.summary.totalErrors</div>
+                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">錯誤數量</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 font-weight-bold text-gray-800">@Model.summary.totalWarnings</div>
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">警告數量</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 font-weight-bold text-gray-800">@(Model.summary.isValid ? "通過" : "失敗")</div>
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">驗證狀態</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h3 mb-0 font-weight-bold text-gray-800">@Model.timestamp.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">報告時間</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細驗證結果 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-list"></i> 詳細驗證結果
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.consistency.isValid)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> 升級規則一致性驗證通過
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> 升級規則一致性驗證失敗
+                        </div>
+                    }
+
+                    @if (Model.consistency.warnings != null && Model.consistency.warnings.Count > 0)
+                    {
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> 警告</h6>
+                            <ul class="mb-0">
+                                @foreach (var warning in Model.consistency.warnings)
+                                {
+                                    <li>@warning</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (Model.consistency.errors != null && Model.consistency.errors.Count > 0)
+                    {
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-times-circle"></i> 錯誤</h6>
+                            <ul class="mb-0">
+                                @foreach (var error in Model.consistency.errors)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 驗證統計圖表 -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie"></i> 驗證結果分布
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="validationChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line"></i> 驗證趨勢
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function refreshReport() {
+            location.reload();
+        }
+
+        function exportReport() {
+            // 這裡可以實作匯出功能
+            alert('匯出功能開發中...');
+        }
+
+        .ready(function() {
+            // 驗證結果分布圖
+            var ctx1 = document.getElementById('validationChart').getContext('2d');
+            var validationChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['通過', '錯誤', '警告'],
+                    datasets: [{
+                        data: [
+                            @(Model.summary.isValid ? 1 : 0),
+                            @Model.summary.totalErrors,
+                            @Model.summary.totalWarnings
+                        ],
+                        backgroundColor: [
+                            '#28a745',
+                            '#dc3545',
+                            '#ffc107'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // 驗證趨勢圖
+            var ctx2 = document.getElementById('trendChart').getContext('2d');
+            var trendChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['1小時前', '30分鐘前', '15分鐘前', '現在'],
+                    datasets: [{
+                        label: '錯誤數量',
+                        data: [0, 0, 0, @Model.summary.totalErrors],
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.1
+                    }, {
+                        label: '警告數量',
+                        data: [0, 0, 0, @Model.summary.totalWarnings],
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
+

@@ -1,0 +1,117 @@
+@model GameSpace.Models.Coupon
+@{
+    ViewData["Title"] = "優惠券詳情";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">優惠券詳情</h1>
+        <div>
+            <a href="@Url.Action("Index", "AdminCoupon")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">優惠券資訊</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">優惠券ID</dt>
+                        <dd class="col-sm-9">@Html.DisplayFor(model => model.CouponId)</dd>
+                        
+                        <dt class="col-sm-3">優惠券代碼</dt>
+                        <dd class="col-sm-9">@Html.DisplayFor(model => model.CouponCode)</dd>
+                        
+                        <dt class="col-sm-3">使用者</dt>
+                        <dd class="col-sm-9">@Html.DisplayFor(model => model.User.UserName)</dd>
+                        
+                        <dt class="col-sm-3">優惠券類型</dt>
+                        <dd class="col-sm-9">@Html.DisplayFor(model => model.CouponType.Name)</dd>
+                        
+                        <dt class="col-sm-3">狀態</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.IsUsed)
+                            {
+                                <span class="badge badge-success">已使用</span>
+                            }
+                            else if (Model.CouponType?.ValidTo < DateTime.Now)
+                            {
+                                <span class="badge badge-danger">已過期</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-warning">未使用</span>
+                            }
+                        </dd>
+                        
+                        <dt class="col-sm-3">獲得時間</dt>
+                        <dd class="col-sm-9">@Html.DisplayFor(model => model.AcquiredTime)</dd>
+                        
+                        <dt class="col-sm-3">使用時間</dt>
+                        <dd class="col-sm-9">@(Model.UsedTime?.ToString("yyyy-MM-dd HH:mm") ?? "-")</dd>
+                        
+                        @if (Model.UsedInOrderId.HasValue)
+                        {
+                            <dt class="col-sm-3">使用訂單ID</dt>
+                            <dd class="col-sm-9">@Html.DisplayFor(model => model.UsedInOrderId)</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-info-circle"></i> 操作選項
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Edit", "AdminCoupon", new { id = Model.CouponId })" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> 編輯優惠券
+                        </a>
+                        <a href="@Url.Action("Delete", "AdminCoupon", new { id = Model.CouponId })" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> 刪除優惠券
+                        </a>
+                        <a href="@Url.Action("Index", "AdminCoupon")" class="btn btn-secondary">
+                            <i class="fas fa-list"></i> 返回列表
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 注意事項
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            優惠券代碼不可重複
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            刪除操作無法復原
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            請確認使用者身份
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

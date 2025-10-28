@@ -1,0 +1,172 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.SignInRecordViewModel
+@{
+    ViewData["Title"] = "刪除簽到紀錄";
+}
+
+@await Html.PartialAsync("_MiniGameAdminTabs")
+
+<div class="container-fluid">
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h3><i class="fas fa-trash-alt me-2"></i>刪除簽到紀錄</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>警告：</strong>刪除簽到紀錄是不可逆的操作！請確認後再執行。
+            </div>
+
+            <!-- 紀錄資訊 -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>簽到紀錄資訊</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">紀錄 ID：</dt>
+                                <dd class="col-sm-8">@Model.RecordId</dd>
+
+                                <dt class="col-sm-4">會員 ID：</dt>
+                                <dd class="col-sm-8">@Model.UserId</dd>
+
+                                <dt class="col-sm-4">會員帳號：</dt>
+                                <dd class="col-sm-8">@Model.UserAccount</dd>
+
+                                <dt class="col-sm-4">會員名稱：</dt>
+                                <dd class="col-sm-8">@Model.UserName</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">簽到日期：</dt>
+                                <dd class="col-sm-8">@Model.SignInDate.ToString("yyyy-MM-dd")</dd>
+
+                                <dt class="col-sm-4">連續天數：</dt>
+                                <dd class="col-sm-8"><span class="badge bg-info">@Model.ConsecutiveDays 天</span></dd>
+
+                                <dt class="col-sm-4">紀錄時間：</dt>
+                                <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- 獎勵資訊 -->
+                    @if (Model.PointsRewarded > 0 || Model.PetExpRewarded > 0 || Model.CouponTypeId.HasValue || Model.EvoucherTypeId.HasValue)
+                    {
+                        <hr />
+                        <h6 class="text-muted mb-3"><i class="fas fa-gift me-2"></i>已發放獎勵：</h6>
+                        <div class="row">
+                            @if (Model.PointsRewarded > 0)
+                            {
+                                <div class="col-md-3">
+                                    <div class="alert alert-success mb-2">
+                                        <i class="fas fa-coins me-1"></i>點數：<strong>@Model.PointsRewarded</strong>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.PetExpRewarded > 0)
+                            {
+                                <div class="col-md-3">
+                                    <div class="alert alert-info mb-2">
+                                        <i class="fas fa-star me-1"></i>經驗值：<strong>@Model.PetExpRewarded</strong>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.CouponTypeId.HasValue)
+                            {
+                                <div class="col-md-3">
+                                    <div class="alert alert-warning mb-2">
+                                        <i class="fas fa-ticket-alt me-1"></i>優惠券：<strong>@Model.CouponTypeName</strong>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.EvoucherTypeId.HasValue)
+                            {
+                                <div class="col-md-3">
+                                    <div class="alert alert-primary mb-2">
+                                        <i class="fas fa-gift me-1"></i>禮券：<strong>@Model.EvoucherTypeName</strong>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 刪除警告 -->
+            <div class="card border-warning mb-4">
+                <div class="card-body">
+                    <h6 class="card-title text-danger"><i class="fas fa-exclamation-circle me-2"></i>刪除後的影響</h6>
+                    <ul class="mb-0">
+                        <li class="text-danger"><strong>此操作無法復原！</strong></li>
+                        <li>簽到紀錄將被永久刪除</li>
+                        <li>已發放的獎勵（點數、經驗值、優惠券等）<strong>不會自動回收</strong></li>
+                        <li>會員的連續簽到天數可能會受到影響</li>
+                        <li>刪除操作將被記錄在系統日誌中</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 確認表單 -->
+            <form asp-action="DeleteSignInRecord" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="RecordId" value="@Model.RecordId" />
+
+                <!-- 刪除原因 -->
+                <div class="mb-3">
+                    <label for="deleteReason" class="form-label">刪除原因 <span class="text-danger">*</span></label>
+                    <textarea name="DeleteReason" id="deleteReason" class="form-control" rows="4" required placeholder="請詳細說明刪除此簽到紀錄的原因（必填）"></textarea>
+                    <small class="text-muted">此原因將被記錄在系統日誌中，以便日後追溯。</small>
+                </div>
+
+                <!-- 二次確認 -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required />
+                        <label class="form-check-label text-danger" for="confirmDelete">
+                            <strong>我已了解刪除後無法復原，並確認要刪除此簽到紀錄</strong>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="mt-4 border-top pt-3">
+                    <button type="submit" class="btn btn-danger" id="btnDelete" disabled>
+                        <i class="fas fa-trash-alt me-1"></i>確認刪除
+                    </button>
+                    <a asp-action="QuerySignInRecords" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>取消返回
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 確認勾選後才能按刪除按鈕
+        document.getElementById('confirmDelete').addEventListener('change', function() {
+            document.getElementById('btnDelete').disabled = !this.checked;
+        });
+
+        // 表單提交前最後確認
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const reason = document.getElementById('deleteReason').value.trim();
+            if (!reason) {
+                e.preventDefault();
+                alert('請填寫刪除原因！');
+                return false;
+            }
+
+            const confirmMsg = '最後確認：\n\n確定要刪除此簽到紀錄嗎？\n此操作無法復原！\n\n紀錄ID：@Model.RecordId\n會員：@Model.UserAccount (@Model.UserName)\n日期：@Model.SignInDate.ToString("yyyy-MM-dd")';
+
+            if (!confirm(confirmMsg)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+}

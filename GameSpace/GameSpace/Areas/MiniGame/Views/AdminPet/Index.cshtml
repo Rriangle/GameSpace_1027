@@ -1,0 +1,130 @@
+﻿@model GameSpace.Areas.MiniGame.Models.AdminPetIndexViewModel
+@{
+    ViewData["Title"] = "寵物管理";
+    Layout = "~/Areas/MiniGame/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物管理</h1>
+        <a href="@Url.Action("Create")" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> 新增寵物
+        </a>
+    </div>
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">寵物列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>寵物ID</th>
+                            <th>寵物名稱</th>
+                            <th>主人</th>
+                            <th>等級</th>
+                            <th>經驗值</th>
+                            <th>飢餓</th>
+                            <th>心情</th>
+                            <th>體力</th>
+                            <th>清潔</th>
+                            <th>健康</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pet in Model.Pets.Items)
+                        {
+                            <tr>
+                                <td>@pet.PetId</td>
+                                <td>@pet.PetName</td>
+                                <td>@pet.User?.UserName</td>
+                                <td>@pet.Level</td>
+                                <td>@pet.Experience</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @(pet.Hunger < 20 ? "bg-danger" : pet.Hunger < 50 ? "bg-warning" : "bg-success")" 
+                                             role="progressbar" style="width: @pet.Hunger%" 
+                                             aria-valuenow="@pet.Hunger" aria-valuemin="0" aria-valuemax="100">
+                                            @pet.Hunger%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @(pet.Mood < 20 ? "bg-danger" : pet.Mood < 50 ? "bg-warning" : "bg-success")" 
+                                             role="progressbar" style="width: @pet.Mood%" 
+                                             aria-valuenow="@pet.Mood" aria-valuemin="0" aria-valuemax="100">
+                                            @pet.Mood%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @(pet.Stamina < 20 ? "bg-danger" : pet.Stamina < 50 ? "bg-warning" : "bg-success")" 
+                                             role="progressbar" style="width: @pet.Stamina%" 
+                                             aria-valuenow="@pet.Stamina" aria-valuemin="0" aria-valuemax="100">
+                                            @pet.Stamina%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @(pet.Cleanliness < 20 ? "bg-danger" : pet.Cleanliness < 50 ? "bg-warning" : "bg-success")" 
+                                             role="progressbar" style="width: @pet.Cleanliness%" 
+                                             aria-valuenow="@pet.Cleanliness" aria-valuemin="0" aria-valuemax="100">
+                                            @pet.Cleanliness%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @(pet.Health < 20 ? "bg-danger" : pet.Health < 50 ? "bg-warning" : "bg-success")" 
+                                             role="progressbar" style="width: @pet.Health%" 
+                                             aria-valuenow="@pet.Health" aria-valuemin="0" aria-valuemax="100">
+                                            @pet.Health%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", new { id = pet.PetId })" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", new { id = pet.PetId })" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="@Url.Action("Delete", new { id = pet.PetId })" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DataTables JavaScript -->
+<script src="~/lib/datatables/js/jquery.dataTables.min.js"></script>
+<script src="~/lib/datatables/js/dataTables.bootstrap4.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#dataTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+        },
+        "pageLength": 25,
+        "order": [[ 0, "desc" ]]
+    });
+});
+</script>
+

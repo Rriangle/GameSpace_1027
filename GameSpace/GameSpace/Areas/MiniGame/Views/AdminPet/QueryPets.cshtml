@@ -1,0 +1,430 @@
+@{
+    ViewData["Title"] = "會員個別寵物基本資料查詢";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Navigation Tabs -->
+<partial name="_MiniGameAdminTabs" />
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-paw text-primary me-2"></i>會員個別寵物基本資料查詢
+        </h1>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("ColorChangeHistory")" class="btn btn-info">
+                <i class="fas fa-palette me-1"></i>換膚／換背景紀錄查詢
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>返回
+            </a>
+        </div>
+    </div>
+
+    <!-- 統計卡片區 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">總寵物數</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800" id="totalPets">0</div>
+                        </div>
+                        <div class="text-primary opacity-50">
+                            <i class="fas fa-paw fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">健康寵物</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800" id="activePets">0</div>
+                        </div>
+                        <div class="text-success opacity-50">
+                            <i class="fas fa-heart fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-info border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">平均等級</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800" id="avgLevel">0</div>
+                        </div>
+                        <div class="text-info opacity-50">
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">需照顧寵物</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800" id="needCarePets">0</div>
+                        </div>
+                        <div class="text-warning opacity-50">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜尋區域 -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-gradient-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-filter me-2"></i>搜尋條件</h4>
+        </div>
+        <div class="card-body p-4">
+            <form id="searchForm">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control rounded" id="userId" name="userId" placeholder="輸入會員ID">
+                            <label for="userId"><i class="fas fa-user me-1"></i>會員ID</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control rounded" id="userName" name="userName" placeholder="輸入會員名稱">
+                            <label for="userName"><i class="fas fa-user-tag me-1"></i>會員名稱</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control rounded" id="petName" name="petName" placeholder="輸入寵物名稱">
+                            <label for="petName"><i class="fas fa-paw me-1"></i>寵物名稱</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <select class="form-control rounded" id="petType" name="petType">
+                                <option value="">全部類型</option>
+                                <option value="slime">史萊姆</option>
+                                <option value="dragon">龍</option>
+                                <option value="cat">貓</option>
+                                <option value="dog">狗</option>
+                            </select>
+                            <label for="petType"><i class="fas fa-dragon me-1"></i>寵物類型</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <input type="number" class="form-control rounded" id="minLevel" name="minLevel" placeholder="1" min="1">
+                            <label for="minLevel"><i class="fas fa-arrow-up me-1"></i>最小等級</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <input type="number" class="form-control rounded" id="maxLevel" name="maxLevel" placeholder="100" max="100">
+                            <label for="maxLevel"><i class="fas fa-arrow-down me-1"></i>最大等級</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <select class="form-control rounded" id="status" name="status">
+                                <option value="">全部狀態</option>
+                                <option value="healthy">健康</option>
+                                <option value="normal">普通</option>
+                                <option value="needcare">需照顧</option>
+                                <option value="critical">危急</option>
+                            </select>
+                            <label for="status"><i class="fas fa-heartbeat me-1"></i>健康狀態</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="form-floating">
+                            <select class="form-control rounded" id="color" name="color">
+                                <option value="">全部顏色</option>
+                                <option value="red">紅色</option>
+                                <option value="blue">藍色</option>
+                                <option value="green">綠色</option>
+                                <option value="yellow">黃色</option>
+                                <option value="purple">紫色</option>
+                            </select>
+                            <label for="color"><i class="fas fa-palette me-1"></i>顏色</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 text-end">
+                        <button type="button" class="btn btn-primary btn-lg rounded-pill" id="searchBtn">
+                            <i class="fas fa-search me-2"></i>搜尋
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg rounded-pill" id="resetBtn">
+                            <i class="fas fa-undo me-2"></i>重置
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg rounded-pill" id="exportBtn">
+                            <i class="fas fa-download me-2"></i>匯出
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 結果區域 -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table me-2 text-primary"></i>查詢結果</h5>
+            <span class="badge bg-primary rounded-pill" id="resultCount">共 0 筆資料</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="petsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><i class="fas fa-hashtag me-1"></i>會員ID</th>
+                            <th><i class="fas fa-user me-1"></i>會員名稱</th>
+                            <th><i class="fas fa-paw me-1"></i>寵物名稱</th>
+                            <th><i class="fas fa-dragon me-1"></i>類型</th>
+                            <th><i class="fas fa-level-up-alt me-1"></i>等級</th>
+                            <th><i class="fas fa-heartbeat me-1"></i>健康狀態</th>
+                            <th><i class="fas fa-chart-bar me-1"></i>五大屬性</th>
+                            <th><i class="fas fa-palette me-1"></i>顏色</th>
+                            <th class="text-center pe-4"><i class="fas fa-cog me-1"></i>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 寵物數據將通過 AJAX 動態載入 -->
+                        <tr>
+                            <td colspan="9" class="text-center p-5">
+                                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">請使用搜尋條件查詢寵物資料</h5>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 詳細資訊 Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>寵物詳細資訊</h5>
+                <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-clipboard me-2 text-primary"></i>基本資訊</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr><td class="text-muted">會員ID:</td><td id="detailUserId" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">會員名稱:</td><td id="detailUserName" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">寵物名稱:</td><td id="detailPetName" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">寵物類型:</td><td id="detailPetType" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">等級:</td><td id="detailLevel" class="fw-bold"></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-line me-2 text-success"></i>屬性資訊</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr><td class="text-muted">飢餓度:</td><td id="detailHunger" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">心情:</td><td id="detailMood" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">體力:</td><td id="detailStamina" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">清潔度:</td><td id="detailCleanliness" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">健康度:</td><td id="detailHealth" class="fw-bold"></td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-palette me-2 text-warning"></i>外觀資訊</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr><td class="text-muted">顏色:</td><td id="detailColor" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">背景:</td><td id="detailBackground" class="fw-bold"></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-clock me-2 text-info"></i>時間資訊</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr><td class="text-muted">創建時間:</td><td id="detailCreateTime" class="fw-bold"></td></tr>
+                            <tr><td class="text-muted">最後更新:</td><td id="detailLastUpdate" class="fw-bold"></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>關閉
+                </button>
+                <button type="button" class="btn btn-warning" id="adjustPetBtn">
+                    <i class="fas fa-edit me-1"></i>調整寵物
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // 初始化 DataTable
+        var table = $("#petsTable").DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Chinese-traditional.json"
+            },
+            "pageLength": 25,
+            "order": [[ 0, "asc" ]],
+            "columnDefs": [
+                { "orderable": false, "targets": 8 }
+            ]
+        });
+
+        // 搜尋功能
+        $("#searchBtn").click(function() {
+            var formData = $("#searchForm").serialize();
+            $.ajax({
+                url: "@Url.Action("SearchPets", "AdminPet")",
+                type: "POST",
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        loadDataToTable(response.data);
+                        updateStatistics(response.statistics);
+                    } else {
+                        alert("搜尋失敗: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("搜尋請求失敗，請稍後再試");
+                }
+            });
+        });
+
+        // 重置功能
+        $("#resetBtn").click(function() {
+            $("#searchForm")[0].reset();
+            table.clear().draw();
+            $("#resultCount").text("共 0 筆資料");
+            updateStatistics({ totalPets: 0, activePets: 0, avgLevel: 0, needCarePets: 0 });
+        });
+
+        // 匯出功能
+        $("#exportBtn").click(function() {
+            var formData = $("#searchForm").serialize();
+            window.open("@Url.Action("ExportPets", "AdminPet")?" + formData, "_blank");
+        });
+
+        // 載入數據到表格
+        function loadDataToTable(data) {
+            table.clear();
+            data.forEach(function(row) {
+                // 健康狀態判定
+                var avgHealth = (row.hunger + row.mood + row.stamina + row.cleanliness + row.health) / 5;
+                var statusClass = "";
+                var statusText = "";
+                if (avgHealth >= 70) {
+                    statusClass = "success";
+                    statusText = "健康";
+                } else if (avgHealth >= 40) {
+                    statusClass = "warning";
+                    statusText = "普通";
+                } else if (avgHealth >= 20) {
+                    statusClass = "danger";
+                    statusText = "需照顧";
+                } else {
+                    statusClass = "dark";
+                    statusText = "危急";
+                }
+
+                // 五大屬性顯示
+                var attributesHtml = '<div class="small">' +
+                    '<div class="progress mb-1" style="height: 5px;"><div class="progress-bar bg-danger" style="width:' + row.hunger + '%"></div></div>' +
+                    '<div class="progress mb-1" style="height: 5px;"><div class="progress-bar bg-warning" style="width:' + row.mood + '%"></div></div>' +
+                    '<div class="progress mb-1" style="height: 5px;"><div class="progress-bar bg-primary" style="width:' + row.stamina + '%"></div></div>' +
+                    '<div class="progress mb-1" style="height: 5px;"><div class="progress-bar bg-info" style="width:' + row.cleanliness + '%"></div></div>' +
+                    '<div class="progress" style="height: 5px;"><div class="progress-bar bg-success" style="width:' + row.health + '%"></div></div>' +
+                    '</div>';
+
+                var actionButtons = '<button class="btn btn-sm btn-info me-1" onclick="viewDetail(' + row.petId + ')"><i class="fas fa-eye"></i></button>' +
+                                   '<button class="btn btn-sm btn-warning" onclick="adjustPet(' + row.petId + ')"><i class="fas fa-edit"></i></button>';
+
+                table.row.add([
+                    '<span class="badge bg-secondary">' + row.userId + '</span>',
+                    row.userName,
+                    '<strong>' + row.petName + '</strong>',
+                    row.petType,
+                    '<span class="badge bg-primary">Lv.' + row.level + '</span>',
+                    '<span class="badge bg-' + statusClass + ' rounded-pill">' + statusText + '</span>',
+                    attributesHtml,
+                    '<span class="badge" style="background-color:' + row.color + '; color: #fff;">' + row.color + '</span>',
+                    actionButtons
+                ]);
+            });
+            table.draw();
+            $("#resultCount").text("共 " + data.length + " 筆資料");
+        }
+
+        // 更新統計資訊
+        function updateStatistics(stats) {
+            $("#totalPets").text(stats.totalPets);
+            $("#activePets").text(stats.activePets);
+            $("#avgLevel").text(stats.avgLevel.toFixed(1));
+            $("#needCarePets").text(stats.needCarePets);
+        }
+
+        // 查看詳細資訊
+        window.viewDetail = function(petId) {
+            $.ajax({
+                url: "@Url.Action("GetPetDetail", "AdminPet")",
+                type: "GET",
+                data: { petId: petId },
+                success: function(response) {
+                    if (response.success) {
+                        $("#detailUserId").text(response.data.userId);
+                        $("#detailUserName").text(response.data.userName);
+                        $("#detailPetName").text(response.data.petName);
+                        $("#detailPetType").text(response.data.petType);
+                        $("#detailLevel").html('<span class="badge bg-primary">Lv.' + response.data.level + '</span>');
+                        $("#detailHunger").html('<span class="badge bg-danger">' + response.data.hunger + '%</span>');
+                        $("#detailMood").html('<span class="badge bg-warning text-dark">' + response.data.mood + '%</span>');
+                        $("#detailStamina").html('<span class="badge bg-primary">' + response.data.stamina + '%</span>');
+                        $("#detailCleanliness").html('<span class="badge bg-info">' + response.data.cleanliness + '%</span>');
+                        $("#detailHealth").html('<span class="badge bg-success">' + response.data.health + '%</span>');
+                        $("#detailColor").html('<span class="badge" style="background-color:' + response.data.color + '; color: #fff;">' + response.data.color + '</span>');
+                        $("#detailBackground").html('<span class="badge" style="background-color:' + response.data.background + '; color: #333; border: 1px solid #ddd;">' + response.data.background + '</span>');
+                        $("#detailCreateTime").text(response.data.createTime);
+                        $("#detailLastUpdate").text(response.data.lastUpdate);
+                        $("#detailModal").modal("show");
+                    } else {
+                        alert("獲取詳細資訊失敗: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("獲取詳細資訊失敗，請稍後再試");
+                }
+            });
+        };
+
+        // 調整寵物
+        window.adjustPet = function(petId) {
+            window.location.href = '@Url.Action("IndividualSettings", "AdminPet")' + '?petId=' + petId;
+        };
+
+        // 調整寵物按鈕
+        $("#adjustPetBtn").click(function() {
+            $("#detailModal").modal("hide");
+        });
+    });
+</script>

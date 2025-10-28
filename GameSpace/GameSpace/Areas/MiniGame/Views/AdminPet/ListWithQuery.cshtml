@@ -1,0 +1,359 @@
+@model GameSpace.Areas.MiniGame.Models.ViewModels.PetListQueryModel
+@{
+    ViewData["Title"] = "寵物進階查詢列表";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">寵物進階查詢列表</h1>
+    </div>
+
+    <!-- 查詢表單 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">查詢表單</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" id="searchForm">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="userId">使用者ID</label>
+                            <input type="text" class="form-control" id="userId" name="userId" placeholder="輸入使用者ID">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="userName">使用者名稱</label>
+                            <input type="text" class="form-control" id="userName" name="userName" placeholder="輸入使用者名稱">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="petName">寵物名字</label>
+                            <input type="text" class="form-control" id="petName" name="petName" placeholder="輸入寵物名字">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="petId">寵物ID</label>
+                            <input type="text" class="form-control" id="petId" name="petId" placeholder="輸入寵物ID">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="minLevel">最低等級</label>
+                            <input type="number" class="form-control" id="minLevel" name="minLevel" min="1" placeholder="最低等級">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="maxLevel">最高等級</label>
+                            <input type="number" class="form-control" id="maxLevel" name="maxLevel" min="1" placeholder="最高等級">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="skinColor">膚色</label>
+                            <select class="form-control" id="skinColor" name="skinColor">
+                                <option value="">全部</option>
+                                <option value="白色">白色</option>
+                                <option value="黑色">黑色</option>
+                                <option value="灰色">灰色</option>
+                                <option value="棕色">棕色</option>
+                                <option value="黃色">黃色</option>
+                                <option value="橘色">橘色</option>
+                                <option value="粉色">粉色</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="background">背景</label>
+                            <select class="form-control" id="background" name="background">
+                                <option value="">全部</option>
+                                <option value="灰格子">灰格子</option>
+                                <option value="藍格子">藍格子</option>
+                                <option value="粉色">粉色</option>
+                                <option value="紫色">紫色</option>
+                                <option value="森林">森林</option>
+                                <option value="藍天">藍天</option>
+                                <option value="星空">星空</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="isActive">狀態</label>
+                            <select class="form-control" id="isActive" name="isActive">
+                                <option value="">全部</option>
+                                <option value="true">啟用中</option>
+                                <option value="false">未啟用</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="sortBy">排序欄位</label>
+                            <select class="form-control" id="sortBy" name="sortBy">
+                                <option value="createdAt">建立時間</option>
+                                <option value="level">等級</option>
+                                <option value="experience">經驗值</option>
+                                <option value="name">寵物名字</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="sortOrder">排序方式</label>
+                            <select class="form-control" id="sortOrder" name="sortOrder">
+                                <option value="desc">降序</option>
+                                <option value="asc">升序</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="pageSize">每頁筆數</label>
+                            <select class="form-control" id="pageSize" name="pageSize">
+                                <option value="10">10 筆</option>
+                                <option value="25">25 筆</option>
+                                <option value="50">50 筆</option>
+                                <option value="100">100 筆</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> 搜尋
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> 重置
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="exportPets()">
+                        <i class="fas fa-download"></i> 匯出
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 統計資訊區域 -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">總寵物數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalPets">1,234</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-paw fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">啟用中寵物</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="activePets">1,100</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-heart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">平均等級</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="averageLevel">15.6</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">總餵食次數</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalFeedings">25,678</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-utensils fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 寵物列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">寵物列表</h6>
+            <span class="badge badge-info" id="resultCount">共0 筆結果</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>寵物ID</th>
+                            <th>使用者ID</th>
+                            <th>使用者名稱</th>
+                            <th>寵物名字</th>
+                            <th>等級</th>
+                            <th>經驗值</th>
+                            <th>膚色</th>
+                            <th>背景</th>
+                            <th>狀態</th>
+                            <th>建立時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Pets != null && Model.Pets.Any())
+                        {
+                            @foreach (var pet in Model.Pets)
+                            {
+                                <tr>
+                                    <td>@pet.PetId</td>
+                                    <td>@pet.UserId</td>
+                                    <td>@(pet.User?.UserName ?? "N/A")</td>
+                                    <td>@pet.PetName</td>
+                                    <td>
+                                        <span class="badge badge-primary">@pet.Level</span>
+                                    </td>
+                                    <td>@pet.Experience</td>
+                                    <td>
+                                        <span class="badge badge-info" style="background-color: @pet.SkinColor;">@pet.SkinColor</span>
+                                    </td>
+                                    <td>@pet.BackgroundColor</td>
+                                    <td>
+                                        <span class="badge badge-success">啟用中</span>
+                                    </td>
+                                    <td>@pet.LevelUpTime.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick="editPet(@pet.PetId)">
+                                            <i class="fas fa-edit"></i> 編輯
+                                        </button>
+                                        <button class="btn btn-sm btn-info" onclick="viewPetDetails(@pet.PetId)">
+                                            <i class="fas fa-eye"></i> 詳情
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deletePet(@pet.PetId)">
+                                            <i class="fas fa-trash"></i> 刪除
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="11" class="text-center">無符合條件的寵物資料</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分頁 -->
+            @if (Model != null && Model.Pagination != null)
+            {
+                <nav aria-label="寵物列表分頁">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.Pagination.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?page=@(Model.Pagination.CurrentPage - 1)">上一頁</a>
+                            </li>
+                        }
+
+                        @for (int i = Math.Max(1, Model.Pagination.CurrentPage - 2); i <= Math.Min(Model.Pagination.TotalPages, Model.Pagination.CurrentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.Pagination.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="?page=@i">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.Pagination.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?page=@(Model.Pagination.CurrentPage + 1)">下一頁</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+function resetForm() {
+    document.getElementById("searchForm").reset();
+}
+
+function exportPets() {
+    // 匯出寵物列表
+    alert("匯出功能開發中...");
+}
+
+function editPet(petId) {
+    // 編輯寵物
+    alert("編輯寵物: " + petId);
+}
+
+function viewPetDetails(petId) {
+    // 查看寵物詳情
+    alert("查看寵物詳情: " + petId);
+}
+
+function deletePet(petId) {
+    if (confirm("確定要刪除此寵物嗎？此操作無法復原！")) {
+        // 刪除寵物
+        alert("寵物已刪除: " + petId);
+        location.reload();
+    }
+}
+
+// 更新結果計數
+function updateResultCount() {
+    const rows = document.querySelectorAll("tbody tr");
+    const count = rows.length - (rows.length > 0 && rows[0].cells[0].textContent.includes("無符合") ? 1 : 0);
+    document.getElementById("resultCount").textContent = `共${count} 筆結果`;
+}
+
+// 頁面載入
+document.addEventListener("DOMContentLoaded", function() {
+    updateResultCount();
+});
+</script>

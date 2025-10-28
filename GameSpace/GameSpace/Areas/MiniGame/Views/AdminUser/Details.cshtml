@@ -1,0 +1,274 @@
+﻿@model GameSpace.Models.User
+@{
+    ViewData["Title"] = "用戶詳情";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- 頁面標題 -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">用戶詳情</h1>
+        <div>
+            <a href="@Url.Action("Edit", "AdminUser", new { id = Model.UserId })" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm">
+                <i class="fas fa-edit fa-sm text-white-50"></i> 編輯用戶
+            </a>
+            <a href="@Url.Action("Index", "AdminUser")" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 基本資訊 -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">基本資訊</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                        <h5 class="mt-3">@Model.UserName</h5>
+                        <span class="badge @(Model.UserRight?.UserStatus == true ? "badge-success" : "badge-danger")">
+                            @(Model.UserRight?.UserStatus == true ? "啟用" : "停用")
+                        </span>
+                    </div>
+                    
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>用戶ID:</strong></td>
+                            <td>@Model.UserId</td>
+                        </tr>
+                        <tr>
+                            <td><strong>帳號:</strong></td>
+                            <td>@Model.UserAccount</td>
+                        </tr>
+                        <tr>
+                            <td><strong>電子郵件:</strong></td>
+                            <td>@(Model.UserIntroduce?.Email ?? "未設定")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>電話:</strong></td>
+                            <td>@(Model.UserIntroduce?.Cellphone ?? "未設定")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>生日:</strong></td>
+                            <td>@(Model.UserIntroduce?.DateOfBirth.ToString("yyyy-MM-dd") ?? "未設定")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>性別:</strong></td>
+                            <td>@(Model.UserIntroduce?.Gender ?? "未設定")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>註冊日期:</strong></td>
+                            <td>@(Model.UserIntroduce?.CreateAccount.ToString("yyyy-MM-dd HH:mm") ?? "未設定")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>最後登入:</strong></td>
+                            <td>@(Model.UserLockoutEnd?.ToString("yyyy-MM-dd HH:mm") ?? "從未鎖定")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 詳細資訊 -->
+        <div class="col-lg-8">
+            <!-- 地址資訊 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">地址資訊</h6>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.UserIntroduce?.Address))
+                    {
+                        <p>@Model.UserIntroduce.Address</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">未設定地址</p>
+                    }
+                </div>
+            </div>
+
+            <!-- 錢包資訊 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">錢包資訊</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.WalletHistories != null && Model.WalletHistories.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>交易類型</th>
+                                        <th>金額</th>
+                                        <th>交易日期</th>
+                                        <th>描述</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var wallet in Model.WalletHistories.Take(10))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge @(wallet.ChangeType == "Point" && wallet.PointsChanged > 0 ? "badge-success" : "badge-danger")">
+                                                    @(wallet.ChangeType == "Point" && wallet.PointsChanged > 0 ? "獲得" : "消費")
+                                                </span>
+                                            </td>
+                                            <td>@wallet.PointsChanged.ToString("N0")</td>
+                                            <td>@wallet.ChangeTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>@wallet.Description</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (Model.WalletHistories.Count > 10)
+                        {
+                            <p class="text-muted text-center">顯示最近10筆記錄，共 @Model.WalletHistories.Count 筆</p>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">暫無錢包記錄</p>
+                    }
+                </div>
+            </div>
+
+            <!-- 簽到記錄 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">簽到記錄</h6>
+                </div>
+                <div class="card-body">
+                    @{
+                        var signInRecords = ViewBag.SignInRecords as List<GameSpace.Models.UserSignInStat>;
+                    }
+                    @if (signInRecords != null && signInRecords.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>簽到日期</th>
+                                        <th>獲得點數</th>
+                                        <th>獲得經驗</th>
+                                        <th>優惠券</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var signIn in signInRecords)
+                                    {
+                                        <tr>
+                                            <td>@signIn.SignTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>@signIn.PointsGained.ToString("N0")</td>
+                                            <td>@signIn.ExpGained.ToString("N0")</td>
+                                            <td>@(!string.IsNullOrEmpty(signIn.CouponGained) ? signIn.CouponGained : "-")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-muted text-center">顯示最近 @signInRecords.Count 筆記錄</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">尚無簽到記錄</p>
+                    }
+                </div>
+            </div>
+
+            <!-- 寵物資訊 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">寵物資訊</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.Pets != null && Model.Pets.Any())
+                    {
+                        <div class="row">
+                            @foreach (var pet in Model.Pets.Take(6))
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-paw fa-2x text-primary mb-2"></i>
+                                            <h6>@pet.PetName</h6>
+                                            <p class="text-muted small">@pet.PetName</p>
+                                            <span class="badge badge-info">@pet.Level</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.Pets.Count > 6)
+                        {
+                            <p class="text-muted text-center">顯示前6隻寵物，共 @Model.Pets.Count 隻</p>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">暫無寵物</p>
+                    }
+                </div>
+            </div>
+
+            <!-- 遊戲記錄 -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">遊戲記錄</h6>
+                </div>
+                <div class="card-body">
+                    @{
+                        var gameRecords = ViewBag.GameRecords as List<GameSpace.Models.MiniGame>;
+                    }
+                    @if (gameRecords != null && gameRecords.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>遊玩時間</th>
+                                        <th>關卡</th>
+                                        <th>結果</th>
+                                        <th>怪物數</th>
+                                        <th>獲得點數</th>
+                                        <th>獲得經驗</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var record in gameRecords)
+                                    {
+                                        <tr>
+                                            <td>@record.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>第 @record.Level 關</td>
+                                            <td>
+                                                <span class="badge badge-@(record.Result == "勝利" ? "success" : "danger")">
+                                                    @record.Result
+                                                </span>
+                                            </td>
+                                            <td>@record.MonsterCount</td>
+                                            <td>@record.PointsGained.ToString("N0")</td>
+                                            <td>@record.ExpGained.ToString("N0")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-muted text-center">顯示最近 @gameRecords.Count 筆記錄</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">尚無遊戲記錄</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

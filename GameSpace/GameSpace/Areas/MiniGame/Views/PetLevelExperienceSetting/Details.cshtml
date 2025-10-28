@@ -1,0 +1,54 @@
+﻿@model GameSpace.Areas.MiniGame.Models.Settings.PetLevelExperienceSettingViewModel
+
+@{
+    ViewData["Title"] = "寵物等級經驗值設定詳情";
+    Layout = "~/Areas/MiniGame/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">寵物等級經驗值設定詳情</h3>
+                    <div class="card-tools">
+                        <a asp-action="Index" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> 返回列表
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-2">ID:</dt>
+                        <dd class="col-sm-10">@Model.Id</dd>
+                        
+                        <dt class="col-sm-2">等級:</dt>
+                        <dd class="col-sm-10">@Model.Level</dd>
+                        
+                        <dt class="col-sm-2">所需經驗值:</dt>
+                        <dd class="col-sm-10">@Model.RequiredExperience.ToString("N0")</dd>
+                        
+                        <dt class="col-sm-2">描述:</dt>
+                        <dd class="col-sm-10">@(string.IsNullOrEmpty(Model.Description) ? "-" : Model.Description)</dd>
+                        
+                        <dt class="col-sm-2">建立時間:</dt>
+                        <dd class="col-sm-10">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+                        
+                        <dt class="col-sm-2">更新時間:</dt>
+                        <dd class="col-sm-10">@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+                    </dl>
+                    
+                    <div class="form-group">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> 編輯
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> 刪除
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
